@@ -9,7 +9,10 @@ export const ToggleThemeButton = () => {
   const { theme, setTheme } = useTheme();
 
   // When mounted on client, now we can show the UI
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    setTheme("sunset-horizon");
+  }, []);
 
   if (!mounted) return null;
 

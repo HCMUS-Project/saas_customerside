@@ -1,6 +1,7 @@
 "use client";
 
 import { ItemCard } from "@/components/cards/item-card";
+import { ServiceCarousel } from "@/components/carousels/service-carousel";
 import {
   Carousel,
   CarouselContent,
@@ -9,12 +10,13 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { mockProducts } from "@/constants/mock-data/mock-product";
+import { mockServices } from "@/constants/mock-data/mock-services";
 import { ToggleThemeButton } from "@/constants/toggle-theme-button";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between pt-10">
-      <ToggleThemeButton />
+      <ServiceCarousel serviceList={mockServices} />
 
       <Carousel
         opts={{
@@ -42,6 +44,9 @@ export default function Home() {
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
+      
+
+      <ToggleThemeButton />
     </main>
   );
 }

@@ -28,6 +28,7 @@ const config = {
           DEFAULT: "var(--primary)",
           foreground: "var(--primary-foreground)",
           focus: "var(--primary-focus)",
+          opacity: 'rgba(var(--primary-rgb), 0.5)',
         },
         secondary: {
           DEFAULT: "var(--secondary)",

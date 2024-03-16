@@ -78,45 +78,55 @@ export const Header: React.FC<HeaderProps> = () => {
       )}
     </div>
   ) : (
-    <Drawer direction="left">
-      <DrawerTrigger>
-        <div className="px-4 py-2">
-          <MenuIcon size={24} />
-        </div>
-      </DrawerTrigger>
+    <div className="flex">
+      <Drawer direction="left">
+        <DrawerTrigger>
+          <div className="px-4 py-2">
+            <MenuIcon size={24} />
+          </div>
+        </DrawerTrigger>
 
-      <DrawerContent>
-        <DrawerHeader>
-          <Image
-            src="https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1395880969.1710252000&semt=sph"
-            alt="Logo"
-            width={40}
-            height={40}
-            className="ml-4"
-          />
-        </DrawerHeader>
+        <DrawerContent>
+          <DrawerHeader>
+            <Image
+              src="https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1395880969.1710252000&semt=sph"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="ml-4"
+            />
+          </DrawerHeader>
 
-        <div className="flex flex-col gap-4 pl-5 my-5">
-          <Link href="/">Trang Chu</Link>
-          <Link href="/">Dich Vu</Link>
-          <Link href="/">San Pham</Link>
+          <div className="flex flex-col gap-4 pl-5 my-5">
+            <Link href="/">Trang Chu</Link>
+            <Link href="/">Dich Vu</Link>
+            <Link href="/">San Pham</Link>
 
-          {isLoggedIn ? (
-            <div className="flex flex-col gap-4 mt-8">
-              <Link href="/">Profile</Link>
-              <Link href="/">Settings</Link>
-              <Link href="/">Logout</Link>
-            </div>
-          ) : (
-            <Button
-              onClick={() => {}}
-              className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
-            >
-              Dang nhap
-            </Button>
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+            {isLoggedIn ? (
+              <div className="flex flex-col gap-4 mt-8">
+                <Link href="/">Profile</Link>
+                <Link href="/">Settings</Link>
+                <Link href="/">Logout</Link>
+              </div>
+            ) : (
+              <Button
+                onClick={() => {}}
+                className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
+              >
+                Dang nhap
+              </Button>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Image
+        src="https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1395880969.1710252000&semt=sph"
+        alt="Logo"
+        width={40}
+        height={40}
+        className="ml-4"
+      />
+    </div>
   );
 };
