@@ -1,11 +1,12 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type Booking = {
-  image: string;
+  imgSrc: string;
   product: string;
   price: string;
   quantity: string;
@@ -15,8 +16,20 @@ export type Booking = {
 
 export const columns: ColumnDef<Booking>[] = [
   {
-    accessorKey: "image",
+    accessorKey: "imgSrc",
     header: "",
+
+    cell: ({ row }) => {
+      return (
+        <Image
+          src={row.getValue("imgSrc")}
+          alt="product image"
+          width={50}
+          height={50}
+          className="mx-5"
+        />
+      );
+    },
   },
   {
     accessorKey: "product",

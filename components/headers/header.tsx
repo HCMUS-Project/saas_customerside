@@ -41,33 +41,36 @@ export const Header: React.FC<HeaderProps> = () => {
 
       <div className="flex justify-evenly gap-48">
         <Link href="/">Trang Chu</Link>
-        <Link href="/">Dich Vu</Link>
-        <Link href="/">San Pham</Link>
+        <Link href="/bookings">Dich Vu</Link>
+        <Link href="/product">San Pham</Link>
       </div>
 
       {isLoggedIn ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>Avatar</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>Avatar</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent>
-            <DropdownMenuItem>
-              <Link href="/">Profile</Link>
-            </DropdownMenuItem>
+            <DropdownMenuContent>
+              <DropdownMenuItem>
+                <Link href="/">Profile</Link>
+              </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <Link href="/">Settings</Link>
-            </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/">Settings</Link>
+              </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <Link href="/">Logout</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem>
+                <Link href="/">Logout</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* <shoppingCartButton /> */}
+        </div>
       ) : (
         <Button
           onClick={() => {}}
@@ -98,8 +101,8 @@ export const Header: React.FC<HeaderProps> = () => {
 
         <div className="flex flex-col gap-4 pl-5 my-5">
           <Link href="/">Trang Chu</Link>
-          <Link href="/">Dich Vu</Link>
-          <Link href="/">San Pham</Link>
+          <Link href="/bookings">Dich Vu</Link>
+          <Link href="/product">San Pham</Link>
 
           {isLoggedIn ? (
             <div className="flex flex-col gap-4 mt-8">

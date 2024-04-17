@@ -12,8 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Booking, columns } from "./columns";
+import { columns } from "./columns";
 import { DataTable } from "./data-table";
+import type { Booking } from "./columns";
 
 async function getData(): Promise<Booking[]> {
   const res = await fetch(
