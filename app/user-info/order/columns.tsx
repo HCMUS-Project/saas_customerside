@@ -5,7 +5,7 @@ import Image from "next/image";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Booking = {
+export type Order = {
   imgSrc: string;
   product: string;
   price: string;
@@ -14,7 +14,7 @@ export type Booking = {
   date: string;
 };
 
-export const columns: ColumnDef<Booking>[] = [
+export const columns: ColumnDef<Order>[] = [
   {
     accessorKey: "imgSrc",
     header: "",

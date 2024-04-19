@@ -3,10 +3,10 @@ import { mockProducts } from "@/constants/mock-data/mock-product";
 
 import Image from "next/image";
 import Link from "next/link";
-const AllProduct = () => {
+const AllBooking = () => {
   return (
     <div className="container pt-16">
-      <h2 className="font-medium text-2xl pb-4">All Products</h2>
+      <h2 className="font-medium text-2xl pb-4">All Bookings</h2>
 
       <Link href="/product/product-detail" className="grid grid-cols-4 gap-2">
         {mockProducts.map((item, index) => (
@@ -39,4 +39,4 @@ const AllProduct = () => {
   );
 };
 
-export default AllProduct;
+export default AllBooking;

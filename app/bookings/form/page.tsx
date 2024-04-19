@@ -54,7 +54,7 @@ function onSubmit(data: z.infer<typeof FormSchema>) {
   );
 }
 
-export default function Booking() {
+export default function BookingForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });

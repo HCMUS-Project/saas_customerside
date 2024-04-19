@@ -9,7 +9,9 @@ import { Ghost } from "lucide-react";
 
 import React, { useState } from "react";
 import Link from "next/link";
+
 import CommentForm from "./comment";
+
 
 export default function ProductPageProps() {
   // Chọn một sản phẩm từ mảng mockProducts để hiển thị chi tiết
@@ -66,7 +68,9 @@ export default function ProductPageProps() {
           </div>
         </div>
       </div>
+
       <CommentForm />
+
       <Recommended />
     </div>
   );
