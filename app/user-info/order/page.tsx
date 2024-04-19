@@ -14,9 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import type { Booking } from "./columns";
+import type { Order } from "./columns";
 
-async function getData(): Promise<Booking[]> {
+async function getData(): Promise<Order[]> {
   const res = await fetch(
     "https://6577fda6197926adf62f397c.mockapi.io/product"
   );
@@ -62,7 +62,7 @@ export default async function Booking() {
             data-te-ripple-color="light"
             className={cn(
               "inline-block rounded-md px-6 pb-3 pt-3.5 text-xs font-medium uppercase leading-normal text-primary transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-primary-600 focus:text-primary-600 focus:outline-none focus:ring-0 active:text-primary-700",
-              "border-b-[3px] border-blue-300"
+              ""
             )}
           >
             Booking
@@ -74,7 +74,7 @@ export default async function Booking() {
             data-te-ripple-color="light"
             className={cn(
               "inline-block rounded-md px-6 pb-3 pt-3.5 text-xs font-medium uppercase leading-normal text-primary transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-primary-600 focus:text-primary-600 focus:outline-none focus:ring-0 active:text-primary-700",
-              ""
+              "border-b-[3px] border-blue-300"
             )}
           >
             Order

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Ghost } from "lucide-react";
 
 import React, { useState } from "react";
+import Link from "next/link";
 
 export default function ProductPageProps() {
   // Chọn một sản phẩm từ mảng mockProducts để hiển thị chi tiết
@@ -30,7 +31,7 @@ export default function ProductPageProps() {
   }
 
   return (
-    <div>
+    <div className="mt-4">
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
         <Image
           src={product.imgSrc}
@@ -57,7 +58,9 @@ export default function ProductPageProps() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline">Order now</Button>
+            <Link href="/cart">
+              <Button variant="outline">Order now</Button>
+            </Link>
             <AddToCartButton productId={product.id} />
           </div>
         </div>

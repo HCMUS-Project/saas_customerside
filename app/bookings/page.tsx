@@ -35,140 +35,219 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { AlignJustify, CalendarIcon, Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
+import { ComboBoxResponsiveDestination } from "../bookings/combobox-destination";
+import { ComboBoxResponsiveCoupon } from "../bookings/combobox-coupon";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
+import BestSeller from "./best-seller";
+import AllBooking from "../bookings/all-bookings";
+import Recommended from "./recommend-booking";
+
+const items = [
+  {
+    id: "recents",
+    label: "Recents",
+  },
+  {
+    id: "home",
+    label: "Home",
+  },
+  {
+    id: "applications",
+    label: "Applications",
+  },
+  {
+    id: "desktop",
+    label: "Desktop",
+  },
+  {
+    id: "downloads",
+    label: "Downloads",
+  },
+  {
+    id: "documents",
+    label: "Documents",
+  },
+] as const;
 
 const FormSchema = z.object({
-  booking: z.date({
-    required_error: "Bokking dateis required.",
-  }),
+  items: z.array(z.string()).refine((value) => value.some((item) => item)),
 });
-function onSubmit(data: z.infer<typeof FormSchema>) {
-  console.log(
-    <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-      <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-    </pre>
-  );
-}
 
 export default function Bookings() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log(data);
+  }
 
   return (
-    <div className="flex pt-6 sm:flex justify-center items-center ">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>BOOKING</CardTitle>
-          <CardDescription>Choose time to...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="framework">Chon dia diem</Label>
-                <Select>
-                  <SelectTrigger id="framework">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="next">Next.js</SelectItem>
-                    <SelectItem value="sveltekit">SvelteKit</SelectItem>
-                    <SelectItem value="astro">Astro</SelectItem>
-                    <SelectItem value="nuxt">Nuxt.js</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="framework">Chon dich vu</Label>
-                <Select>
-                  <SelectTrigger id="framework">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="next">Next.js</SelectItem>
-                    <SelectItem value="sveltekit">SvelteKit</SelectItem>
-                    <SelectItem value="astro">Astro</SelectItem>
-                    <SelectItem value="nuxt">Nuxt.js</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </form>
-          <Form {...form}>
-            <form
-              className="space-y-1.5 pt-2 "
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
-              <FormField
-                control={form.control}
-                name="booking"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Booking date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+    <div className=" py-6">
+      <div className="container sm:flex justify-between items-center space-x-2">
+        <div>
+          <ComboBoxResponsiveDestination />
+        </div>
+        <div>
+          <ComboBoxResponsiveCoupon />
+        </div>
+        <div className="w-full sm:w-[300px] md:w-[70%] relative">
+          <Input
+            className="border-gray-200 border p-2 px-4 rounded-lg w-full"
+            type="text"
+            placeholder="enter any Booking"
+          />
+          <Search
+            className="absolute top-0 right-0 mr-3 mt-3 text-gray-400"
+            size={20}
+          />
+        </div>
+        <div>
+          <Popover>
+            <PopoverTrigger>
+              <AlignJustify />
+            </PopoverTrigger>
+            <PopoverContent className="size-20 w-full h-full">
+              <div className="border-b font-bold ">filter</div>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-8"
+                >
+                  <FormField
+                    control={form.control}
+                    name="items"
+                    render={() => (
+                      <FormItem className="pt-2">
+                        {items.map((item) => (
+                          <FormField
+                            key={item.id}
+                            control={form.control}
+                            name="items"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={item.id}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(item.id)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([
+                                              ...field.value,
+                                              item.id,
+                                            ])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== item.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {item.label}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit">Submit</Button>
+                </form>
+              </Form>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+      <div className="hidden lg:block">
+        <div className="container">
+          <div className="flex w-fit gap-10 mx-auto font-medium py-4 tex-blackish">
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-          <div className="flex flex-col pt-2 space-y-1.5">
-            <Label htmlFor="framework">Chon nhan vien</Label>
-            <Select>
-              <SelectTrigger id="framework">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="next">Next.js</SelectItem>
-                <SelectItem value="sveltekit">SvelteKit</SelectItem>
-                <SelectItem value="astro">Astro</SelectItem>
-                <SelectItem value="nuxt">Nuxt.js</SelectItem>
-              </SelectContent>
-            </Select>
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-center w-full">
-          <Button className="w-full" variant="outline" type="submit">
-            Submit
-          </Button>
-        </CardFooter>
-      </Card>
+          <div className="flex w-fit gap-10 mx-auto font-medium py-4 tex-blackish">
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+            <div className="flex flex-col items-center">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+
+              <Link href="/bookings/form">Booking</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Recommended />
+      <BestSeller />
+      <AllBooking />
     </div>
   );
 }
