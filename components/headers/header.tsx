@@ -72,12 +72,15 @@ export const Header: React.FC<HeaderProps> = () => {
           {/* <shoppingCartButton /> */}
         </div>
       ) : (
-        <Button
-          onClick={() => {}}
-          className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
-        >
-          Dang nhap
-        </Button>
+        <Link href="/auth/login">
+          <Button
+            // onClick={() => {}}
+            className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
+          >
+            {" "}
+            Dang nhap
+          </Button>
+        </Link>
       )}
     </div>
   ) : (

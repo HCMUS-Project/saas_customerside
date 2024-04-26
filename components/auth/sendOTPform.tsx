@@ -18,12 +18,6 @@ import { useFormStatus } from "react-dom";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-// import {
-//   InputOTP,
-//   InputOTPGroup,
-//   InputOTPSeparator,
-//   InputOTPSlot,
-// } from "@/components/ui/input-otp";
 
 import { Mail } from "lucide-react";
 import CardWrapper from "@/components/auth/CardWrapper";
@@ -37,7 +31,6 @@ const SendOTPForm = () => {
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
-
       password: "",
     },
   });
@@ -49,7 +42,7 @@ const SendOTPForm = () => {
   return (
     <CardWrapper
       label="Welcome to Lorem"
-      title="Forgot Password"
+      title="Email OTP"
       backButtonTitle="No Account?"
       backButtonHref="/auth/register"
       backButtonLabel="Sign up"
@@ -63,6 +56,10 @@ const SendOTPForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Enter your Email or Username</FormLabel>
+                  <FormLabel>
+                    <Input type="email" placeholder="email" />
+                  </FormLabel>
+
                   <FormControl></FormControl>
                   <FormMessage />
                 </FormItem>

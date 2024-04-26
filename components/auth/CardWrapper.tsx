@@ -32,7 +32,7 @@ const CardWrapper = ({
   children,
 }: cardWrapperProps) => {
   return (
-    <Card className="xl:w-1/3 md:w-1/2 shadow-md">
+    <Card className="xl:w-2/5 md:w-1/2 shadow-md">
       <CardHeader>
         <div className="flex justify-between items-center  py-2">
           {" "}

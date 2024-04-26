@@ -33,7 +33,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   useEffect(() => {
     if (typeof window !== "undefined") {
       setScreenWidth(window.innerWidth);
-      console.log("test: ",window.innerWidth);
+      console.log("test: ", window.innerWidth);
     }
   }, []);
 
@@ -42,7 +42,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       onClick={() => {
         redirect();
       }}
-      className="w-[70vw] h-[70vw] md:w-[25vw] md:h-[25vw] p-4"
+      className="w-[70vw] h-[70vw] md:w-[25vw] md:h-[26vw] p-4"
     >
       <CardHeader>
         <div className="w-full">
@@ -62,7 +62,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       </CardContent>
 
       <CardFooter>
-        <div className="flex justify-between items-center w-full px-4">
+        <div className="flex justify-between items-center w-full ">
           <div>
             <span>{price}</span>
             {type === "service" && <span> / shift</span>}

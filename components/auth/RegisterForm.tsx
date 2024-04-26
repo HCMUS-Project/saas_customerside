@@ -18,8 +18,12 @@ import { z } from "zod";
 import { useFormStatus } from "react-dom";
 import { useState } from "react";
 import { PasswordIput } from "../ui/passwordInput";
+import { useRouter } from "next/navigation";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
 
 const RegisterForm = () => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm({
     resolver: zodResolver(RegisterSchema),
@@ -31,9 +35,25 @@ const RegisterForm = () => {
       confirmPassword: "",
     },
   });
-  const onSubmit = (data: z.infer<typeof RegisterSchema>) => {
+  const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
     setLoading(true);
-    console.log(data);
+    const response = await AXIOS.POST({
+      uri: authEndpoint.signUp,
+      params: {
+        domain: "30shine.com",
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      },
+    });
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      router.push("/auth/login");
+    } else {
+      console.error("Registration failed");
+    }
   };
   const { pending } = useFormStatus();
   return (
