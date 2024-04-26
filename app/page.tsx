@@ -26,8 +26,8 @@ export default function Home() {
       >
         <CarouselContent>
           {Array.from(mockProducts).map((_, index) => (
-            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-              <div className="p-1">
+            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 ">
+              <div className="p-1 ">
                 <ItemCard
                   imgSrc={mockProducts[index].imgSrc}
                   name={mockProducts[index].name}
