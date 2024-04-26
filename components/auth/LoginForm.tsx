@@ -21,9 +21,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { PasswordIput } from "../ui/passwordInput";
 import { Mail } from "lucide-react";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
+import { useRouter } from "next/navigation";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -32,9 +36,21 @@ const LoginForm = () => {
       password: "",
     },
   });
-  const onSubmit = (data: z.infer<typeof LoginSchema>) => {
+  const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);
-    console.log(data);
+    const response = await AXIOS.POST({
+      uri: authEndpoint.signIn,
+      params: {
+        domain: "30shine.com",
+        email: data.email,
+        password: data.password,
+      },
+    });
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      router.push("/");
+    } else {
+      console.error("Registration failed");
+    }
   };
   const { pending } = useFormStatus();
   return (
@@ -98,12 +114,12 @@ const LoginForm = () => {
           </div>
 
           <p className=" text-center font-extralight">OR</p>
-          <div className="">
-            <div className="flex justify-between w-full space-x-8">
+          <div className="flex ">
+            <div className="flex justify-between w-full space-x-2">
               <Link href="/auth/google">
                 <Button
                   variant="ghost"
-                  className="w-full flex  md:ml-0 bg-blue-200"
+                  className="w-full flex  md:ml-0 bg-blue-200 px-8"
                 >
                   <Image
                     src="/images/google.png"
@@ -118,7 +134,7 @@ const LoginForm = () => {
 
               <Button
                 variant="ghost"
-                className="w-full flex  md:ml-0 bg-blue-200 "
+                className="w-full flex  md:ml-0 bg-blue-200 pr-2 "
               >
                 <Image
                   src="/images/facebook.png"
