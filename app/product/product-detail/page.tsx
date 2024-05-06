@@ -10,6 +10,12 @@ import { Ghost } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
 
+<<<<<<< Updated upstream
+=======
+import CommentForm from "./comment";
+import StarRating from "./rating";
+
+>>>>>>> Stashed changes
 export default function ProductPageProps() {
   // Chọn một sản phẩm từ mảng mockProducts để hiển thị chi tiết
   const product = mockProducts[0]; // Đây là một ví dụ, bạn có thể chọn sản phẩm khác tùy thuộc vào logic của bạn
@@ -44,6 +50,7 @@ export default function ProductPageProps() {
         <div>
           <h1 className="text-5xl font-bold">{product.name}</h1>
           <div className="mt-4">${product.price}</div>
+          <StarRating />
           <p>
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium
             officiis dolor totam! Modi quidem quas est minima similique aperiam

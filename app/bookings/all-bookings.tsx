@@ -8,7 +8,7 @@ const AllBooking = () => {
     <div className="container pt-16">
       <h2 className="font-medium text-2xl pb-4">All Bookings</h2>
 
-      <Link href="/product/product-detail" className="grid grid-cols-4 gap-2">
+      <Link href="/bookings/form" className="grid grid-cols-4 gap-2">
         {mockProducts.map((item, index) => (
           <div
             key={index}

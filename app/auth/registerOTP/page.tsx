@@ -23,25 +23,66 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-
-const RegisterOTPForm = z.object({
-  pin: z.string().min(6, {
-    message: "Your one-time password must be 6 characters.",
-  }),
-});
+import { authEndpoint } from "@/constants/api/auth.api";
+import { AXIOS } from "@/constants/network/axios";
+import { useRouter } from "next/navigation";
+import { RegisterOTPFSchema } from "@/schema";
+import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
 
 export default function RegisterOTP() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const form = useForm({
-    resolver: zodResolver(RegisterOTPForm),
+    resolver: zodResolver(RegisterOTPFSchema),
     defaultValues: {
+      email: "",
       pin: "",
     },
   });
-
-  const onSubmit = (data: z.infer<typeof RegisterOTPForm>) => {
+  const sendMailOTP = async () => {
+    try {
+      setLoading(true);
+      // Gọi API sendMailOTP để gửi lại mã OTP qua email
+      const response = await AXIOS.POST({
+        uri: authEndpoint.sendMailOTP,
+        params: {
+          domain: "30shine.com",
+          email: form.getValues("email"), // Sử dụng email từ form
+        },
+      });
+      console.log("New OTP sent successfully");
+    } catch (error) {
+      console.error("Failed to send new OTP:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const onSubmit = async (data: z.infer<typeof RegisterOTPFSchema>) => {
     setLoading(true);
     console.log(data);
+
+    try {
+      // Call the verifyAccount API
+      const response = await AXIOS.POST({
+        uri: authEndpoint.verifyAccount,
+        params: {
+          domain: "30shine.com",
+          email: data.email,
+          otp: data.pin,
+        },
+      });
+
+      // If verification is successful, redirect to the home page
+      if (response.status === 200) {
+        router.push("/"); // Redirect to the home page
+      }
+    } catch (error) {
+      // Handle error
+      console.error("Verification failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,6 +100,23 @@ export default function RegisterOTP() {
         >
           <FormField
             control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="please enter your email address"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="pin"
             render={({ field }) => (
               <FormItem>
@@ -74,7 +132,13 @@ export default function RegisterOTP() {
                     </InputOTPGroup>
                   </InputOTP>
                 </FormControl>
-                <FormDescription>Please enter the OTP.</FormDescription>
+                <FormDescription>
+                  <div>Please enter OTP</div>
+                  <Button className="pl-0" variant="link" onClick={sendMailOTP}>
+                    Resend OTP
+                  </Button>
+                </FormDescription>
+
                 <FormMessage />
               </FormItem>
             )}

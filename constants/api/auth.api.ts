@@ -1,4 +1,8 @@
 export const authEndpoint = {
-  signIn: "/auth/sign-in",
-  signUp: "/auth/sign-up",
+  signIn: "api/auth/sign-in",
+  signUp: "api/auth/sign-up",
+  verifyAccount: "api/auth/verify-account",
+  sendMailOTP: "api/auth/send-mail-otp",
+  updateProfile: "api/auth/update-profile",
+  getProfile: "api/auth/get-profile",
 };
