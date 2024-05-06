@@ -29,7 +29,7 @@ const RegisterForm = () => {
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       email: "",
-      name: "",
+      username: "",
       phone: "",
       password: "",
       confirmPassword: "",
@@ -37,22 +37,29 @@ const RegisterForm = () => {
   });
   const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
     setLoading(true);
-    const response = await AXIOS.POST({
-      uri: authEndpoint.signUp,
-      params: {
-        domain: "30shine.com",
-        email: data.email,
-        name: data.name,
-        phone: data.phone,
-        password: data.password,
-        confirmPassword: data.confirmPassword,
-      },
-    });
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      router.push("/auth/login");
-    } else {
-      console.error("Registration failed");
+    try {
+      const response = await AXIOS.POST({
+        uri: authEndpoint.signUp,
+        params: {
+          email: data.email,
+          username: data.username,
+          phone: data.phone,
+          password: data.password,
+          domain: "30shine.com", // Assuming domain is constant
+          device: "web", // Assuming device is constant
+        },
+      });
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        router.push("/auth/registerOTP");
+      } else {
+        console.error("Registration failed");
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+    } finally {
+      setLoading(false);
     }
   };
   const { pending } = useFormStatus();
@@ -89,7 +96,7 @@ const RegisterForm = () => {
               {/* Added flex container */}
               <FormField
                 control={form.control}
-                name="name"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>User Name</FormLabel>

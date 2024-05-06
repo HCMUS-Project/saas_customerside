@@ -10,7 +10,13 @@ import { Ghost } from "lucide-react";
 import React, { useState } from "react";
 import Link from "next/link";
 
+
 import CommentForm from "./comment";
+import StarRating from "./rating";
+
+
+import CommentForm from "./comment";
+
 
 
 export default function ProductPageProps() {
@@ -47,6 +53,7 @@ export default function ProductPageProps() {
         <div>
           <h1 className="text-5xl font-bold">{product.name}</h1>
           <div className="mt-4">${product.price}</div>
+          <StarRating />
           <p>
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium
             officiis dolor totam! Modi quidem quas est minima similique aperiam

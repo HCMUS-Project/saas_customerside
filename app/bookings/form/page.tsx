@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Select,
   SelectContent,
@@ -41,9 +40,20 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 
+import * as React from "react";
+import { useState } from "react";
+
+const bookedTimes = [8, 10, 12, 14, 16, 18];
+
 const FormSchema = z.object({
-  booking: z.date({
-    required_error: "Bokking dateis required.",
+  bookingDate: z.date({
+    required_error: "Booking date is required.",
+  }),
+  employee: z.string({
+    required_error: "Employee is required.",
+  }),
+  bookingTime: z.string({
+    required_error: "Booking time is required.",
   }),
 });
 function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -55,6 +65,18 @@ function onSubmit(data: z.infer<typeof FormSchema>) {
 }
 
 export default function BookingForm() {
+  const [selectedTime, setSelectedTime] = useState<number | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+
+  const handleTimeClick = (time: number) => {
+    if (!bookedTimes.includes(time)) {
+      setSelectedTime(time);
+    }
+  };
+
+  const handleEmployeeSelect = (employee: string) => {
+    setSelectedEmployee(employee);
+  };
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
@@ -106,7 +128,7 @@ export default function BookingForm() {
             >
               <FormField
                 control={form.control}
-                name="booking"
+                name="bookingDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Booking date</FormLabel>
@@ -147,21 +169,45 @@ export default function BookingForm() {
                 )}
               />
             </form>
+
+            <div className="flex flex-col pt-2 space-y-1.5">
+              <label htmlFor="employee">Chọn nhân viên</label>
+              <Select
+                onValueChange={(value) => handleEmployeeSelect(value)}
+                defaultValue={selectedEmployee}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn nhân viên" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">Nhân viên A</SelectItem>
+                  <SelectItem value="B">Nhân viên B</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedEmployee && (
+              <div className="flex flex-col pt-2 space-y-1.5">
+                <h2>Select a Time:</h2>
+                <div>
+                  {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                    <button
+                      key={hour}
+                      onClick={() => handleTimeClick(hour)}
+                      disabled={bookedTimes.includes(hour)}
+                      className={`py-2 px-4 rounded-md mr-2 mt-2 ${
+                        selectedTime === hour
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {hour}:00
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </Form>
-          <div className="flex flex-col pt-2 space-y-1.5">
-            <Label htmlFor="framework">Chon nhan vien</Label>
-            <Select>
-              <SelectTrigger id="framework">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="next">Next.js</SelectItem>
-                <SelectItem value="sveltekit">SvelteKit</SelectItem>
-                <SelectItem value="astro">Astro</SelectItem>
-                <SelectItem value="nuxt">Nuxt.js</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </CardContent>
         <CardFooter className="flex justify-center w-full">
           <Button className="w-full" variant="outline" type="submit">

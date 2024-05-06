@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
@@ -14,35 +14,103 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
+import { Input } from "@/components/ui/input";
+
+const accessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiIzMHNoaW5lLmNvbSIsImVtYWlsIjoiaGFodXluaGR1Y2h1eUBnbWFpbC5jb20iLCJyb2xlIjowLCJpYXQiOjE3MTQ5ODgxMjYsImV4cCI6MTcxNDk5MTcyNn0.CGs70pzcOk5-6CzhHpBSy4YCg_9McnVJp1JWFP_VdOk";
 const UserInfo = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState({
-    name: "Huy Ha",
-    email: "huyha@example.com",
-    phoneNumber: "1234567890",
-    address: "123 Street, City",
-    dob: "01/01/1990",
+  const [userData, setUserData] = useState<{
+    username: "" | string;
+    phone: "" | string;
+    address: "" | string;
+    name: "" | string;
+    gender: "" | string;
+    age: 0 | number;
+  }>({
+    username: "",
+    phone: "",
+    address: "",
+    name: "",
+    gender: "",
+    age: 0,
   });
+
   const handleEditProfile = () => {
     setIsEditing(true);
   };
   // Hàm xử lý sự kiện khi nhấn vào nút "save"
-  const handleSaveProfile = () => {
-    // Gửi dữ liệu đã chỉnh sửa lên máy chủ ở đây
-
-    // Sau khi gửi thành công, cập nhật trạng thái chỉnh sửa
-    setIsEditing(false);
-  };
   const handleChangePassword = () => {
     setIsChangingPassword(true);
   };
+  const handleSaveProfile = async () => {
+    try {
+      // Gọi API để lưu thông tin người dùng
+      const response = await AXIOS.POST({
+        token: accessToken,
+        uri: authEndpoint.updateProfile,
+        params: { ...userData, age: parseInt(userData?.age.toString()) },
+      });
+
+      // Xử lý kết quả từ API
+      if (response) {
+        console.log("Profile saved successfully");
+        setIsEditing(false);
+        alert("Profile updated successfully!");
+      }
+    } catch (error) {
+      // Kiểm tra nếu error là một đối tượng lỗi và có thuộc tính message
+      console.log(error);
+    }
+  };
+
   const handleSavePassword = () => {
     // Gửi yêu cầu thay đổi mật khẩu lên máy chủ ở đây
 
     // Sau khi gửi thành công, cập nhật trạng thái chỉnh sửa
     setIsChangingPassword(false);
   };
+
+  useEffect(() => {
+    const fecthData = async () => {
+      const res = await AXIOS.GET({
+        uri: authEndpoint.getProfile,
+        token: accessToken,
+      });
+
+      setUserData(res.data);
+      console.log(res.data);
+    };
+
+    fecthData();
+  }, []);
+
+  const renderField = (
+    label: string,
+    value: string | number,
+    fieldName: string
+  ) => {
+    return (
+      <div className="grid grid-cols-3 gap-x-0 py-2">
+        <div>{label}</div>
+        {isEditing ? (
+          <Input
+            type="text"
+            value={value}
+            onChange={(e) =>
+              setUserData({ ...userData, [fieldName]: e.target.value })
+            }
+          />
+        ) : (
+          <div>{value}</div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="py-6">
       <div className="mt-6 flex justify-center  ">
@@ -115,86 +183,20 @@ const UserInfo = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-x-0 py-2">
-              <div>Name</div>
-              {/* Hiển thị input field nếu đang chỉnh sửa, ngược lại hiển thị dữ liệu */}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={userData.name}
-                  onChange={(e) =>
-                    setUserData({ ...userData, name: e.target.value })
-                  }
-                />
-              ) : (
-                <div>{userData.name}</div>
-              )}
-            </div>
+            {renderField("UserName", userData?.username, "username")}
             <hr />
-            <div className="grid grid-cols-3 gap-x-0 py-2">
-              <div>Email</div>
-              {/* Hiển thị input field nếu đang chỉnh sửa, ngược lại hiển thị dữ liệu */}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={userData.email}
-                  onChange={(e) =>
-                    setUserData({ ...userData, email: e.target.value })
-                  }
-                />
-              ) : (
-                <div>{userData.email}</div>
-              )}
-            </div>
+            {renderField("Phone", userData?.phone, "phone")}
             <hr />
-            <div className="grid grid-cols-3 gap-x-0 py-2">
-              <div>PhoneNumber</div>
-              {/* Hiển thị input field nếu đang chỉnh sửa, ngược lại hiển thị dữ liệu */}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={userData.phoneNumber}
-                  onChange={(e) =>
-                    setUserData({ ...userData, phoneNumber: e.target.value })
-                  }
-                />
-              ) : (
-                <div>{userData.phoneNumber}</div>
-              )}
-            </div>
+            {renderField("Address", userData?.address, "address")}
             <hr />
-            <div className="grid grid-cols-3 gap-x-0 py-2">
-              <div>Address</div>
-              {/* Hiển thị input field nếu đang chỉnh sửa, ngược lại hiển thị dữ liệu */}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={userData.address}
-                  onChange={(e) =>
-                    setUserData({ ...userData, address: e.target.value })
-                  }
-                />
-              ) : (
-                <div>{userData.address}</div>
-              )}
-            </div>
+            {renderField("Name", userData?.name, "name")}
             <hr />
-            <div className="grid grid-cols-3 gap-x-0 py-2">
-              <div>Dob</div>
-              {/* Hiển thị input field nếu đang chỉnh sửa, ngược lại hiển thị dữ liệu */}
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={userData.dob}
-                  onChange={(e) =>
-                    setUserData({ ...userData, dob: e.target.value })
-                  }
-                />
-              ) : (
-                <div>{userData.dob}</div>
-              )}
-            </div>
-            <div className="flex justify-center">
+            {renderField("Gender", userData?.gender, "gender")}
+            <hr />
+            {renderField("age", userData?.age, "age")}
+            <hr />
+
+            <div className="pt-2 flex justify-center">
               {isEditing && (
                 <Button variant="destructive" onClick={handleSaveProfile}>
                   Save
