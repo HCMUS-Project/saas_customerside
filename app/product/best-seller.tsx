@@ -4,7 +4,7 @@ import { mockProducts } from "@/constants/mock-data/mock-product";
 import Image from "next/image";
 const BestSeller = () => {
   return (
-    <div className="container pt-16">
+    <div className="container pt-2">
       <h2 className="font-medium text-2xl pb-4">Best Seller</h2>
 
       <div className="grid grid-cols-4 gap-2">

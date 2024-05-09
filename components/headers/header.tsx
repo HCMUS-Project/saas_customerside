@@ -8,8 +8,8 @@ import {
   DrawerHeader,
   DrawerTrigger,
 } from "../ui/drawer";
-import { MenuIcon } from "lucide-react";
-import { useState } from "react";
+import { MenuIcon, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -20,14 +20,42 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { useAccessToken } from "@/app/AccessTokenContext";
+import { useRouter } from "next/navigation";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
 
 interface HeaderProps {
   children?: React.ReactNode;
 }
 
 export const Header: React.FC<HeaderProps> = () => {
+  const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { accessToken } = useAccessToken();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsLoggedIn(accessToken != "");
+  }, [accessToken]);
+
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout
+      await AXIOS.GET({
+        uri: authEndpoint.logOut,
+        token: accessToken, // Token của người dùng
+      });
+
+      // Đánh dấu người dùng là không đăng nhập sau khi đăng xuất thành công
+      setIsLoggedIn(false);
+
+      // Sau khi logout thành công, chuyển hướng về trang chủ
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return isDesktop ? (
     <div className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm">
@@ -46,7 +74,7 @@ export const Header: React.FC<HeaderProps> = () => {
       </div>
 
       {isLoggedIn ? (
-        <div>
+        <div className="flex">
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar>
@@ -56,8 +84,8 @@ export const Header: React.FC<HeaderProps> = () => {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Link href="/">Profile</Link>
+              <DropdownMenuItem onClick={() => router.push("/user-info")}>
+                Profile
               </DropdownMenuItem>
 
               <DropdownMenuItem>
@@ -65,11 +93,13 @@ export const Header: React.FC<HeaderProps> = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem>
-                <Link href="/">Logout</Link>
+                <Link href="#" onClick={handleLogout}>
+                  Logout
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* <shoppingCartButton /> */}
+          <ShoppingCart />
         </div>
       ) : (
         <Link href="/auth/login">
@@ -109,9 +139,11 @@ export const Header: React.FC<HeaderProps> = () => {
 
           {isLoggedIn ? (
             <div className="flex flex-col gap-4 mt-8">
-              <Link href="/">Profile</Link>
+              <Link href="/user-info">Profile</Link>
               <Link href="/">Settings</Link>
-              <Link href="/">Logout</Link>
+              <Link href="#" onClick={handleLogout}>
+                Logout
+              </Link>
             </div>
           ) : (
             <Button
