@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import AddToCartButton from "./add-to-cart-button";
+
 import Recommended from "../recommend-product";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
@@ -12,28 +12,39 @@ import Link from "next/link";
 
 import StarRating from "./rating";
 import CommentForm from "./comment";
-import { productEndpoint } from "@/constants/api/auth.api";
-import { AXIOS } from "@/constants/network/axios";
-import { useAccessToken } from "@/app/AccessTokenContext";
-import { Star } from "lucide-react";
 
+import { AXIOS } from "@/constants/network/axios";
+import { ShoppingCart, Star } from "lucide-react";
+import { productEndpoints } from "@/constants/api/product.api";
+import { getJwt } from "@/util/auth.util";
+import { authEndpoint } from "@/constants/api/auth.api";
+import { cartEndpoints } from "@/constants/api/cart.api";
+import { access } from "fs";
+import { error } from "console";
+interface CartItem {
+  id: string;
+  images: string | string[];
+  name: string;
+  price: number;
+  quantity: number;
+}
 export default function ProductPageProps({
   params,
 }: {
   params: { id: string };
 }) {
-  const { accessToken } = useAccessToken();
   const searchParams = useSearchParams();
 
   const [productsData, setProductsData] = useState<{ products: any[] }>({
     products: [],
   });
   const productId = params.id;
+
   const [productData, setProductData] = useState<{
     id: " " | string;
     images: "" | Array<string>;
     name: "" | string;
-    price: "" | number;
+    price: number;
     rating: "" | Array<string>;
     description: string;
     // Add other properties if necessary
@@ -45,33 +56,30 @@ export default function ProductPageProps({
     rating: "",
     description: "",
   });
-  // Chọn một sản phẩm từ mảng mockProducts để hiển thị chi tiết
-  // const product = mockProducts[0]; // Đây là một ví dụ, bạn có thể chọn sản phẩm khác tùy thuộc vào logic của bạn
-  const [count, setCount] = useState(0);
 
-  const fetchData = useCallback(
-    async (productId: string) => {
-      try {
-        const res = await AXIOS.GET({
-          uri: productEndpoint.findProductByID.replace("{id}", params.id), // Sử dụng ID để tạo URI của sản phẩm cần lấy
-          token: accessToken,
-        });
-        const product = res.data; // Lấy dữ liệu sản phẩm từ API
-        setProductData(product);
-        console.log(product);
-      } catch (error) {
-        console.error("Error fetching product data:", error);
-      }
-    },
-    [accessToken]
-  );
+  const [count, setCount] = useState(0);
+  const [cart, setCart] = useState(null);
+  const accessToken = getJwt("AT");
+  const fetchData = useCallback(async (productId: string) => {
+    try {
+      const res = await AXIOS.GET({
+        uri: productEndpoints.findById(params.id), // Sử dụng ID để tạo URI của sản phẩm cần lấy
+      });
+      const product = res.data; // Lấy dữ liệu sản phẩm từ API
+      setProductData(product);
+      console.log(product);
+    } catch (error) {
+      console.error("Error fetching product data:", error);
+    }
+  }, []);
+
   useEffect(() => {
     if (accessToken && productId) {
       fetchData(productId); // Gọi hàm fetchData với ID được truyền từ router query
     } else {
-      notFound();
+      console.log("Login ddi ku");
     }
-  }, [accessToken, productId, fetchData]);
+  }, [accessToken, productId]);
 
   const increment = () => {
     setCount(count + 1);
@@ -83,9 +91,40 @@ export default function ProductPageProps({
     }
   };
 
-  if (!productData) {
-    return null;
-  }
+  const handleAddToCart = async () => {
+    // Kiểm tra xem count có phải là số nguyên dương không
+    if (!Number.isInteger(count) || count <= 0) {
+      alert("Please enter a valid quantity greater than 0.");
+      return; // Dừng hàm nếu count không hợp lệ
+    }
+    try {
+      if (!accessToken) {
+        throw new Error("no access token");
+      }
+
+      // Gửi yêu cầu POST để tạo giỏ hàng mới
+      const createCartResponse = await AXIOS.POST({
+        uri: cartEndpoints.addItemToCart,
+        params: {
+          userId: "some userId",
+          cartItem: {
+            productId: productData.id,
+            quantity: count,
+          },
+        },
+      });
+
+      // Kiểm tra xem yêu cầu tạo giỏ hàng có thành công hay không
+      if (createCartResponse.status >= 200 && createCartResponse.status < 300) {
+        // Thông báo cho người dùng rằng sản phẩm đã được thêm vào giỏ hàng thành công
+        alert("Product added to cart successfully.");
+        return;
+      }
+    } catch (error) {
+      // Kiểm tra xem yêu cầu lấy giỏ hàng thành công và giỏ hàng đã tồn tại hay không
+      console.log(error);
+    }
+  };
 
   return (
     <div className="mt-4">
@@ -119,7 +158,12 @@ export default function ProductPageProps({
             <Link href="/cart">
               <Button variant="outline">Order now</Button>
             </Link>
-            <AddToCartButton productId={productData.id} />
+            <div className="flex items-center gap-2">
+              <Button onClick={handleAddToCart} className="btn btn-primary">
+                Add to Cart
+                <ShoppingCart />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

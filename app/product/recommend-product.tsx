@@ -24,13 +24,12 @@ const Recommended = ({ products }: { products: Product[] }) => {
             className="px-4 border border-gray-200 rounded-xl max-w-[400px]"
           >
             <Link href={`/product/${products[index].id}`}>
-              <div>
+              <div className="w-full h-[200px] relative">
                 <Image
-                  className="w-full h-auto"
+                  className="object-fill "
                   src={products?.[index]?.images?.[0]}
-                  width={200}
-                  height={300}
                   alt={products[index]?.name}
+                  fill
                 />
               </div>
 

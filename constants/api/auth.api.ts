@@ -8,9 +8,3 @@ export const authEndpoint = {
   refeshToken: "api/auth/refesh-token",
   logOut: "api/auth/sign-out",
 };
-
-export const productEndpoint = {
-  findAllProduct: "api/ecommerce/product/find/all",
-  findProductByID: "api/ecommerce/product/find/{id}",
-  searchProduct: "api/ecommerce/product/search",
-};

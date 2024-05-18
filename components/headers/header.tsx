@@ -20,10 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { useAccessToken } from "@/app/AccessTokenContext";
+// import { useAccessToken } from "@/app/AccessTokenContext";
 import { useRouter } from "next/navigation";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
+import { getJwt } from "@/util/auth.util";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -32,19 +33,28 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = () => {
   const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const { accessToken } = useAccessToken();
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsLoggedIn(accessToken != "");
-  }, [accessToken]);
+    const accesToken = getJwt("AT");
+    setIsLoggedIn(accesToken != "");
+  }, []);
+  const handleCartClick = () => {
+    // Điều hướng đến trang giỏ hàng khi button được click
+    // Ví dụ: Sử dụng useRouter từ Next.js
+    // import { useRouter } from "next/router";
 
+    router.push("/cart");
+  };
+  const handleLoginClick = () => {
+    router.push("/auth/login");
+  };
   const handleLogout = async () => {
     try {
       // Gọi API logout
       await AXIOS.GET({
         uri: authEndpoint.logOut,
-        token: accessToken, // Token của người dùng
       });
 
       // Đánh dấu người dùng là không đăng nhập sau khi đăng xuất thành công
@@ -93,24 +103,26 @@ export const Header: React.FC<HeaderProps> = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem>
-                <Link href="#" onClick={handleLogout}>
-                  Logout
-                </Link>
+                <Button onClick={handleLogout}>Logout</Button>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <ShoppingCart />
+          <Button
+            className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
+            onClick={handleCartClick}
+            style={{ bottom: "20px", right: "20px" }} // Đặt độ dài và chiều cao
+          >
+            <ShoppingCart className="w-6 h-6" />
+          </Button>
         </div>
       ) : (
-        <Link href="/auth/login">
-          <Button
-            // onClick={() => {}}
-            className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
-          >
-            {" "}
-            Dang nhap
-          </Button>
-        </Link>
+        <Button
+          onClick={handleLoginClick}
+          className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
+        >
+          {" "}
+          Dang nhap
+        </Button>
       )}
     </div>
   ) : (

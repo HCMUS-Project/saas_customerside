@@ -30,17 +30,18 @@ import BestSeller from "./best-seller";
 import AllProduct from "./all-products";
 import { useEffect, useState } from "react";
 import { AXIOS } from "@/constants/network/axios";
-import { productEndpoint } from "@/constants/api/auth.api";
-import { useAccessToken } from "../AccessTokenContext";
+
+// import { useAccessToken } from "../AccessTokenContext";
 import { useDebounce } from "use-debounce";
 import Search from "@/app/product/search";
+import { productEndpoints } from "@/constants/api/product.api";
+import { getJwt } from "@/util/auth.util";
 
 const FormSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item)),
 });
 
 export default function Product() {
-  const { accessToken } = useAccessToken();
   const [productsData, setProductsData] = useState<{ products: any[] }>({
     products: [],
   });
@@ -55,18 +56,20 @@ export default function Product() {
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
   useEffect(() => {
-    const fecthData = async () => {
-      const res = await AXIOS.GET({
-        uri: productEndpoint.findAllProduct,
-        token: accessToken,
-      });
-
-      setProductsData(res.data);
-      console.log(res.data);
+    const fetchData = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findAll,
+        });
+        setProductsData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
     };
 
-    fecthData();
-  }, [accessToken]);
+    fetchData();
+  }, []);
 
   const items = [
     {

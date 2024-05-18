@@ -24,10 +24,11 @@ import { Mail } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { useRouter } from "next/navigation";
-import { useAccessToken } from "@/app/AccessTokenContext";
+// import { useAccessToken } from "@/app/AccessTokenContext";
+import { storeJwt } from "@/util/auth.util";
 
 const LoginForm = () => {
-  const { setAccessToken } = useAccessToken();
+  // const { setAccessToken } = useAccessToken();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -50,8 +51,11 @@ const LoginForm = () => {
         },
       });
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        const accessToken = response.data.accessToken;
-        setAccessToken(accessToken); // Đặt access token vào Context
+        const { accessToken, refreshToken } = response.data;
+        storeJwt(accessToken, "AT");
+        storeJwt(refreshToken, "RT");
+        // const accessToken = response.data.accessToken;
+        // setAccessToken(accessToken); // Đặt access token vào Context
         router.push("/"); // Chuyển hướng đến trang chủ
       } else {
         console.error("Login failed"); // Thông báo đăng nhập thất bại

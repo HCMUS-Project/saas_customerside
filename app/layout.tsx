@@ -4,7 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Header } from "@/components/headers/header";
 import Footer from "@/components/footer/footer";
-import { AccessTokenProvider } from "@/app/AccessTokenContext"; // Import AccessTokenProvider
+import AuthGuard from "@/components/guard/auth.guard";
+// import { AccessTokenProvider } from "@/app/AccessTokenContext"; // Import AccessTokenProvider
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,14 +22,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {/* Wrap your layout with AccessTokenProvider */}
-        <AccessTokenProvider>
-          <ThemeProvider>
-            <Header />
-            <div className="px-[10%]">{children}</div>
-            <Footer />
-          </ThemeProvider>
-        </AccessTokenProvider>
+        <ThemeProvider>
+          <Header />
+          <div className="px-[10%]">{children}</div>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

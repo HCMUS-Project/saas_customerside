@@ -5,8 +5,9 @@ import { useDebounce } from "use-debounce";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
-import { productEndpoint } from "@/constants/api/auth.api";
-import { useAccessToken } from "../AccessTokenContext";
+
+// import { useAccessToken } from "../AccessTokenContext";
+import { productEndpoints } from "@/constants/api/product.api";
 interface Product {
   id: string;
   name: string;
@@ -18,7 +19,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [query] = useDebounce(text, 500);
-  const { accessToken } = useAccessToken();
+  // const { accessToken } = useAccessToken();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -30,8 +31,7 @@ const Search = () => {
         }
         setLoading(true);
         const res = await AXIOS.GET({
-          uri: `${productEndpoint.searchProduct}?name=${query}`, // Adjust the endpoint based on your API
-          token: accessToken, // Replace 'your-access-token' with the actual access token
+          uri: `${productEndpoints.searchProduct}?name=${query}`, // Adjust the endpoint based on your API
         });
         setSearchResults(res.data.products);
       } catch (error) {
@@ -42,10 +42,10 @@ const Search = () => {
     };
 
     fetchProducts();
-  }, [query, accessToken]);
+  }, [query]);
 
   const handleProductClick = (productId: string) => {
-    router.push(`/product/${productId}`);
+    router.push(`/product/search?${productId}`);
   };
 
   return (

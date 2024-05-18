@@ -16,10 +16,12 @@ import { useRouter } from "next/router";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { Input } from "@/components/ui/input";
-import { useAccessToken } from "@/app/AccessTokenContext";
+
+import { getJwt } from "@/util/auth.util";
+import { get } from "http";
 
 const UserInfo = () => {
-  const { accessToken } = useAccessToken();
+  // const accessToken = getJwt("AT");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<{
@@ -39,12 +41,12 @@ const UserInfo = () => {
   });
 
   useEffect(() => {
+    const accessToken = getJwt("AT");
     const fetchUserData = async () => {
       try {
         if (accessToken) {
           const response = await AXIOS.GET({
             uri: authEndpoint.getProfile,
-            token: accessToken,
           });
 
           const { username, phone, address, name, gender, age } = response.data;
@@ -59,7 +61,7 @@ const UserInfo = () => {
     };
 
     fetchUserData(); // Gọi hàm fetchUserData từ trong useEffect để lấy dữ liệu người dùng khi component được tạo ra
-  }, [accessToken]);
+  }, []);
 
   const handleEditProfile = () => {
     setIsEditing(true);
@@ -72,7 +74,6 @@ const UserInfo = () => {
     try {
       // Gọi API để lưu thông tin người dùng
       const response = await AXIOS.POST({
-        token: accessToken,
         uri: authEndpoint.updateProfile,
         params: { ...userData, age: parseInt(userData?.age.toString()) },
       });

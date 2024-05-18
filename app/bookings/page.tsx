@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,8 @@ import Link from "next/link";
 import BestSeller from "./best-seller";
 import AllBooking from "../bookings/all-bookings";
 import Recommended from "./recommend-booking";
+import { AXIOS } from "@/constants/network/axios";
+import { bookingEndpoints } from "@/constants/api/bookings.api";
 
 const items = [
   {
@@ -81,12 +83,31 @@ const FormSchema = z.object({
 });
 
 export default function Bookings() {
+  const [bookingsData, setBookingsData] = useState<{ services: any[] }>({
+    services: [],
+  });
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
   function onSubmit(data: z.infer<typeof FormSchema>) {
     console.log(data);
   }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: bookingEndpoints.searchBookings,
+        });
+        setBookingsData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className=" py-6">
@@ -247,7 +268,7 @@ export default function Bookings() {
       </div>
       <Recommended />
       <BestSeller />
-      <AllBooking />
+      <AllBooking bookings={bookingsData.services} />
     </div>
   );
 }
