@@ -1,7 +1,7 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { ComboBoxResponsiveDestination } from "@/app/product/combobox-destination";
-import { AlignJustify, Search, Shirt } from "lucide-react";
+import { AlignJustify } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,50 +28,83 @@ import Recommended from "./recommend-product";
 import { ComboBoxResponsiveCoupon } from "./combobox-coupon";
 import BestSeller from "./best-seller";
 import AllProduct from "./all-products";
-const items = [
-  {
-    id: "recents",
-    label: "Recents",
-  },
-  {
-    id: "home",
-    label: "Home",
-  },
-  {
-    id: "applications",
-    label: "Applications",
-  },
-  {
-    id: "desktop",
-    label: "Desktop",
-  },
-  {
-    id: "downloads",
-    label: "Downloads",
-  },
-  {
-    id: "documents",
-    label: "Documents",
-  },
-] as const;
+import { useEffect, useState } from "react";
+import { AXIOS } from "@/constants/network/axios";
+
+// import { useAccessToken } from "../AccessTokenContext";
+import { useDebounce } from "use-debounce";
+import Search from "@/app/product/search";
+import { productEndpoints } from "@/constants/api/product.api";
+import { getJwt } from "@/util/auth.util";
 
 const FormSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item)),
 });
 
 export default function Product() {
+  const [productsData, setProductsData] = useState<{ products: any[] }>({
+    products: [],
+  });
+  const [searchProduct, setSearchProduct] = useState<string | undefined>("");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       items: ["recents", "home"],
     },
   });
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findAll,
+        });
+        setProductsData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const items = [
+    {
+      id: "recents",
+      label: "Recents",
+    },
+    {
+      id: "home",
+      label: "Home",
+    },
+    {
+      id: "applications",
+      label: "Applications",
+    },
+    {
+      id: "desktop",
+      label: "Desktop",
+    },
+    {
+      id: "downloads",
+      label: "Downloads",
+    },
+    {
+      id: "documents",
+      label: "Documents",
+    },
+  ] as const;
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     console.log(data);
   }
+
+  console.log(productsData);
   return (
-    <div className=" py-6">
+    <div className=" py-2">
       <div className="container sm:flex justify-between items-center space-x-2">
         <div>
           <ComboBoxResponsiveDestination />
@@ -80,15 +113,7 @@ export default function Product() {
           <ComboBoxResponsiveCoupon />
         </div>
         <div className="w-full sm:w-[300px] md:w-[70%] relative">
-          <Input
-            className="border-gray-200 border p-2 px-4 rounded-lg w-full"
-            type="text"
-            placeholder="enter any product"
-          />
-          <Search
-            className="absolute top-0 right-0 mr-3 mt-3 text-gray-400"
-            size={20}
-          />
+          <Search />
         </div>
         <div>
           <Popover>
@@ -227,7 +252,7 @@ export default function Product() {
           </div>
         </div>
       </div>
-      <Recommended />
+      <Recommended products={productsData?.products} />
       <BestSeller />
       <AllProduct />
     </div>

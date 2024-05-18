@@ -1,13 +1,218 @@
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import CartEntry from "./cart-entry";
+import { AXIOS } from "@/constants/network/axios";
+import { productEndpoints } from "@/constants/api/product.api";
+import { cartEndpoints } from "@/constants/api/cart.api";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface Product {
+  productId: string;
+  images: string;
+  quantity: number;
+  name: string;
+  price: number;
+}
 
 export default function CartPage() {
+  const [count, setCount] = useState<number[]>([]);
+  const [cartItems, setCartItems] = useState<Product[]>([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
+  const [cartID, setCartID] = useState(null);
+  const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
+
+  const fetchCartData = async () => {
+    try {
+      const response = await AXIOS.GET({
+        uri: cartEndpoints.findall,
+      });
+      if (response.data) {
+        setCartID(response.data.carts[0].id);
+
+        const result: Array<Product> | undefined = await fetchDataCartFromID(
+          response.data.carts[0].cartItems
+        );
+        result && setCartItems(result); // Cập nhật state cartItems với dữ liệu lấy được từ server
+      }
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
+  useEffect(() => {
+    fetchCartData();
+  }, []);
+
+  const fetchDataCartFromID = async (cartItemsTemp: any) => {
+    let temp: Array<Product> = [];
+    try {
+      for (const item of cartItemsTemp) {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findById(item.productId),
+        });
+
+        if (res.data) {
+          const updatedItem = {
+            ...item,
+            images: res.data.images[0],
+            price: res.data.price,
+            name: res.data.name,
+          };
+
+          temp = [...temp, updatedItem];
+        }
+      }
+
+      return temp;
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    console.log("hello");
+  }, [cartItems]);
+
+  const handleCheckboxChange = (index: number) => {
+    setSelectedItems((prevState) => {
+      const updatedSelectedItems = [...prevState];
+      updatedSelectedItems[index] = !updatedSelectedItems[index];
+      return updatedSelectedItems;
+    });
+  };
+
+  const updateCart = async (index: number, newQuantity: number) => {
+    try {
+      const updatedCartItem = { ...cartItems[index], quantity: newQuantity };
+      console.log(updatedCartItem);
+      const params = {
+        id: cartID,
+        cartItems: {
+          quantity: updatedCartItem.quantity,
+          productId: updatedCartItem.productId,
+        },
+      };
+      const response = await AXIOS.POST({
+        uri: cartEndpoints.updateCart,
+        params: params,
+      });
+      if (!response.data) {
+        throw new Error("Response data is empty");
+      }
+      // Cập nhật giỏ hàng sau khi cập nhật thành công
+      const updatedCartItems = [...cartItems];
+      updatedCartItems[index] = updatedCartItem;
+      setCartItems(updatedCartItems);
+    } catch (error) {
+      console.error("Error updating cart item:", error);
+    }
+  };
+
+  const calculateTotalPrice = () => {
+    const totalPrice = cartItems.reduce((acc, item, index) => {
+      return acc + item.price * count[index];
+    }, 0);
+    setTotalPrice(totalPrice);
+  };
+
+  useEffect(() => {
+    // Initialize count state with quantity of each cart item
+    setCount(cartItems.map((item) => item.quantity));
+  }, [cartItems]); // Thêm count vào dependency
+  useEffect(() => {
+    // Calculate total price whenever count change
+    calculateTotalPrice();
+  }, [count]);
+
+  const increment = async (index: number) => {
+    setCount((prevCount) => {
+      const newCount = [...prevCount];
+      newCount[index]++;
+      updateCart(index, newCount[index]); // Gửi yêu cầu cập nhật giỏ hàng khi tăng số lượng
+      return newCount;
+    });
+  };
+
+  const decrement = async (index: number) => {
+    setCount((prevCount) => {
+      const newCount = [...prevCount];
+      if (newCount[index] > 0) {
+        newCount[index]--;
+        updateCart(index, newCount[index]); // Gửi yêu cầu cập nhật giỏ hàng khi giảm số lượng
+      }
+      return newCount;
+    });
+  };
+
+  const removeFromCart = async (index: number) => {
+    setCartItems((prevCartItems) => {
+      // Tạo một bản sao mới của mảng và loại bỏ phần tử được chọn
+      const newCartItems = [...prevCartItems];
+      newCartItems.splice(index, 1);
+      // Gửi yêu cầu cập nhật giỏ hàng để xóa sản phẩm
+      updateCart(index, 0);
+      // Hiển thị thông báo khi xóa thành công
+      setShowAlert(true);
+      return newCartItems;
+    });
+  };
+
+  // useEffect(() => {
+  //   // Lấy danh sách sản phẩm từ local storage
+
+  //   // const storedCartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+
+  // }, []);
+
   return (
-    <div>
-      <h1 className="mb-6 font-bold text-3xl">Shopping Cart</h1>
-      <CartEntry />
+    <div className="mt-2">
+      {cartItems.map((item, index) => (
+        <div className="mt-4 flex justify-between" key={item.productId}>
+          <div className="flex flex-wrap items-center gap-4">
+            <Checkbox
+              checked={selectedItems[index]}
+              onCheckedChange={() => handleCheckboxChange(index)}
+            />
+            {item.images && item.images.length > 0 ? (
+              <Image
+                src={item.images}
+                width={200}
+                height={200}
+                alt={item.name}
+                className="rounded-lg"
+              />
+            ) : (
+              <div>No Image Available</div>
+            )}
+            <div>
+              <Link href={`product/product-detail?id=${item.productId}`}>
+                <div className="font-bold">{item.name}</div>
+              </Link>
+              <div>${item.price}</div>
+              <div className="my-1 flex item-center gap-2">
+                Quantity:
+                <div className="flex font-bold text-center gap-3 mb-2">
+                  <Button onClick={() => decrement(index)}>-</Button>
+                  <h1 className="flex flex-col items-center my-2">
+                    {count[index]}
+                  </h1>
+                  <Button onClick={() => increment(index)}>+</Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                Total Price: ${item.price * count[index]}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <Button onClick={() => removeFromCart(index)}>Remove</Button>
+          </div>
+        </div>
+      ))}
       <div className="flex flex-col items-end sm:items-center">
-        <p className="mb-3 font-bold">Total: $1000</p>
+        <p className="mb-3 font-bold">Total: ${totalPrice}</p>
         <Button className="btn btn-primary sm:w-[200px]">Checkout</Button>
       </div>
     </div>

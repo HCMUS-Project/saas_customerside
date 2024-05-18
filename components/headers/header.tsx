@@ -8,8 +8,8 @@ import {
   DrawerHeader,
   DrawerTrigger,
 } from "../ui/drawer";
-import { MenuIcon } from "lucide-react";
-import { useState } from "react";
+import { MenuIcon, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -20,14 +20,52 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+// import { useAccessToken } from "@/app/AccessTokenContext";
+import { useRouter } from "next/navigation";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
+import { getJwt } from "@/util/auth.util";
 
 interface HeaderProps {
   children?: React.ReactNode;
 }
 
 export const Header: React.FC<HeaderProps> = () => {
+  const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    const accesToken = getJwt("AT");
+    setIsLoggedIn(accesToken != "");
+  }, []);
+  const handleCartClick = () => {
+    // Điều hướng đến trang giỏ hàng khi button được click
+    // Ví dụ: Sử dụng useRouter từ Next.js
+    // import { useRouter } from "next/router";
+
+    router.push("/cart");
+  };
+  const handleLoginClick = () => {
+    router.push("/auth/login");
+  };
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout
+      await AXIOS.GET({
+        uri: authEndpoint.logOut,
+      });
+
+      // Đánh dấu người dùng là không đăng nhập sau khi đăng xuất thành công
+      setIsLoggedIn(false);
+
+      // Sau khi logout thành công, chuyển hướng về trang chủ
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return isDesktop ? (
     <div className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm">
@@ -46,7 +84,7 @@ export const Header: React.FC<HeaderProps> = () => {
       </div>
 
       {isLoggedIn ? (
-        <div>
+        <div className="flex">
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar>
@@ -56,8 +94,8 @@ export const Header: React.FC<HeaderProps> = () => {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Link href="/">Profile</Link>
+              <DropdownMenuItem onClick={() => router.push("/user-info")}>
+                Profile
               </DropdownMenuItem>
 
               <DropdownMenuItem>
@@ -65,22 +103,26 @@ export const Header: React.FC<HeaderProps> = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem>
-                <Link href="/">Logout</Link>
+                <Button onClick={handleLogout}>Logout</Button>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* <shoppingCartButton /> */}
+          <Button
+            className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
+            onClick={handleCartClick}
+            style={{ bottom: "20px", right: "20px" }} // Đặt độ dài và chiều cao
+          >
+            <ShoppingCart className="w-6 h-6" />
+          </Button>
         </div>
       ) : (
-        <Link href="/auth/login">
-          <Button
-            // onClick={() => {}}
-            className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
-          >
-            {" "}
-            Dang nhap
-          </Button>
-        </Link>
+        <Button
+          onClick={handleLoginClick}
+          className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
+        >
+          {" "}
+          Dang nhap
+        </Button>
       )}
     </div>
   ) : (
@@ -109,9 +151,11 @@ export const Header: React.FC<HeaderProps> = () => {
 
           {isLoggedIn ? (
             <div className="flex flex-col gap-4 mt-8">
-              <Link href="/">Profile</Link>
+              <Link href="/user-info">Profile</Link>
               <Link href="/">Settings</Link>
-              <Link href="/">Logout</Link>
+              <Link href="#" onClick={handleLogout}>
+                Logout
+              </Link>
             </div>
           ) : (
             <Button

@@ -24,32 +24,46 @@ import { Mail } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { useRouter } from "next/navigation";
+// import { useAccessToken } from "@/app/AccessTokenContext";
+import { storeJwt } from "@/util/auth.util";
 
 const LoginForm = () => {
+  // const { setAccessToken } = useAccessToken();
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const form = useForm({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
-
       password: "",
     },
   });
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);
-    const response = await AXIOS.POST({
-      uri: authEndpoint.signIn,
-      params: {
-        domain: "30shine.com",
-        email: data.email,
-        password: data.password,
-      },
-    });
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      router.push("/");
-    } else {
-      console.error("Registration failed");
+    try {
+      const response = await AXIOS.POST({
+        uri: authEndpoint.signIn,
+        params: {
+          domain: "30shine.com",
+          email: data.email,
+          password: data.password,
+        },
+      });
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        const { accessToken, refreshToken } = response.data;
+        storeJwt(accessToken, "AT");
+        storeJwt(refreshToken, "RT");
+        // const accessToken = response.data.accessToken;
+        // setAccessToken(accessToken); // Đặt access token vào Context
+        router.push("/"); // Chuyển hướng đến trang chủ
+      } else {
+        console.error("Login failed"); // Thông báo đăng nhập thất bại
+      }
+    } catch (error) {
+      console.error("Error logging in:", error); // Xử lý lỗi khi gửi yêu cầu đăng nhập
+    } finally {
+      setLoading(false);
     }
   };
   const { pending } = useFormStatus();

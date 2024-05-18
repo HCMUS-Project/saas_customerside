@@ -1,8 +1,75 @@
+import { getJwt, storeJwt } from "@/util/auth.util";
 import axios, { AxiosError } from "axios";
+import { authEndpoint } from "../api/auth.api";
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API,
 });
+console.log(process.env.NEXT_PUBLIC_API);
+
+API.interceptors.request.use(async (config) => {
+  const token = getJwt("AT");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+let isRefreshing = false;
+
+API.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        try {
+          const refreshToken = getJwt("RT");
+
+          originalRequest.headers.Authorization = `Bearer ${refreshToken}`;
+          const refreshNewToken = await AXIOS.POST({
+            uri: authEndpoint.refeshToken,
+            headers: {
+              Authorization: `Bearer ${refreshToken}`,
+            },
+          });
+
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+            refreshNewToken.data;
+
+          storeJwt(newAccessToken, "AT");
+          storeJwt(newRefreshToken, "RT");
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+          return await API(originalRequest);
+        } catch (err) {
+          return Promise.reject(err);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const setInterceptorAccessToken = (token: string) => {
+  API.interceptors.request.use(async (config) => {
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+};
 
 export const AXIOS = {
   ENCODE_FORM_DATA: (data: any) => {
@@ -15,121 +82,85 @@ export const AXIOS = {
     return formData;
   },
 
-  GET: async ({
-    uri,
-    params,
-    token,
-  }: {
-    uri: string;
-    params?: object;
-    token?: string | undefined;
-  }) => {
-    try {
-      const res = await API.get(uri, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        params: params,
-      });
+  GET: async ({ uri, params }: { uri: string; params?: object }) => {
+    const res = await API.get(uri, {
+      params: params,
+    });
 
-      return res.data;
-    } catch (err: any) {
-      return err.response;
-    }
+    return res.data;
   },
 
   POST: async ({
     uri,
     params,
-    token,
+    headers,
     hasFile,
   }: {
     uri: string;
     params?: object;
-    token?: string | undefined;
+    headers?: object;
     hasFile?: boolean;
   }) => {
-    try {
-      const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
-      const res = await API.post(uri, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          ...(hasFile
-            ? { "Content-Type": "multipart/form-data" }
-            : { "Content-Type": "application/json" }),
-          Accept: "application/json",
-        },
-      });
+    const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
+    const res = await API.post(uri, data, {
+      headers: {
+        ...(headers || {}),
+        ...(hasFile
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" }),
+        Accept: "application/json",
+      },
+    });
 
-      return res.data;
-    } catch (error: any) {
-      return error.response;
-    }
+    return res.data;
   },
 
   POST_DOWNLOAD_FILE: async ({
     uri,
     params,
-    token,
     hasFile,
   }: {
     uri: string;
     params?: object;
-    token?: string | undefined;
     hasFile?: boolean;
   }) => {
-    try {
-      const res = await API.post(uri, params, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/*",
-        },
-        responseType: "blob",
-      });
+    const res = await API.post(uri, params, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/*",
+      },
+      responseType: "blob",
+    });
 
-      return res.data;
-    } catch (error: any) {
-      return error.response;
-    }
+    return res.data;
   },
 
   PUT: async ({
     uri,
     params,
-    token,
     hasFile,
   }: {
     uri: string;
     params?: object;
-    token?: string | undefined;
     hasFile?: boolean;
   }) => {
-    try {
-      const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
+    const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
 
-      const res = await API.put(uri, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          ...(hasFile
-            ? { "Content-Type": "multipart/form-data" }
-            : { "Content-Type": "application/json" }),
-          Accept: "application/json",
-        },
-      });
+    const res = await API.put(uri, data, {
+      headers: {
+        ...(hasFile
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" }),
+        Accept: "application/json",
+      },
+    });
 
-      return res.data;
-    } catch (error: any) {
-      return error.response;
-    }
+    return res.data;
   },
 
   PATCH: async ({
     uri,
     params,
-    token,
     hasFile,
   }: {
     uri: string;
@@ -137,47 +168,36 @@ export const AXIOS = {
     token?: string | undefined;
     hasFile?: boolean;
   }) => {
-    try {
-      const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
+    const data = hasFile ? AXIOS.ENCODE_FORM_DATA(params) : params;
 
-      const res = await API.patch(uri, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          ...(hasFile
-            ? { "Content-Type": "multipart/form-data" }
-            : { "Content-Type": "application/json" }),
-          Accept: "application/json",
-        },
-      });
+    const res = await API.patch(uri, data, {
+      headers: {
+        ...(hasFile
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" }),
+        Accept: "application/json",
+      },
+    });
 
-      return res.data;
-    } catch (error: any) {
-      return error.response;
-    }
+    return res.data;
   },
 
   DELETE: async ({
     uri,
     params,
-    token,
   }: {
     uri: string;
     params?: object;
     token?: string | undefined;
   }) => {
-    try {
-      const res = await API.delete(uri, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        params: params,
-      });
+    const res = await API.delete(uri, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      params: params,
+    });
 
-      return res.data;
-    } catch (error: any) {
-      return error.response;
-    }
+    return res.data;
   },
 };

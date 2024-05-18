@@ -1,3 +1,4 @@
+"use client";
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <section className="w-full">

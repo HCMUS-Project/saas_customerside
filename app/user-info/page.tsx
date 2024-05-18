@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -13,14 +12,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { useRouter } from "next/router";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { Input } from "@/components/ui/input";
 
-const accessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiIzMHNoaW5lLmNvbSIsImVtYWlsIjoiaGFodXluaGR1Y2h1eUBnbWFpbC5jb20iLCJyb2xlIjowLCJpYXQiOjE3MTQ5ODgxMjYsImV4cCI6MTcxNDk5MTcyNn0.CGs70pzcOk5-6CzhHpBSy4YCg_9McnVJp1JWFP_VdOk";
+import { getJwt } from "@/util/auth.util";
+import { get } from "http";
+
 const UserInfo = () => {
+  // const accessToken = getJwt("AT");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<{
@@ -39,6 +40,29 @@ const UserInfo = () => {
     age: 0,
   });
 
+  useEffect(() => {
+    const accessToken = getJwt("AT");
+    const fetchUserData = async () => {
+      try {
+        if (accessToken) {
+          const response = await AXIOS.GET({
+            uri: authEndpoint.getProfile,
+          });
+
+          const { username, phone, address, name, gender, age } = response.data;
+
+          // Cập nhật state chỉ với các trường dữ liệu mong muốn
+          setUserData({ username, phone, address, name, gender, age });
+          console.log(accessToken);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData(); // Gọi hàm fetchUserData từ trong useEffect để lấy dữ liệu người dùng khi component được tạo ra
+  }, []);
+
   const handleEditProfile = () => {
     setIsEditing(true);
   };
@@ -50,7 +74,6 @@ const UserInfo = () => {
     try {
       // Gọi API để lưu thông tin người dùng
       const response = await AXIOS.POST({
-        token: accessToken,
         uri: authEndpoint.updateProfile,
         params: { ...userData, age: parseInt(userData?.age.toString()) },
       });
@@ -73,20 +96,6 @@ const UserInfo = () => {
     // Sau khi gửi thành công, cập nhật trạng thái chỉnh sửa
     setIsChangingPassword(false);
   };
-
-  useEffect(() => {
-    const fecthData = async () => {
-      const res = await AXIOS.GET({
-        uri: authEndpoint.getProfile,
-        token: accessToken,
-      });
-
-      setUserData(res.data);
-      console.log(res.data);
-    };
-
-    fecthData();
-  }, []);
 
   const renderField = (
     label: string,

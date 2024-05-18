@@ -4,6 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Header } from "@/components/headers/header";
 import Footer from "@/components/footer/footer";
+import AuthGuard from "@/components/guard/auth.guard";
+// import { AccessTokenProvider } from "@/app/AccessTokenContext"; // Import AccessTokenProvider
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <Header />
-
           <div className="px-[10%]">{children}</div>
           <Footer />
         </ThemeProvider>
