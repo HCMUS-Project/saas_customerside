@@ -50,6 +50,7 @@ import AllBooking from "../bookings/all-bookings";
 import Recommended from "./recommend-booking";
 import { AXIOS } from "@/constants/network/axios";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
+import SearchBooking from "./search";
 
 const items = [
   {
@@ -119,15 +120,7 @@ export default function Bookings() {
           <ComboBoxResponsiveCoupon />
         </div>
         <div className="w-full sm:w-[300px] md:w-[70%] relative">
-          <Input
-            className="border-gray-200 border p-2 px-4 rounded-lg w-full"
-            type="text"
-            placeholder="enter any Booking"
-          />
-          <Search
-            className="absolute top-0 right-0 mr-3 mt-3 text-gray-400"
-            size={20}
-          />
+          <SearchBooking />
         </div>
         <div>
           <Popover>
@@ -266,8 +259,8 @@ export default function Bookings() {
           </div>
         </div>
       </div>
-      <Recommended />
-      <BestSeller />
+      <Recommended bookings={bookingsData.services} />
+      <BestSeller bookings={bookingsData.services} />
       <AllBooking bookings={bookingsData.services} />
     </div>
   );

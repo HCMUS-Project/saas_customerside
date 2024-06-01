@@ -17,10 +17,10 @@ import { AXIOS } from "@/constants/network/axios";
 import { ShoppingCart, Star } from "lucide-react";
 import { productEndpoints } from "@/constants/api/product.api";
 import { getJwt } from "@/util/auth.util";
-import { authEndpoint } from "@/constants/api/auth.api";
+
 import { cartEndpoints } from "@/constants/api/cart.api";
-import { access } from "fs";
-import { error } from "console";
+import Swal from "sweetalert2";
+
 interface CartItem {
   id: string;
   images: string | string[];
@@ -28,6 +28,7 @@ interface CartItem {
   price: number;
   quantity: number;
 }
+
 export default function ProductPageProps({
   params,
 }: {
@@ -47,7 +48,6 @@ export default function ProductPageProps({
     price: number;
     rating: "" | Array<string>;
     description: string;
-    // Add other properties if necessary
   }>({
     id: "",
     images: "",
@@ -60,12 +60,13 @@ export default function ProductPageProps({
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState(null);
   const accessToken = getJwt("AT");
+
   const fetchData = useCallback(async (productId: string) => {
     try {
       const res = await AXIOS.GET({
-        uri: productEndpoints.findById(params.id), // Sử dụng ID để tạo URI của sản phẩm cần lấy
+        uri: productEndpoints.findById("30shine.com", params.id),
       });
-      const product = res.data; // Lấy dữ liệu sản phẩm từ API
+      const product = res.data;
       setProductData(product);
       console.log(product);
     } catch (error) {
@@ -75,7 +76,7 @@ export default function ProductPageProps({
 
   useEffect(() => {
     if (accessToken && productId) {
-      fetchData(productId); // Gọi hàm fetchData với ID được truyền từ router query
+      fetchData(productId);
     } else {
       console.log("Login ddi ku");
     }
@@ -92,17 +93,15 @@ export default function ProductPageProps({
   };
 
   const handleAddToCart = async () => {
-    // Kiểm tra xem count có phải là số nguyên dương không
     if (!Number.isInteger(count) || count <= 0) {
-      alert("Please enter a valid quantity greater than 0.");
-      return; // Dừng hàm nếu count không hợp lệ
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please enter a valid quantity greater than 0.",
+      });
+      return;
     }
     try {
-      if (!accessToken) {
-        throw new Error("no access token");
-      }
-
-      // Gửi yêu cầu POST để tạo giỏ hàng mới
       const createCartResponse = await AXIOS.POST({
         uri: cartEndpoints.addItemToCart,
         params: {
@@ -114,15 +113,23 @@ export default function ProductPageProps({
         },
       });
 
-      // Kiểm tra xem yêu cầu tạo giỏ hàng có thành công hay không
+      console.log("Create Cart Response:", createCartResponse);
+
       if (createCartResponse.status >= 200 && createCartResponse.status < 300) {
-        // Thông báo cho người dùng rằng sản phẩm đã được thêm vào giỏ hàng thành công
-        alert("Product added to cart successfully.");
-        return;
+        console.log("Product added to cart successfully.");
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: "Product added to cart successfully.",
+        });
       }
     } catch (error) {
-      // Kiểm tra xem yêu cầu lấy giỏ hàng thành công và giỏ hàng đã tồn tại hay không
-      console.log(error);
+      console.error("Error adding product to cart:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong! Please try again.",
+      });
     }
   };
 
@@ -145,15 +152,12 @@ export default function ProductPageProps({
             ))}
           </div>
           <div className="mt-4">${productData?.price}</div>
-
           <p>{productData?.description}</p>
           <div className="flex font-bold text-center gap-3 mb-2">
-            {" "}
             <Button onClick={decrement}>-</Button>
             <h1 className="flex flex-col items-center my-2">{count}</h1>
             <Button onClick={increment}>+</Button>
           </div>
-
           <div className="flex gap-3">
             <Link href="/cart">
               <Button variant="outline">Order now</Button>
@@ -167,9 +171,7 @@ export default function ProductPageProps({
           </div>
         </div>
       </div>
-
       <CommentForm />
-
       <Recommended products={productsData.products} />
     </div>
   );
