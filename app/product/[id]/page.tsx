@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { notFound } from "next/navigation";
-
+import { notFound, useRouter } from "next/navigation";
+import { useAuthStore } from "@/hooks/store/auth.store";
 import Recommended from "../recommend-product";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
@@ -56,10 +56,11 @@ export default function ProductPageProps({
     rating: "",
     description: "",
   });
-
+  const router = useRouter();
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState(null);
   const accessToken = getJwt("AT");
+  const authStore: any = useAuthStore();
 
   const fetchData = useCallback(async (productId: string) => {
     try {
@@ -78,9 +79,9 @@ export default function ProductPageProps({
     if (accessToken && productId) {
       fetchData(productId);
     } else {
-      console.log("Login ddi ku");
+      console.log("Login required");
     }
-  }, [accessToken, productId]);
+  }, [accessToken, productId, fetchData]);
 
   const increment = () => {
     setCount(count + 1);
@@ -101,36 +102,43 @@ export default function ProductPageProps({
       });
       return;
     }
-    try {
-      const createCartResponse = await AXIOS.POST({
-        uri: cartEndpoints.addItemToCart,
-        params: {
-          userId: "some userId",
-          cartItem: {
-            productId: productData.id,
-            quantity: count,
+    if (authStore.isAuthorized == false) {
+      router.push("/auth/login");
+      return;
+    } else
+      try {
+        const createCartResponse = await AXIOS.POST({
+          uri: cartEndpoints.addItemToCart,
+          params: {
+            userId: "some userId",
+            cartItem: {
+              productId: productData.id,
+              quantity: count,
+            },
           },
-        },
-      });
+        });
 
-      console.log("Create Cart Response:", createCartResponse);
+        console.log("Create Cart Response:", createCartResponse);
 
-      if (createCartResponse.status >= 200 && createCartResponse.status < 300) {
-        console.log("Product added to cart successfully.");
+        if (
+          createCartResponse.status >= 200 &&
+          createCartResponse.status < 300
+        ) {
+          console.log("Product added to cart successfully.");
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Product added to cart successfully.",
+          });
+        }
+      } catch (error) {
+        console.error("Error adding product to cart:", error);
         Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Product added to cart successfully.",
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong! Please try again.",
         });
       }
-    } catch (error) {
-      console.error("Error adding product to cart:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Something went wrong! Please try again.",
-      });
-    }
   };
 
   return (
