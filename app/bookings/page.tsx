@@ -96,9 +96,10 @@ export default function Bookings() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const domain = "30shine.com";
       try {
         const res = await AXIOS.GET({
-          uri: bookingEndpoints.searchBookings,
+          uri: bookingEndpoints.searchBookings(domain),
         });
         setBookingsData(res.data);
         console.log(res.data);

@@ -1,12 +1,12 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
-import { useAuth } from "../providers/auth-provider"; // Sử dụng AuthContext
+
 import {
   Drawer,
   DrawerContent,
@@ -22,43 +22,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { getJwt } from "@/util/auth.util";
+import { useAuthStore } from "@/hooks/store/auth.store";
 
 interface HeaderProps {
   children?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ children }) => {
+const NavLinks = () => (
+  <div className="flex justify-evenly gap-48">
+    <Link href="/">Trang Chu</Link>
+    <Link href="/bookings">Dich Vu</Link>
+    <Link href="/product">San Pham</Link>
+  </div>
+);
+
+const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
   const router = useRouter();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
-  const handleCartClick = () => {
-    router.push("/cart");
-  };
-
-  const handleLoginClick = () => {
-    router.push("/auth/login");
-  };
-
-  const handleLogout = async () => {
-    try {
-      await AXIOS.GET({ uri: authEndpoint.logOut });
-      setIsLoggedIn(false);
-      router.push("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
-
-  const navLinks = (
-    <div className="flex justify-evenly gap-48">
-      <Link href="/">Trang Chu</Link>
-      <Link href="/bookings">Dich Vu</Link>
-      <Link href="/product">San Pham</Link>
-    </div>
-  );
-
-  const userMenu = (
+  return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar>
@@ -74,11 +56,43 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           <Link href="/">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Button onClick={handleLogout}>Logout</Button>
+          <Button onClick={onLogout}>Logout</Button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
+};
+
+export const Header: React.FC<HeaderProps> = ({ children }) => {
+  const router = useRouter();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const authStore: any = useAuthStore();
+
+  useEffect(() => {
+    const accessToken = getJwt("AT");
+    setIsLoggedIn(accessToken !== ""); // Kiểm tra token khi tải trang
+  }, [setIsLoggedIn]);
+
+  const handleCartClick = () => {
+    router.push("/cart");
+  };
+
+  const handleLoginClick = () => {
+    router.push("/auth/login");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AXIOS.GET({ uri: authEndpoint.logOut });
+      localStorage.removeItem("AT"); // Xóa token khỏi localStorage
+      // setIsLoggedIn(false);
+      authStore.setIsAuthorized(false);
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return isDesktop ? (
     <div className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm">
@@ -89,10 +103,10 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
         height={40}
         className="ml-4"
       />
-      {navLinks}
-      {isLoggedIn ? (
+      <NavLinks />
+      {authStore.isAuthorized ? (
         <div className="flex items-center">
-          {userMenu}
+          <UserMenu onLogout={handleLogout} />
           <Button
             className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
             onClick={handleCartClick}
@@ -131,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           <Link href="/">Trang Chu</Link>
           <Link href="/bookings">Dich Vu</Link>
           <Link href="/product">San Pham</Link>
-          {isLoggedIn ? (
+          {authStore.isAuthorized ? (
             <div className="flex flex-col gap-4 mt-8">
               <Link href="/user-info">Profile</Link>
               <Link href="/">Settings</Link>

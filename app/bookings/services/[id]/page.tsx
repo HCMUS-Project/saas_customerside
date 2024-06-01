@@ -15,6 +15,7 @@ import { cartEndpoints } from "@/constants/api/cart.api";
 import { access } from "fs";
 import { error } from "console";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
+import { useAuthStore } from "@/hooks/store/auth.store";
 
 interface CartItem {
   id: string;
@@ -54,12 +55,14 @@ export default function ServicePageProps({
 
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState(null);
+  const authStore: any = useAuthStore();
   const accessToken = getJwt("AT");
 
   const fetchData = useCallback(async (serviceId: string) => {
     try {
+      const domain = "30shine.com";
       const res = await AXIOS.GET({
-        uri: bookingEndpoints.findById(serviceId), // Use the ID to create the URI of the service
+        uri: bookingEndpoints.findById(domain, serviceId), // Use the ID to create the URI of the service
       });
       const booking = res.data;
       setBookingData(booking);
@@ -78,6 +81,11 @@ export default function ServicePageProps({
   }, [accessToken, servicesId]);
 
   const handleOrderNow = () => {
+    if (authStore.isAuthorized == false) {
+      router.push("/auth/login");
+      return;
+    }
+
     const serviceData = {
       id: servicesId,
       name: bookingData.name,

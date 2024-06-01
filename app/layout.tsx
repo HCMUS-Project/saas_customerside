@@ -6,7 +6,6 @@ import { Header } from "@/components/headers/header";
 import Footer from "@/components/footer/footer";
 import AuthGuard from "@/components/guard/auth.guard";
 // import { AccessTokenProvider } from "@/app/AccessTokenContext"; // Import AccessTokenProvider
-import { AuthProvider } from "@/components/providers/auth-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,16 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
-          <ThemeProvider>
-            <Header />
-            <div className="px-[10%]">{children}</div>
-            <Footer />
-          </ThemeProvider>
-        </body>
-      </html>
-    </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider>
+          <Header />
+          <div className="px-[10%]">{children}</div>
+          <Footer />
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
