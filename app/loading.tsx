@@ -1,3 +1,3 @@
 export default function LoadingPage() {
-  return <span className="loading loading-dots loading-lg m-auto block" />;
+  return <span className="animate-spin rounded-full h-screen w-screen border-b-2 border-gray-900"></span>;
 }

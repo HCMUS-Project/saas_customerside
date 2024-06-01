@@ -31,7 +31,6 @@ import AllProduct from "./all-products";
 import { useEffect, useState } from "react";
 import { AXIOS } from "@/constants/network/axios";
 
-// import { useAccessToken } from "../AccessTokenContext";
 import { useDebounce } from "use-debounce";
 import Search from "@/app/product/search";
 import { productEndpoints } from "@/constants/api/product.api";

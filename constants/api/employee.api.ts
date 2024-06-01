@@ -1,3 +1,4 @@
 export const employeeEndpoints = {
-  searchEmployee: "api/booking/employee/search",
+  searchEmployee: (domain: string) =>
+    `api/booking/employee/search?domain=${domain}`,
 };

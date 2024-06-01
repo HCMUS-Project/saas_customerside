@@ -104,7 +104,7 @@ export default function BookingForm() {
 
     try {
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee,
+        uri: employeeEndpoints.searchEmployee("30shine.com"),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -197,7 +197,7 @@ export default function BookingForm() {
 
     try {
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee,
+        uri: employeeEndpoints.searchEmployee("30shine.com"),
         params: {
           services: [JSON.parse(storedService).id],
         },

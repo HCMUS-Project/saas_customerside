@@ -20,6 +20,7 @@ import { getJwt } from "@/util/auth.util";
 
 import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
+import LoadingPage from "@/app/loading";
 
 interface CartItem {
   id: string;
@@ -59,29 +60,30 @@ export default function ProductPageProps({
   const router = useRouter();
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState(null);
-  const accessToken = getJwt("AT");
+  const [loading, setLoading] = useState(false);
   const authStore: any = useAuthStore();
 
-  const fetchData = useCallback(async (productId: string) => {
+  const fetchData = async (productId: string) => {
     try {
+      setLoading(true);
+
       const res = await AXIOS.GET({
-        uri: productEndpoints.findById("30shine.com", params.id),
+        uri: productEndpoints.findById("30shine.com", productId),
       });
+
       const product = res.data;
       setProductData(product);
       console.log(product);
     } catch (error) {
       console.error("Error fetching product data:", error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    if (accessToken && productId) {
-      fetchData(productId);
-    } else {
-      console.log("Login required");
-    }
-  }, [accessToken, productId, fetchData]);
+    fetchData(productId);
+  }, [productId]);
 
   const increment = () => {
     setCount(count + 1);
@@ -141,16 +143,19 @@ export default function ProductPageProps({
       }
   };
 
+  if (loading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="mt-4">
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
         <Image
-          src={productData?.images?.[0]}
+          src={productData?.images[0]}
           width={500}
           height={500}
           alt={productData?.name}
           className="rounded-lg"
-          priority
         />
         <div>
           <h1 className="text-5xl font-bold">{productData?.name}</h1>

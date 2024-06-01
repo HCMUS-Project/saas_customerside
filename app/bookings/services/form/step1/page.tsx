@@ -35,7 +35,7 @@ interface Service {
 const fetchServices = async (): Promise<Service[]> => {
   try {
     const response = await AXIOS.GET({
-      uri: bookingEndpoints.searchBookings,
+      uri: bookingEndpoints.searchBookings("30shine.com"),
     });
     if (response.data && Array.isArray(response.data.services)) {
       return response.data.services;

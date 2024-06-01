@@ -65,8 +65,8 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
                     <div className="w-full h-[200px] relative">
                       <Image
                         className="object-cover"
-                        src={product.images[0]}
-                        alt={product.name}
+                        src={product.images[0] ?? "https://picsum.photos/536/354"}
+                        alt={product.name ?? "Hero"}
                         layout="fill"
                       />
                     </div>

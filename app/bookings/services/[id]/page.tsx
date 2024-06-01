@@ -56,7 +56,6 @@ export default function ServicePageProps({
   const [count, setCount] = useState(0);
   const [cart, setCart] = useState(null);
   const authStore: any = useAuthStore();
-  const accessToken = getJwt("AT");
 
   const fetchData = useCallback(async (serviceId: string) => {
     try {
@@ -73,12 +72,8 @@ export default function ServicePageProps({
   }, []);
 
   useEffect(() => {
-    if (accessToken && servicesId) {
-      fetchData(servicesId); // Fetch data with the service ID
-    } else {
-      console.log("Login required");
-    }
-  }, [accessToken, servicesId]);
+    fetchData(servicesId);
+  }, []);
 
   const handleOrderNow = () => {
     if (authStore.isAuthorized == false) {
@@ -100,12 +95,11 @@ export default function ServicePageProps({
     <div className="mt-4 mb-8">
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
         <Image
-          src={bookingData?.images?.[0]}
+          src={bookingData?.images[0]}
           width={500}
           height={500}
           alt={bookingData?.name}
           className="rounded-lg"
-          priority
         />
         <div>
           <h1 className="text-5xl font-bold">{bookingData?.name}</h1>
@@ -118,7 +112,7 @@ export default function ServicePageProps({
           <p>{bookingData?.description}</p>
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleOrderNow}>
-              Order now
+              Book now
             </Button>
           </div>
         </div>
