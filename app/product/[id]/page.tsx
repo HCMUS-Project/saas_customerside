@@ -20,6 +20,7 @@ import { getJwt } from "@/util/auth.util";
 
 import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
+import { getDomain } from "@/util/get-domain";
 import LoadingPage from "@/app/loading";
 
 interface CartItem {
@@ -63,12 +64,13 @@ export default function ProductPageProps({
   const [loading, setLoading] = useState(false);
   const authStore: any = useAuthStore();
 
-  const fetchData = async (productId: string) => {
+  const fetchData = useCallback(async (productId: string) => {
+    const domain = getDomain();
     try {
       setLoading(true);
 
       const res = await AXIOS.GET({
-        uri: productEndpoints.findById("30shine.com", productId),
+        uri: productEndpoints.findById(domain, params.id),
       });
 
       const product = res.data;
@@ -94,6 +96,21 @@ export default function ProductPageProps({
       setCount(count - 1);
     }
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findAll("30shine.com"),
+        });
+        setProductsData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleAddToCart = async () => {
     if (!Number.isInteger(count) || count <= 0) {

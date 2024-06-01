@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { RegisterOTPFSchema } from "@/schema";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
+import { getDomain } from "@/util/get-domain";
 
 export default function RegisterOTP() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function RegisterOTP() {
       const response = await AXIOS.POST({
         uri: authEndpoint.sendMailOTP,
         params: {
-          domain: "30shine.com",
+          domain: getDomain(),
           email: form.getValues("email"), // Sử dụng email từ form
         },
       });

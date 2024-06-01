@@ -68,6 +68,9 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
                         src={product.images[0] ?? "https://picsum.photos/536/354"}
                         alt={product.name ?? "Hero"}
                         layout="fill"
+                        sizes="(min-width: 66em) 33vw,
+                        (min-width: 44em) 50vw,
+                        100vw"
                       />
                     </div>
 

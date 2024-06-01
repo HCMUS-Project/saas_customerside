@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { storeJwt } from "@/util/auth.util";
 
 import { useAuthStore } from "@/hooks/store/auth.store";
+import { getDomain } from "@/util/get-domain";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ const LoginForm = () => {
       const response = await AXIOS.POST({
         uri: authEndpoint.signIn,
         params: {
-          domain: "30shine.com",
+          domain: getDomain(),
           email: data.email,
           password: data.password,
         },

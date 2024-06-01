@@ -103,8 +103,9 @@ export default function BookingForm() {
     }
 
     try {
+      const domain = "30shine.com";
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee("30shine.com"),
+        uri: employeeEndpoints.searchEmployee(domain),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -196,8 +197,9 @@ export default function BookingForm() {
     const formattedDate = format(selectedDate, "EEEE").toUpperCase();
 
     try {
+      const domain = "30shine.com";
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee("30shine.com"),
+        uri: employeeEndpoints.searchEmployee(domain),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -273,6 +275,7 @@ export default function BookingForm() {
       note: "đặt chỗ",
       service: serviceId, // Pass the service ID directly
       startTime: utcDateTime.toISOString(),
+      employee: "",
     };
     console.log(bookingData);
 

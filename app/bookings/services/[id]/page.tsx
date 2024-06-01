@@ -16,6 +16,7 @@ import { access } from "fs";
 import { error } from "console";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useAuthStore } from "@/hooks/store/auth.store";
+import { getDomain } from "@/util/get-domain";
 
 interface CartItem {
   id: string;
@@ -59,7 +60,7 @@ export default function ServicePageProps({
 
   const fetchData = useCallback(async (serviceId: string) => {
     try {
-      const domain = "30shine.com";
+      const domain = getDomain();
       const res = await AXIOS.GET({
         uri: bookingEndpoints.findById(domain, serviceId), // Use the ID to create the URI of the service
       });

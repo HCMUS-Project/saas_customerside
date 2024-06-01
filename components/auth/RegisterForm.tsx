@@ -21,6 +21,7 @@ import { PasswordIput } from "../ui/passwordInput";
 import { useRouter } from "next/navigation";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
+import { getDomain } from "@/util/get-domain";
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -35,6 +36,7 @@ const RegisterForm = () => {
       confirmPassword: "",
     },
   });
+
   const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
     setLoading(true);
 
@@ -46,7 +48,7 @@ const RegisterForm = () => {
           username: data.username,
           phone: data.phone,
           password: data.password,
-          domain: "30shine.com", // Assuming domain is constant
+          domain: getDomain(),
           device: "web", // Assuming device is constant
         },
       });
