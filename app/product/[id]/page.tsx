@@ -64,7 +64,7 @@ export default function ProductPageProps({
   const [loading, setLoading] = useState(false);
   const authStore: any = useAuthStore();
 
-  const fetchData = useCallback(async (productId: string) => {
+  const fetchData = async (productId: string) => {
     const domain = getDomain();
     try {
       setLoading(true);
