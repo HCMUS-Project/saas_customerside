@@ -1,63 +1,70 @@
 "use client";
-import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { format, addDays } from "date-fns";
+import Swal from "sweetalert2";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
-import * as React from "react";
-import { useState, useEffect } from "react";
 import { AXIOS } from "@/constants/network/axios";
 import { employeeEndpoints } from "@/constants/api/employee.api";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { XIcon } from "lucide-react";
+
+interface Service {
+  id: string;
+  images: Array<string>;
+  name: string;
+  price: number;
+  rating: number;
+  description: string;
+}
+
 interface Employee {
   id: string;
   lastName: string;
   firstName: string;
   workDays: string[];
-  workShift: string[]; // Đảm bảo trường workDays tồn tại và có kiểu dữ liệu là một mảng chuỗi
+  workShift: string[];
+  avatar?: string;
+}
+
+interface Slot {
+  startTime: string;
+  endTime: string;
+  employees: Employee[];
 }
 
 const FormSchema = z.object({
   bookingDate: z.date({
     required_error: "Booking date is required.",
-  }),
-  employee: z.string({
-    required_error: "Employee is required.",
   }),
   bookingTime: z.string({
     required_error: "Booking time is required.",
@@ -65,89 +72,125 @@ const FormSchema = z.object({
 });
 
 export default function BookingForm() {
-  const [selectedTime, setSelectedTime] = useState<number | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<
-    Employee | undefined
-  >(undefined);
-  const [serviceData, setServiceData] = useState<{
-    id: string;
-    name: string;
-    image: string;
-  } | null>(null);
-  const [workDays, setWorkDays] = useState<string[]>(["SUNDAY"]);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [employees, setEmployees] = useState<Employee[] | null>([]);
-  const getWorkShift = (hour: number): string => {
-    if (hour >= 6 && hour < 12) {
-      return "MORNING";
-    } else if (hour >= 12 && hour < 17) {
-      return "AFTERNOON";
-    } else if (hour >= 17 && hour < 22) {
-      return "EVENING";
-    } else {
-      return "NIGHT";
-    }
-  };
-  const getShiftTimeRange = (shifts: string[]): [number, number] => {
-    let startHour = 0;
-    let endHour = 0;
+  const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<Slot[]>([]);
+  const router = useRouter();
 
-    shifts.forEach((shift) => {
-      switch (shift) {
-        case "MORNING":
-          startHour = 6;
-          endHour = 12;
-          break;
-        case "AFTERNOON":
-          startHour = 12;
-          endHour = 17;
-          break;
-        case "EVENING":
-          startHour = 17;
-          endHour = 22;
-          break;
-        case "NIGHT":
-          startHour = 22;
-          endHour = 24;
-          break;
-        default:
-          break;
-      }
-    });
-
-    return [startHour, endHour];
-  };
   useEffect(() => {
-    const storedServiceData = localStorage.getItem("ServiceID");
-    if (storedServiceData) {
-      setServiceData(JSON.parse(storedServiceData));
+    const storedService = localStorage.getItem("selectedService");
+    if (storedService) {
+      setSelectedService(JSON.parse(storedService));
     }
   }, []);
 
-  const handleTimeClick = (hour: number) => {
-    setSelectedTime(hour);
-    const shiftTimeRange = getShiftTimeRange(selectedEmployee?.workShift || []);
-    console.log("Selected shift time range:", shiftTimeRange);
+  useEffect(() => {
+    if (selectedService) {
+      fetchAvailableDates();
+    }
+  }, [selectedService]);
+
+  const fetchAvailableDates = async () => {
+    const storedService = localStorage.getItem("selectedService");
+
+    if (!storedService) {
+      console.error("Service data not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await AXIOS.GET({
+        uri: employeeEndpoints.searchEmployee,
+        params: {
+          services: [JSON.parse(storedService).id],
+        },
+      });
+
+      const employees = response.data.employees;
+      const workDays = employees.reduce((acc: Set<string>, employee: any) => {
+        employee.workDays.forEach((day: string) => acc.add(day));
+        return acc;
+      }, new Set<string>());
+
+      const dates: Date[] = [];
+      for (let i = 0; i < 30; i++) {
+        const date = addDays(new Date(), i);
+        const dayName = format(date, "EEEE").toUpperCase();
+        if (workDays.has(dayName)) {
+          dates.push(date);
+        }
+      }
+
+      setAvailableDates(dates);
+    } catch (error) {
+      console.error("Failed to fetch employees", error);
+    }
   };
 
-  const handleEmployeeSelect = (employeeId: string) => {
-    const selectedEmployee = employees?.find(
-      (employee) => employee.id === employeeId
-    );
-    setSelectedEmployee(selectedEmployee);
+  const handleTimeClick = (time: string) => {
+    setSelectedTime(time);
+    console.log(selectedTime);
   };
 
-  const fetchEmployees = async (selectedDate: Date) => {
-    const workShift = ["MORNING", "AFTERNOON", "EVENING", "NIGHT"];
-    const storedServiceData = localStorage.getItem("ServiceID");
-    const serviceId = storedServiceData
-      ? JSON.parse(storedServiceData).id
-      : null;
+  const fetchBookedSlots = async (selectedDate: Date) => {
+    const storedService = localStorage.getItem("selectedService");
+    const serviceId = storedService ? JSON.parse(storedService).id : null;
 
     if (!serviceId) {
       console.error("Service ID not found in localStorage");
-      return null; // Trả về null nếu không có serviceId
+      return;
+    }
+
+    try {
+      const response = await AXIOS.GET({
+        uri: bookingEndpoints.slotBookings(
+          format(selectedDate, "yyyy-MM-dd"),
+          serviceId
+        ),
+      });
+
+      if (response.data && Array.isArray(response.data.slotBookings)) {
+        const slots = response.data.slotBookings.map((slot: any) => ({
+          startTime: new Date(slot.startTime).toISOString().slice(11, 16),
+          endTime: new Date(slot.endTime).toISOString().slice(11, 16),
+          employees: slot.employees,
+        }));
+        setAvailableSlots(slots);
+        setBookedSlots(slots);
+      } else {
+        console.error("Unexpected response format", response.data);
+        setAvailableSlots([]);
+        setBookedSlots([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch booked slots", error);
+      setAvailableSlots([]);
+      setBookedSlots([]);
+    }
+  };
+
+  const handleBookingDateSelect = async (date: Date) => {
+    setSelectedDate(date);
+    const employees = await fetchEmployees(date);
+    setEmployees(employees);
+
+    if (employees.length > 0) {
+      await fetchBookedSlots(date);
+    } else {
+      setAvailableSlots([]);
+    }
+  };
+
+  const fetchEmployees = async (selectedDate: Date) => {
+    const storedService = localStorage.getItem("selectedService");
+
+    if (!storedService) {
+      console.error("Service data not found in localStorage");
+      return [];
     }
 
     const formattedDate = format(selectedDate, "EEEE").toUpperCase();
@@ -156,124 +199,185 @@ export default function BookingForm() {
       const response = await AXIOS.GET({
         uri: employeeEndpoints.searchEmployee,
         params: {
-          firstName: "nguyen",
-          lastName: "vu",
-          email: "luphihung111@gmail.com",
-          workDays: [formattedDate], // Truyền ngày làm việc đã chọn vào params
-          workShift: workShift,
-          services: [serviceId],
+          services: [JSON.parse(storedService).id],
         },
       });
 
-      // Lọc nhân viên theo ngày làm việc
       const filteredEmployees = response.data.employees.filter(
         (employee: Employee) => employee?.workDays.includes(formattedDate)
       );
 
-      return { employees: filteredEmployees };
+      return filteredEmployees;
     } catch (error) {
       console.error("Failed to fetch employees", error);
-      return null; // Trả về null nếu có lỗi trong quá trình fetch
+      return [];
     }
-  };
-
-  const handleBookingDateSelect = (date: Date) => {
-    setWorkDays([format(date, "EEEE").toUpperCase()]); // Cập nhật ngày làm việc đã chọn
-    fetchEmployees(date).then((data) => {
-      if (data && data.employees) {
-        // Kiểm tra nếu có dữ liệu nhân viên
-        setEmployees(data.employees);
-        console.log(data.employees);
-      } else {
-        setEmployees([]); // Nếu không có dữ liệu, đặt employees thành một mảng trống
-        console.log("No employees found");
-      }
-    });
   };
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
-  const handleSubmit = async (data: z.infer<typeof FormSchema>) => {
-    if (!selectedDate || selectedTime === null || !selectedEmployee) {
-      console.error("Date, time, or employee not selected");
+  const handleClearService = () => {
+    setSelectedService(null);
+    localStorage.removeItem("selectedService");
+  };
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault(); // Prevent the default form submission
+
+    if (!selectedDate || !selectedTime || !selectedService) {
+      console.error("Date, time, or service not selected");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Please select a date, time, and service.",
+      });
       return;
     }
 
-    const storedServiceData = localStorage.getItem("ServiceID");
-    const serviceId = storedServiceData
-      ? JSON.parse(storedServiceData).id
-      : null;
+    const serviceId = selectedService.id;
 
-    if (!serviceId) {
-      console.error("Service ID not found in localStorage");
+    // Check if the selected slot has employees available
+    const selectedSlot = bookedSlots.find(
+      (slot) => slot.startTime === selectedTime
+    );
+
+    if (!selectedSlot || selectedSlot.employees.length === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No employees are available for the selected time slot. Please choose another time.",
+      });
       return;
     }
 
     const bookingDateTime = new Date(selectedDate);
-    bookingDateTime.setHours(selectedTime);
-    bookingDateTime.setMinutes(0);
+    const [hours, minutes] = selectedTime.split(":").map(Number);
+
+    // Set the time based on the local timezone
+    bookingDateTime.setHours(hours);
+    bookingDateTime.setMinutes(minutes);
     bookingDateTime.setSeconds(0);
 
+    // Convert the local date and time to UTC
+    const utcDateTime = new Date(
+      bookingDateTime.getTime() - bookingDateTime.getTimezoneOffset() * 60000
+    );
+
+    console.log("Selected Date and Time:", selectedDate, selectedTime);
+    console.log("UTC Date and Time:", utcDateTime.toISOString());
+
     const bookingData = {
-      date: selectedDate.toISOString(),
-      employee: selectedEmployee.id, // Truyền employeeId thay vì selectedEmployee
+      date: utcDateTime.toISOString().split("T")[0], // Use the UTC date part
       note: "đặt chỗ",
-      service: serviceId,
-      startTime: bookingDateTime.toISOString(),
+      service: serviceId, // Pass the service ID directly
+      startTime: utcDateTime.toISOString(),
     };
+    console.log(bookingData);
 
     try {
-      await AXIOS.POST({
+      const response = await AXIOS.POST({
         uri: bookingEndpoints.createBookings,
         params: bookingData,
       });
+
+      console.log("Booking response:", response.data);
+
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Booking created successfully!",
+      });
+
+      // Clear local storage and refresh booked slots
+      localStorage.removeItem("selectedService");
+      setSelectedTime(null);
+      setSelectedDate(null);
+      setAvailableSlots([]);
+      setBookedSlots([]);
+      await fetchAvailableDates(); // Fetch available dates again
+      router.push("/bookings");
+
       console.log("Booking successful:", bookingData);
     } catch (error) {
-      console.error("Failed to submit booking", error);
+      console.log(error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to create booking. Please try again.",
+      });
     }
   };
 
+  const totalAmount = selectedService ? selectedService.price : 0;
+
   return (
-    <div className="flex pt-6 sm:flex justify-center items-center ">
+    <div className="container mx-auto mt-8">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>BOOKING</CardTitle>
           <CardDescription>Choose time to...</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            className="space-y-1.5 pt-2 "
-            onSubmit={(event) => {
-              event.preventDefault(); // Chặn hành động mặc định của form
-              form.handleSubmit(handleSubmit)(event); // Gọi hàm handleSubmit với đối tượng sự kiện
-            }}
-          >
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="service">Chọn dịch vụ</Label>
-              <Select defaultValue={serviceData?.id}>
-                <SelectTrigger id="service">
-                  <SelectValue placeholder={serviceData?.name || "Select"} />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  {serviceData && (
-                    <SelectItem value={serviceData.id}>
-                      {serviceData.name}
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </form>
           <Form {...form}>
             <form
-              className="space-y-1.5 pt-2 "
-              onSubmit={(event) => {
-                event.preventDefault(); // Chặn hành động mặc định của form
-                form.handleSubmit(handleSubmit)(event); // Gọi hàm handleSubmit với đối tượng sự kiện
-              }}
+              className="space-y-1.5 pt-2"
+              onSubmit={(e) => handleSubmit(e)}
             >
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="service">Chọn dịch vụ</Label>
+                <div className="border p-2 rounded">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      {selectedService ? (
+                        <span className="ml-2">Đã chọn 1 dịch vụ</span>
+                      ) : (
+                        <span className="ml-2">No service selected</span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      className="ml-auto "
+                      variant="link"
+                      onClick={() =>
+                        router.push("/bookings/services/form/step1")
+                      }
+                    >
+                      {selectedService ? "Change Service" : "Select Service"}
+                    </Button>
+                    {selectedService && (
+                      <Button
+                        variant="link"
+                        type="button"
+                        className="ml-2 text-red-500"
+                        onClick={handleClearService}
+                      >
+                        <XIcon className="h-5 w-5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedService ? (
+                      <span className="bg-gray-200 px-2 py-1 rounded">
+                        {selectedService.name}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No service selected
+                      </span>
+                    )}
+                  </div>
+                  {selectedService && (
+                    <div className="mt-2 text-green-500">
+                      Tổng số tiền bạn cần thanh toán:{" "}
+                      {totalAmount.toLocaleString()} VND
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
                 name="bookingDate"
@@ -289,6 +393,7 @@ export default function BookingForm() {
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
+                            type="button"
                           >
                             {field.value ? (
                               format(field.value, "PPP")
@@ -310,84 +415,68 @@ export default function BookingForm() {
                               handleBookingDateSelect(date);
                             }
                           }}
-                          disabled={(date) => date < new Date("1900-01-01")}
+                          disabled={(date) =>
+                            !availableDates.some(
+                              (d) =>
+                                d.getDate() === date.getDate() &&
+                                d.getMonth() === date.getMonth() &&
+                                d.getFullYear() === date.getFullYear()
+                            )
+                          }
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="employee"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Chọn nhân viên</FormLabel>
-
-                    <Select
-                      onValueChange={(value) => {
-                        console.log("Selected employee ID:", value); // Kiểm tra giá trị của employee ID được chọn
-                        field.onChange(value);
-                        handleEmployeeSelect(value);
-                      }}
-                      defaultValue={selectedEmployee?.id || ""}
+              <div className="space-y-2">
+                <Label>Nhân viên làm việc</Label>
+                <div className="flex space-x-2 overflow-x-auto pb-4">
+                  {employees.map((employee) => (
+                    <div
+                      key={employee.id}
+                      className="border p-2 rounded-lg border-gray-300"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn nhân viên" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {employees !== null &&
-                          employees.map((employee) => (
-                            <SelectItem key={employee.id} value={employee.id}>
-                              {employee.lastName} {employee.firstName}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormItem className="flex flex-col">
-                <FormLabel>Booked Time: </FormLabel>
-                <div>
-                  {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-                    const shiftTimeRange = getShiftTimeRange(
-                      selectedEmployee?.workShift || []
-                    );
-                    const [startHour, endHour] = shiftTimeRange;
-                    if (hour >= startHour && hour < endHour) {
-                      return (
-                        <Button
-                          key={hour}
-                          onClick={() => {
-                            handleTimeClick(hour);
-                          }}
-                          className={`py-2 px-4 rounded-md mr-2 mt-2 ${
-                            selectedTime === hour
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-200 text-gray-700"
-                          }`}
-                          type="button"
-                        >
-                          {hour}:00
-                        </Button>
-                      );
-                    } else {
-                      return null;
-                    }
-                  })}
+                      <Avatar className="justify-self-center">
+                        <AvatarImage
+                          alt={`${employee.firstName} ${employee.lastName}`}
+                          src="https://github.com/shadcn.png"
+                        />
+                      </Avatar>
+                      <p className="text-center mt-2">
+                        {employee.firstName} {employee.lastName}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <FormMessage />
-              </FormItem>
-
+              </div>
+              {availableSlots.length > 0 && (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Chọn giờ</FormLabel>
+                  <div className="grid grid-cols-4 gap-2">
+                    {availableSlots.map((slot) => (
+                      <Button
+                        key={slot.startTime}
+                        type="button"
+                        onClick={() => handleTimeClick(slot.startTime)}
+                        className={`py-2 px-4 rounded-md ${
+                          selectedTime === slot.startTime
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                        disabled={slot.employees.length === 0}
+                      >
+                        {slot.startTime}
+                      </Button>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
               <Button className="w-full" variant="outline" type="submit">
-                Submit
+                Chốt giờ
               </Button>
             </form>
           </Form>

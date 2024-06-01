@@ -1,55 +1,99 @@
-import React, { useState } from "react";
-import { mockProducts } from "@/constants/mock-data/mock-product";
-
+import React, { useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
-const AllProduct = () => {
-  const [userData, setUserData] = useState<{
-    username: "" | string;
-    phone: "" | string;
-    address: "" | string;
-    name: "" | string;
-    gender: "" | string;
-    age: 0 | number;
-  }>({
-    username: "",
-    phone: "",
-    address: "",
-    name: "",
-    gender: "",
-    age: 0,
-  });
-  return (
-    <div className="container ">
-      <h2 className="font-medium text-2xl pb-4">All Products</h2>
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
-      <Link href="/product/product-detail" className="grid grid-cols-4 gap-2">
-        {mockProducts.map((item, index) => (
-          <div
-            key={index}
-            className="px-4 border border-gray-200 rounded-xl max-w-[400px]"
-          >
-            <div>
-              <Image
-                className="w-full h-auto"
-                src={mockProducts[index].imgSrc}
-                width={200}
-                height={300}
-                alt={mockProducts[index].name}
-              />
-            </div>
-            <div className="space-y-2 py-2">
-              <h2 className="text-accent font-medium uppercase">
-                {mockProducts[index].name}
-              </h2>
-              <p className="text-gray-500 max-w-[150px]">
-                Lorem ipsum dolor sit amet
-              </p>
-              <div className="font-bold">${mockProducts[index].price}</div>
-            </div>
-          </div>
-        ))}
-      </Link>
+interface Product {
+  id: string;
+  images: Array<string>;
+  name: string;
+  price: number;
+  rating: number;
+  description: string;
+}
+
+interface AllProductProps {
+  products?: Product[];
+}
+
+const AllProduct = ({ products = [] }: AllProductProps) => {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handleViewAllClick = () => {
+    router.push("/all-products");
+  };
+
+  const extendedProducts =
+    products.length > 0 ? [...products, ...products, ...products] : [];
+
+  return (
+    <div className="container pt-16">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-medium text-2xl">All Products</h2>
+        <Button
+          variant="link"
+          onClick={handleViewAllClick}
+          className="text-blue-500"
+        >
+          View All
+        </Button>
+      </div>
+
+      <div className="relative">
+        <Carousel
+          opts={{
+            align: "start",
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="flex">
+            {extendedProducts.map((product, index) => (
+              <CarouselItem key={index} className="basis-1/3 px-2">
+                <Card className="h-full">
+                  <Link href={`/product/${product.id}`}>
+                    <div className="w-full h-[200px] relative">
+                      <Image
+                        className="object-cover"
+                        src={product.images[0]}
+                        alt={product.name}
+                        layout="fill"
+                      />
+                    </div>
+
+                    <CardContent className="space-y-2 py-2">
+                      <h2 className="text-accent font-medium uppercase">
+                        {product.name}
+                        <div className="flex items-center">
+                          {Array.from({ length: product.rating }, (_, i) => (
+                            <Star key={i} className="w-4 h-4 text-yellow-400" />
+                          ))}
+                        </div>
+                      </h2>
+                      <p className="text-gray-500 max-w-[150px]">
+                        {product.description}
+                      </p>
+                      <div className="font-bold">${product.price}</div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 cursor-pointer" />
+          <CarouselNext className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 cursor-pointer" />
+        </Carousel>
+      </div>
     </div>
   );
 };

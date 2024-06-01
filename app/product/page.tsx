@@ -59,7 +59,7 @@ export default function Product() {
     const fetchData = async () => {
       try {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findAll,
+          uri: productEndpoints.findAll("30shine.com"),
         });
         setProductsData(res.data);
         console.log(res.data);
@@ -253,8 +253,8 @@ export default function Product() {
         </div>
       </div>
       <Recommended products={productsData?.products} />
-      <BestSeller />
-      <AllProduct />
+      <BestSeller products={productsData?.products} />
+      <AllProduct products={productsData?.products} />
     </div>
   );
 }

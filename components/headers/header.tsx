@@ -1,17 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
+import { useAuth } from "../providers/auth-provider"; // Sử dụng AuthContext
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTrigger,
 } from "../ui/drawer";
 import { MenuIcon, ShoppingCart } from "lucide-react";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -20,52 +22,63 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-// import { useAccessToken } from "@/app/AccessTokenContext";
-import { useRouter } from "next/navigation";
-import { AXIOS } from "@/constants/network/axios";
-import { authEndpoint } from "@/constants/api/auth.api";
-import { getJwt } from "@/util/auth.util";
 
 interface HeaderProps {
   children?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = () => {
+export const Header: React.FC<HeaderProps> = ({ children }) => {
   const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
-  useEffect(() => {
-    const accesToken = getJwt("AT");
-    setIsLoggedIn(accesToken != "");
-  }, []);
   const handleCartClick = () => {
-    // Điều hướng đến trang giỏ hàng khi button được click
-    // Ví dụ: Sử dụng useRouter từ Next.js
-    // import { useRouter } from "next/router";
-
     router.push("/cart");
   };
+
   const handleLoginClick = () => {
     router.push("/auth/login");
   };
+
   const handleLogout = async () => {
     try {
-      // Gọi API logout
-      await AXIOS.GET({
-        uri: authEndpoint.logOut,
-      });
-
-      // Đánh dấu người dùng là không đăng nhập sau khi đăng xuất thành công
+      await AXIOS.GET({ uri: authEndpoint.logOut });
       setIsLoggedIn(false);
-
-      // Sau khi logout thành công, chuyển hướng về trang chủ
       router.push("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
+
+  const navLinks = (
+    <div className="flex justify-evenly gap-48">
+      <Link href="/">Trang Chu</Link>
+      <Link href="/bookings">Dich Vu</Link>
+      <Link href="/product">San Pham</Link>
+    </div>
+  );
+
+  const userMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <Avatar>
+          <AvatarImage src="https://github.com/shadcn.png" />
+          <AvatarFallback>Avatar</AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={() => router.push("/user-info")}>
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link href="/">Settings</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Button onClick={handleLogout}>Logout</Button>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return isDesktop ? (
     <div className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm">
@@ -76,41 +89,14 @@ export const Header: React.FC<HeaderProps> = () => {
         height={40}
         className="ml-4"
       />
-
-      <div className="flex justify-evenly gap-48">
-        <Link href="/">Trang Chu</Link>
-        <Link href="/bookings">Dich Vu</Link>
-        <Link href="/product">San Pham</Link>
-      </div>
-
+      {navLinks}
       {isLoggedIn ? (
-        <div className="flex">
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>Avatar</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => router.push("/user-info")}>
-                Profile
-              </DropdownMenuItem>
-
-              <DropdownMenuItem>
-                <Link href="/">Settings</Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem>
-                <Button onClick={handleLogout}>Logout</Button>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center">
+          {userMenu}
           <Button
             className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
             onClick={handleCartClick}
-            style={{ bottom: "20px", right: "20px" }} // Đặt độ dài và chiều cao
+            style={{ bottom: "20px", right: "20px" }}
           >
             <ShoppingCart className="w-6 h-6" />
           </Button>
@@ -120,7 +106,6 @@ export const Header: React.FC<HeaderProps> = () => {
           onClick={handleLoginClick}
           className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
         >
-          {" "}
           Dang nhap
         </Button>
       )}
@@ -132,7 +117,6 @@ export const Header: React.FC<HeaderProps> = () => {
           <MenuIcon size={24} />
         </div>
       </DrawerTrigger>
-
       <DrawerContent>
         <DrawerHeader>
           <Image
@@ -143,12 +127,10 @@ export const Header: React.FC<HeaderProps> = () => {
             className="ml-4"
           />
         </DrawerHeader>
-
         <div className="flex flex-col gap-4 pl-5 my-5">
           <Link href="/">Trang Chu</Link>
           <Link href="/bookings">Dich Vu</Link>
           <Link href="/product">San Pham</Link>
-
           {isLoggedIn ? (
             <div className="flex flex-col gap-4 mt-8">
               <Link href="/user-info">Profile</Link>
@@ -159,7 +141,7 @@ export const Header: React.FC<HeaderProps> = () => {
             </div>
           ) : (
             <Button
-              onClick={() => {}}
+              onClick={handleLoginClick}
               className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
             >
               Dang nhap

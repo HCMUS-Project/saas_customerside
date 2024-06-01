@@ -5,10 +5,10 @@ import { useDebounce } from "use-debounce";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
-import { productEndpoints } from "@/constants/api/product.api";
+import { bookingEndpoints } from "@/constants/api/bookings.api";
 import Image from "next/image";
 
-interface Product {
+interface Booking {
   id: string;
   name: string;
   price: number;
@@ -16,15 +16,15 @@ interface Product {
   // Add other properties if needed
 }
 
-const Search = () => {
+const SearchBooking = () => {
   const [text, setText] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [query] = useDebounce(text, 500);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchBookings = async () => {
       try {
         if (!query) {
           setSearchResults([]);
@@ -32,40 +32,45 @@ const Search = () => {
           return;
         }
         setLoading(true);
-        const domain = "30shine.com"; // Change this to your actual domain
+
         const res = await AXIOS.GET({
-          uri: productEndpoints.searchProductName(domain, query),
+          uri: bookingEndpoints.searchBookingsName(query),
         });
 
-        // Normalize query to lowercase for case-insensitive comparison
-        const normalizedQuery = query.toLowerCase();
+        if (res.data && res.data.booking) {
+          // Normalize query to lowercase for case-insensitive comparison
+          const normalizedQuery = query.toLowerCase();
 
-        // Normalize product names to lowercase for case-insensitive comparison
-        const normalizedProducts = res.data.products.map(
-          (product: Product) => ({
-            ...product,
-            name: product.name.toLowerCase(),
-          })
-        );
+          // Normalize booking names to lowercase for case-insensitive comparison
+          const normalizedBookings = res.data.booking.map(
+            (booking: Booking) => ({
+              ...booking,
+              name: booking.name.toLowerCase(),
+            })
+          );
 
-        // Filter products based on normalized query and product names
-        const filteredProducts = normalizedProducts.filter((product: Product) =>
-          product.name.includes(normalizedQuery)
-        );
+          // Filter bookings based on normalized query and booking names
+          const filteredBookings = normalizedBookings.filter(
+            (booking: Booking) => booking.name.includes(normalizedQuery)
+          );
 
-        setSearchResults(filteredProducts);
+          setSearchResults(filteredBookings);
+        } else {
+          setSearchResults([]);
+        }
       } catch (error) {
         console.error("Error fetching search results:", error);
+        setSearchResults([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchBookings();
   }, [query]);
 
-  const handleProductClick = (productId: string) => {
-    router.push(`/product/search?${productId}`);
+  const handleBookingClick = (bookingId: string) => {
+    router.push(`/bookings/search?${bookingId}`);
   };
 
   return (
@@ -73,7 +78,7 @@ const Search = () => {
       <Input
         className="border p-2 px-4 rounded-lg w-full"
         type="text"
-        placeholder="Enter any product"
+        placeholder="Enter any booking"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -88,26 +93,26 @@ const Search = () => {
       )}
       {!loading && searchResults.length > 0 && (
         <ul className="absolute z-10 w-full bg-white rounded-lg shadow-lg mt-2 py-1">
-          {searchResults.map((product) => (
+          {searchResults.map((booking) => (
             <li
-              key={product.id}
+              key={booking.id}
               className="flex items-center px-3 py-1 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleProductClick(product.id)}
+              onClick={() => handleBookingClick(booking.id)}
             >
               <Image
                 src={
-                  Array.isArray(product.images)
-                    ? product.images[0]
-                    : product.images
+                  Array.isArray(booking.images)
+                    ? booking.images[0]
+                    : booking.images
                 }
                 width={40}
                 height={40}
-                alt={product.name}
+                alt={booking.name}
                 className="h-10 w-10 object-cover mr-2"
               />
               <div>
-                <p className="font-semibold">{product.name}</p>
-                <p className="text-gray-500">${product.price}</p>
+                <p className="font-semibold">{booking.name}</p>
+                <p className="text-gray-500">${booking.price}</p>
               </div>
             </li>
           ))}
@@ -122,4 +127,4 @@ const Search = () => {
   );
 };
 
-export default Search;
+export default SearchBooking;

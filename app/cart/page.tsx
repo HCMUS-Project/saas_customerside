@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { AXIOS } from "@/constants/network/axios";
 import { productEndpoints } from "@/constants/api/product.api";
 import { cartEndpoints } from "@/constants/api/cart.api";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter } from "next/navigation";
 
 interface Product {
   productId: string;
@@ -21,26 +22,25 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
-  const [cartID, setCartID] = useState(null);
+  const [cartID, setCartID] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
+  const router = useRouter();
 
   const fetchCartData = async () => {
     try {
-      const response = await AXIOS.GET({
-        uri: cartEndpoints.findall,
-      });
+      const response = await AXIOS.GET({ uri: cartEndpoints.findall });
       if (response.data) {
         setCartID(response.data.carts[0].id);
-
-        const result: Array<Product> | undefined = await fetchDataCartFromID(
+        const result = await fetchDataCartFromID(
           response.data.carts[0].cartItems
         );
-        result && setCartItems(result); // Cập nhật state cartItems với dữ liệu lấy được từ server
+        if (result) setCartItems(result);
       }
     } catch (error) {
       console.error("Error fetching cart data:", error);
     }
   };
+
   useEffect(() => {
     fetchCartData();
   }, []);
@@ -50,7 +50,7 @@ export default function CartPage() {
     try {
       for (const item of cartItemsTemp) {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findById(item.productId),
+          uri: productEndpoints.findById("30shine.com", item.productId),
         });
 
         if (res.data) {
@@ -72,7 +72,7 @@ export default function CartPage() {
   };
 
   useEffect(() => {
-    console.log("hello");
+    console.log("Cart items updated:", cartItems);
   }, [cartItems]);
 
   const handleCheckboxChange = (index: number) => {
@@ -86,7 +86,6 @@ export default function CartPage() {
   const updateCart = async (index: number, newQuantity: number) => {
     try {
       const updatedCartItem = { ...cartItems[index], quantity: newQuantity };
-      console.log(updatedCartItem);
       const params = {
         id: cartID,
         cartItems: {
@@ -101,7 +100,6 @@ export default function CartPage() {
       if (!response.data) {
         throw new Error("Response data is empty");
       }
-      // Cập nhật giỏ hàng sau khi cập nhật thành công
       const updatedCartItems = [...cartItems];
       updatedCartItems[index] = updatedCartItem;
       setCartItems(updatedCartItems);
@@ -112,25 +110,24 @@ export default function CartPage() {
 
   const calculateTotalPrice = () => {
     const totalPrice = cartItems.reduce((acc, item, index) => {
-      return acc + item.price * count[index];
+      return selectedItems[index] ? acc + item.price * count[index] : acc;
     }, 0);
     setTotalPrice(totalPrice);
   };
 
   useEffect(() => {
-    // Initialize count state with quantity of each cart item
-    setCount(cartItems.map((item) => item.quantity));
-  }, [cartItems]); // Thêm count vào dependency
-  useEffect(() => {
-    // Calculate total price whenever count change
     calculateTotalPrice();
-  }, [count]);
+  }, [count, selectedItems]);
+
+  useEffect(() => {
+    setCount(cartItems.map((item) => item.quantity));
+  }, [cartItems]);
 
   const increment = async (index: number) => {
     setCount((prevCount) => {
       const newCount = [...prevCount];
       newCount[index]++;
-      updateCart(index, newCount[index]); // Gửi yêu cầu cập nhật giỏ hàng khi tăng số lượng
+      updateCart(index, newCount[index]);
       return newCount;
     });
   };
@@ -140,7 +137,7 @@ export default function CartPage() {
       const newCount = [...prevCount];
       if (newCount[index] > 0) {
         newCount[index]--;
-        updateCart(index, newCount[index]); // Gửi yêu cầu cập nhật giỏ hàng khi giảm số lượng
+        updateCart(index, newCount[index]);
       }
       return newCount;
     });
@@ -148,23 +145,21 @@ export default function CartPage() {
 
   const removeFromCart = async (index: number) => {
     setCartItems((prevCartItems) => {
-      // Tạo một bản sao mới của mảng và loại bỏ phần tử được chọn
       const newCartItems = [...prevCartItems];
       newCartItems.splice(index, 1);
-      // Gửi yêu cầu cập nhật giỏ hàng để xóa sản phẩm
       updateCart(index, 0);
-      // Hiển thị thông báo khi xóa thành công
       setShowAlert(true);
       return newCartItems;
     });
   };
 
-  // useEffect(() => {
-  //   // Lấy danh sách sản phẩm từ local storage
-
-  //   // const storedCartItems = JSON.parse(localStorage.getItem("cart") || "[]");
-
-  // }, []);
+  const checkout = () => {
+    const selectedProducts = cartItems.filter(
+      (_, index) => selectedItems[index]
+    );
+    localStorage.setItem("checkoutProducts", JSON.stringify(selectedProducts));
+    router.push("/payment");
+  };
 
   return (
     <div className="mt-2">
@@ -213,7 +208,9 @@ export default function CartPage() {
       ))}
       <div className="flex flex-col items-end sm:items-center">
         <p className="mb-3 font-bold">Total: ${totalPrice}</p>
-        <Button className="btn btn-primary sm:w-[200px]">Checkout</Button>
+        <Button onClick={checkout} className="btn btn-primary sm:w-[200px]">
+          Checkout
+        </Button>
       </div>
     </div>
   );

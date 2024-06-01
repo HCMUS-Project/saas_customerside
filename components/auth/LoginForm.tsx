@@ -2,7 +2,6 @@
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,7 +14,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { z } from "zod";
-import { useFormStatus } from "react-dom";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -24,13 +22,12 @@ import { Mail } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { useRouter } from "next/navigation";
-// import { useAccessToken } from "@/app/AccessTokenContext";
 import { storeJwt } from "@/util/auth.util";
+import { useAuth } from "../providers/auth-provider";
 
 const LoginForm = () => {
-  // const { setAccessToken } = useAccessToken();
-  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { setIsLoggedIn } = useAuth(); // Sử dụng AuthContext
   const router = useRouter();
   const form = useForm({
     resolver: zodResolver(LoginSchema),
@@ -39,6 +36,7 @@ const LoginForm = () => {
       password: "",
     },
   });
+
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);
     try {
@@ -54,19 +52,18 @@ const LoginForm = () => {
         const { accessToken, refreshToken } = response.data;
         storeJwt(accessToken, "AT");
         storeJwt(refreshToken, "RT");
-        // const accessToken = response.data.accessToken;
-        // setAccessToken(accessToken); // Đặt access token vào Context
+        setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập
         router.push("/"); // Chuyển hướng đến trang chủ
       } else {
-        console.error("Login failed"); // Thông báo đăng nhập thất bại
+        console.error("Login failed");
       }
     } catch (error) {
-      console.error("Error logging in:", error); // Xử lý lỗi khi gửi yêu cầu đăng nhập
+      console.error("Error logging in:", error);
     } finally {
       setLoading(false);
     }
   };
-  const { pending } = useFormStatus();
+
   return (
     <CardWrapper
       label="Welcome to Lorem"
@@ -96,7 +93,6 @@ const LoginForm = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="password"
@@ -114,11 +110,11 @@ const LoginForm = () => {
           <div>
             <Button
               type="submit"
-              className="w-full bg-blue-500 "
+              className="w-full bg-blue-500"
               variant="ghost"
-              disabled={pending}
+              disabled={loading}
             >
-              {loading ? " Loading..." : "Log in"}
+              {loading ? "Loading..." : "Log in"}
             </Button>
             <Link href="/auth/forgetPassword">
               <Button variant="link" className="text-xs text-left font-light">
@@ -126,36 +122,31 @@ const LoginForm = () => {
               </Button>
             </Link>
           </div>
-
-          <p className=" text-center font-extralight">OR</p>
-          <div className="flex ">
+          <p className="text-center font-extralight">OR</p>
+          <div className="flex">
             <div className="flex justify-between w-full space-x-2">
               <Link href="/auth/google">
                 <Button
                   variant="ghost"
-                  className="w-full flex  md:ml-0 bg-blue-200 px-8"
+                  className="w-full flex bg-blue-200 px-8"
                 >
                   <Image
                     src="/images/google.png"
-                    alt="My image"
+                    alt="Google"
                     width={30}
                     height={30}
-                    className=" pr-2"
+                    className="pr-2"
                   />
                   Sign In with Google
                 </Button>
               </Link>
-
-              <Button
-                variant="ghost"
-                className="w-full flex  md:ml-0 bg-blue-200 pr-2 "
-              >
+              <Button variant="ghost" className="w-full flex bg-blue-200 pr-2">
                 <Image
                   src="/images/facebook.png"
-                  alt="My image"
+                  alt="Facebook"
                   width={30}
                   height={30}
-                  className=" pr-2"
+                  className="pr-2"
                 />
                 Sign In with Facebook
               </Button>
