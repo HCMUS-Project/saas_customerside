@@ -69,10 +69,10 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const authStore: any = useAuthStore();
 
-  useEffect(() => {
-    const accessToken = getJwt("AT");
-    setIsLoggedIn(accessToken !== ""); // Kiểm tra token khi tải trang
-  }, [setIsLoggedIn]);
+  // useEffect(() => {
+  //   const accessToken = getJwt("AT");
+  //   setIsLoggedIn(accessToken !== ""); // Kiểm tra token khi tải trang
+  // }, [setIsLoggedIn]);
 
   const handleCartClick = () => {
     router.push("/cart");

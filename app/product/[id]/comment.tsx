@@ -122,8 +122,8 @@ const CommentForm = () => {
         </form>
       </Form>
       <div className="flex flex-col gap-4 pt-8">
-        {comments.map((comment) => (
-          <div key={comment.id} className="border rounded-md p-4">
+        {comments.map((comment, index) => (
+          <div key={index} className="border rounded-md p-4">
             <p className="font-semibold mb-2">{comment.username}</p>
             {editMode === comment.id ? (
               <div className="flex items-center gap-2 justify-between">

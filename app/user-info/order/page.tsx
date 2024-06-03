@@ -1,46 +1,90 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { columns } from "./columns";
-import { DataTable } from "./data-table";
-import type { Order } from "./columns";
+import { AXIOS } from "@/constants/network/axios";
 
-async function getData(): Promise<Order[]> {
-  const res = await fetch(
-    "https://6577fda6197926adf62f397c.mockapi.io/product"
-  );
-  const data = await res.json();
-  // Fetch data from your API here.
-  return data;
-  // ...
+import { OrderDataTable } from "./order-data-table";
+import { orderColumns, Order } from "./order-columns";
+import { ecommerceEndpoints } from "@/constants/api/ecommerce";
+import { productEndpoints } from "@/constants/api/product.api";
+
+async function fetchProductDetails(productId: string) {
+  const domain = "30shine.com"; // Replace with your valid domain
+  try {
+    const res = await AXIOS.GET({
+      uri: productEndpoints.findById(domain, productId),
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch product details:", error);
+    return null;
+  }
 }
 
-export default async function Booking() {
-  const data = await getData();
+// Function to fetch orders based on stage
+async function fetchOrders(stage: string): Promise<Order[]> {
+  try {
+    const res = await AXIOS.GET({
+      uri: ecommerceEndpoints.searchOrder(stage),
+    });
+    const orders = res.data.orders;
+
+    // Fetch product details for each product in each order
+    for (const order of orders) {
+      for (const product of order.products) {
+        const productDetails = await fetchProductDetails(product.productId);
+        if (productDetails && productDetails.imgSrc) {
+          product.imgSrc = productDetails.imgSrc; // Ensure productDetails contains imgSrc
+        } else {
+          product.imgSrc = ""; // Fallback in case imgSrc is not available
+        }
+      }
+    }
+    return orders;
+  } catch (error) {
+    console.error("Failed to fetch orders:", error);
+    return [];
+  }
+}
+
+const OrderPage = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stage, setStage] = useState("pending");
+
+  useEffect(() => {
+    fetchOrders(stage).then((data) => {
+      setOrders(data);
+      setLoading(false);
+    });
+  }, [stage]);
+
+  const handleStageChange = (newStage: string) => {
+    setLoading(true);
+    setStage(newStage);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="py-6">
-      <div className="mt-6 flex justify-center  ">
+      <div className="mt-6 flex justify-center">
         <Avatar className="h-20 w-20">
           <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p>Lorem isum</p>
+        <p>Order Page</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
-        <p>Lorem isum@gmail.com</p>
+        <p>user@example.com</p>
       </div>
       <div className="mt-8 overflow-x-hidden relative space-x-6">
         <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
@@ -83,9 +127,25 @@ export default async function Booking() {
       </div>
       <div className="py-6">
         <div className="container mx-auto py-10">
-          <DataTable columns={columns} data={data} />
+          <div className="flex justify-center space-x-4 mb-4">
+            <Button onClick={() => handleStageChange("pending")}>
+              Pending
+            </Button>
+            <Button onClick={() => handleStageChange("shipping")}>
+              Shipping
+            </Button>
+            <Button onClick={() => handleStageChange("completed")}>
+              Completed
+            </Button>
+            <Button onClick={() => handleStageChange("cancelled")}>
+              Cancelled
+            </Button>
+          </div>
+          <OrderDataTable columns={orderColumns} data={orders} />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default OrderPage;

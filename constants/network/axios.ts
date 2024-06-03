@@ -5,7 +5,6 @@ import { authEndpoint } from "../api/auth.api";
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API,
 });
-console.log(process.env.NEXT_PUBLIC_API);
 
 API.interceptors.request.use(async (config) => {
   const token = getJwt("AT");
@@ -37,7 +36,7 @@ API.interceptors.response.use(
 
           originalRequest.headers.Authorization = `Bearer ${refreshToken}`;
           const refreshNewToken = await AXIOS.POST({
-            uri: authEndpoint.refeshToken,
+            uri: authEndpoint.refreshToken,
             headers: {
               Authorization: `Bearer ${refreshToken}`,
             },

@@ -1,4 +1,6 @@
 "use client";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   ColumnDef,
@@ -7,7 +9,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -16,16 +17,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import Image from "next/image";
 
-interface DataTableProps<TData, TValue> {
+interface OrderDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function OrderDataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+}: OrderDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,

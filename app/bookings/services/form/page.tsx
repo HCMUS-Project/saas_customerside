@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +36,7 @@ import { employeeEndpoints } from "@/constants/api/employee.api";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { XIcon } from "lucide-react";
+import LoadingPage from "@/app/loading"; // Import loader component
 
 interface Service {
   id: string;
@@ -53,7 +53,7 @@ interface Employee {
   firstName: string;
   workDays: string[];
   workShift: string[];
-  avatar?: string;
+  image?: string;
 }
 
 interface Slot {
@@ -79,6 +79,8 @@ export default function BookingForm() {
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [bookedSlots, setBookedSlots] = useState<Slot[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false); // State for employee loading
   const router = useRouter();
 
   useEffect(() => {
@@ -103,8 +105,9 @@ export default function BookingForm() {
     }
 
     try {
+      const domain = "30shine.com";
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee,
+        uri: employeeEndpoints.searchEmployee(domain),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -132,8 +135,21 @@ export default function BookingForm() {
   };
 
   const handleTimeClick = (time: string) => {
-    setSelectedTime(time);
-    console.log(selectedTime);
+    if (selectedTime === time) {
+      setSelectedTime(null);
+      setEmployees([]);
+    } else {
+      setSelectedTime(time);
+      setLoadingEmployees(true); // Start loading employees
+      const slot = availableSlots.find((slot) => slot.startTime === time);
+      if (slot) {
+        setEmployees(slot.employees);
+        setLoadingEmployees(false); // Stop loading employees
+      } else {
+        setEmployees([]);
+        setLoadingEmployees(false); // Stop loading employees
+      }
+    }
   };
 
   const fetchBookedSlots = async (selectedDate: Date) => {
@@ -196,8 +212,9 @@ export default function BookingForm() {
     const formattedDate = format(selectedDate, "EEEE").toUpperCase();
 
     try {
+      const domain = "30shine.com";
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee,
+        uri: employeeEndpoints.searchEmployee(domain),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -226,31 +243,22 @@ export default function BookingForm() {
   const handleSubmit = async (e: any) => {
     e.preventDefault(); // Prevent the default form submission
 
-    if (!selectedDate || !selectedTime || !selectedService) {
-      console.error("Date, time, or service not selected");
+    if (
+      !selectedDate ||
+      !selectedTime ||
+      !selectedService ||
+      !selectedEmployee
+    ) {
+      console.error("Date, time, service, or employee not selected");
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Please select a date, time, and service.",
+        text: "Please select a date, time, service, and employee.",
       });
       return;
     }
 
     const serviceId = selectedService.id;
-
-    // Check if the selected slot has employees available
-    const selectedSlot = bookedSlots.find(
-      (slot) => slot.startTime === selectedTime
-    );
-
-    if (!selectedSlot || selectedSlot.employees.length === 0) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No employees are available for the selected time slot. Please choose another time.",
-      });
-      return;
-    }
 
     const bookingDateTime = new Date(selectedDate);
     const [hours, minutes] = selectedTime.split(":").map(Number);
@@ -273,6 +281,7 @@ export default function BookingForm() {
       note: "đặt chỗ",
       service: serviceId, // Pass the service ID directly
       startTime: utcDateTime.toISOString(),
+      employee: selectedEmployee,
     };
     console.log(bookingData);
 
@@ -296,6 +305,7 @@ export default function BookingForm() {
       setSelectedDate(null);
       setAvailableSlots([]);
       setBookedSlots([]);
+      setSelectedEmployee(null);
       await fetchAvailableDates(); // Fetch available dates again
       router.push("/bookings");
 
@@ -431,27 +441,6 @@ export default function BookingForm() {
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <Label>Nhân viên làm việc</Label>
-                <div className="flex space-x-2 overflow-x-auto pb-4">
-                  {employees.map((employee) => (
-                    <div
-                      key={employee.id}
-                      className="border p-2 rounded-lg border-gray-300"
-                    >
-                      <Avatar className="justify-self-center">
-                        <AvatarImage
-                          alt={`${employee.firstName} ${employee.lastName}`}
-                          src="https://github.com/shadcn.png"
-                        />
-                      </Avatar>
-                      <p className="text-center mt-2">
-                        {employee.firstName} {employee.lastName}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
               {availableSlots.length > 0 && (
                 <FormItem className="flex flex-col">
                   <FormLabel>Chọn giờ</FormLabel>
@@ -474,6 +463,47 @@ export default function BookingForm() {
                   </div>
                   <FormMessage />
                 </FormItem>
+              )}
+              {selectedTime && (
+                <>
+                  {loadingEmployees ? (
+                    <div className="flex justify-center items-center h-32">
+                      <LoadingPage />
+                    </div>
+                  ) : (
+                    employees.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Nhân viên làm việc</Label>
+                        <div className="flex space-x-2 overflow-x-auto pb-4">
+                          {employees.map((employee) => (
+                            <div
+                              key={employee.id}
+                              className={`border p-2 rounded-lg cursor-pointer ${
+                                selectedEmployee === employee.id
+                                  ? "border-blue-500"
+                                  : "border-gray-300"
+                              }`}
+                              onClick={() => setSelectedEmployee(employee.id)}
+                            >
+                              <Avatar className="justify-self-center">
+                                <AvatarImage
+                                  alt={`${employee.firstName} ${employee.lastName}`}
+                                  src={
+                                    employee.image ||
+                                    "https://github.com/shadcn.png"
+                                  }
+                                />
+                              </Avatar>
+                              <p className="text-center mt-2">
+                                {employee.firstName} {employee.lastName}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </>
               )}
               <Button className="w-full" variant="outline" type="submit">
                 Chốt giờ

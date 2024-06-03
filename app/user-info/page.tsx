@@ -16,12 +16,9 @@ import { useRouter } from "next/router";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { Input } from "@/components/ui/input";
-
 import { getJwt } from "@/util/auth.util";
-import { get } from "http";
 
 const UserInfo = () => {
-  // const accessToken = getJwt("AT");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<{
@@ -31,6 +28,8 @@ const UserInfo = () => {
     name: "" | string;
     gender: "" | string;
     age: 0 | number;
+    email: "" | string;
+    avatar: "" | string;
   }>({
     username: "",
     phone: "",
@@ -38,6 +37,8 @@ const UserInfo = () => {
     name: "",
     gender: "",
     age: 0,
+    email: "",
+    avatar: "",
   });
 
   useEffect(() => {
@@ -49,10 +50,19 @@ const UserInfo = () => {
             uri: authEndpoint.getProfile,
           });
 
-          const { username, phone, address, name, gender, age } = response.data;
+          const { username, phone, address, name, gender, age, email, avatar } =
+            response.data;
 
-          // Cập nhật state chỉ với các trường dữ liệu mong muốn
-          setUserData({ username, phone, address, name, gender, age });
+          setUserData({
+            username,
+            phone,
+            address,
+            name,
+            gender,
+            age,
+            email,
+            avatar,
+          });
           console.log(accessToken);
         }
       } catch (error) {
@@ -60,40 +70,35 @@ const UserInfo = () => {
       }
     };
 
-    fetchUserData(); // Gọi hàm fetchUserData từ trong useEffect để lấy dữ liệu người dùng khi component được tạo ra
+    fetchUserData();
   }, []);
 
   const handleEditProfile = () => {
     setIsEditing(true);
   };
-  // Hàm xử lý sự kiện khi nhấn vào nút "save"
+
   const handleChangePassword = () => {
     setIsChangingPassword(true);
   };
+
   const handleSaveProfile = async () => {
     try {
-      // Gọi API để lưu thông tin người dùng
       const response = await AXIOS.POST({
         uri: authEndpoint.updateProfile,
         params: { ...userData, age: parseInt(userData?.age.toString()) },
       });
 
-      // Xử lý kết quả từ API
       if (response) {
         console.log("Profile saved successfully");
         setIsEditing(false);
         alert("Profile updated successfully!");
       }
     } catch (error) {
-      // Kiểm tra nếu error là một đối tượng lỗi và có thuộc tính message
       console.log(error);
     }
   };
 
   const handleSavePassword = () => {
-    // Gửi yêu cầu thay đổi mật khẩu lên máy chủ ở đây
-
-    // Sau khi gửi thành công, cập nhật trạng thái chỉnh sửa
     setIsChangingPassword(false);
   };
 
@@ -122,17 +127,19 @@ const UserInfo = () => {
 
   return (
     <div className="py-6">
-      <div className="mt-6 flex justify-center  ">
+      <div className="mt-6 flex justify-center">
         <Avatar className="h-20 w-20">
-          <AvatarImage src="https://github.com/shadcn.png" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarImage
+            src={userData.avatar || "https://github.com/shadcn.png"}
+          />
+          <AvatarFallback>{userData.name[0]}</AvatarFallback>
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p>Lorem isum</p>
+        <p>{userData.name}</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
-        <p>Lorem isum@gmail.com</p>
+        <p>{userData.email}</p>
       </div>
       <div className="mt-8 overflow-x-hidden relative space-x-6">
         <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
@@ -183,7 +190,6 @@ const UserInfo = () => {
                   basic info for faster booking experience
                 </p>
               </div>
-              {/* Hiển thị nút "edit profile" nếu không đang chỉnh sửa */}
               {!isEditing && (
                 <Button variant="link" onClick={handleEditProfile}>
                   edit profile
@@ -202,9 +208,8 @@ const UserInfo = () => {
             <hr />
             {renderField("Gender", userData?.gender, "gender")}
             <hr />
-            {renderField("age", userData?.age, "age")}
+            {renderField("Age", userData?.age, "age")}
             <hr />
-
             <div className="pt-2 flex justify-center">
               {isEditing && (
                 <Button variant="destructive" onClick={handleSaveProfile}>
@@ -224,31 +229,26 @@ const UserInfo = () => {
           <CardContent>
             <div className="grid grid-cols-3 py-2">
               <div>Mobile Number</div>
-              <div>Huy Ha </div>
+              <div>{userData.phone}</div>
             </div>
             <hr />
             <div className="grid grid-cols-3 py-2">
               <div>Email ID</div>
-              <div>Huy Ha</div>
+              <div>{userData.email}</div>
             </div>
             <hr />
             <div className="grid grid-cols-3 py-2 items-center">
               <div>Password</div>
-              {/* Hiển thị input field nếu đang thay đổi mật khẩu, ngược lại hiển thị dữ liệu */}
               {isChangingPassword ? (
-                <input type="password" /> // Input field cho mật khẩu mới
+                <input type="password" />
               ) : (
-                <div>Huy Ha</div> // Hiển thị mật khẩu cũ
+                <div>********</div>
               )}
-
-              {/* Hiển thị nút "change password" nếu không đang thay đổi mật khẩu */}
               {!isChangingPassword && (
                 <Button variant="link" onClick={handleChangePassword}>
                   change password
                 </Button>
               )}
-
-              {/* Hiển thị nút "save password" nếu đang thay đổi mật khẩu */}
               <div className="flex justify-center">
                 {isChangingPassword && (
                   <Button variant="destructive" onClick={handleSavePassword}>
