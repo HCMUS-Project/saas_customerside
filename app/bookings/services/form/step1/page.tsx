@@ -80,16 +80,20 @@ export default function ServiceCards() {
   };
 
   return (
-    <div className="w-1/2 container mx-auto mt-8 pb-40">
-      <h1 className="text-3xl font-bold mb-4">Dịch vụ được yêu thích nhất</h1>
+    <div className="container mx-auto mt-8 pb-40">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            <div className="w-full text-center">
+              <h1 className="text-3xl font-bold mb-4">
+                Dịch vụ được yêu thích nhất
+              </h1>
+            </div>
             {services.length > 0 ? (
               services.map((service) => (
                 <Card
                   key={service.id}
-                  className={`border border-gray-200 rounded-xl overflow-hidden shadow-md ${
+                  className={`w-full sm:w-1/2 lg:w-1/2 xl:w-1/3 border border-gray-200 rounded-xl overflow-hidden shadow-md ${
                     selectedService?.id === service.id ? "border-blue-500" : ""
                   }`}
                 >

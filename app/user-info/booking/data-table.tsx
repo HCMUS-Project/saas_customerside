@@ -16,15 +16,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import React from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  userData: {
+    email: string;
+    name: string;
+    avatar: string;
+  };
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  userData,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,

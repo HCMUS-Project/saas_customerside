@@ -1,23 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import Recommended from "../recommend-product";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-
 import StarRating from "./rating";
 import CommentForm from "./comment";
-
 import { AXIOS } from "@/constants/network/axios";
 import { ShoppingCart, Star } from "lucide-react";
 import { productEndpoints } from "@/constants/api/product.api";
-import { getJwt } from "@/util/auth.util";
-
 import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
 import { getDomain } from "@/util/get-domain";
@@ -31,37 +26,45 @@ interface CartItem {
   quantity: number;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface ProductData {
+  id: string;
+  images: string[];
+  name: string;
+  price: number;
+  rating: number;
+  description: string;
+  categories: Category[];
+}
+
 export default function ProductPageProps({
   params,
 }: {
   params: { id: string };
 }) {
   const searchParams = useSearchParams();
-
   const [productsData, setProductsData] = useState<{ products: any[] }>({
     products: [],
   });
   const productId = params.id;
-
-  const [productData, setProductData] = useState<{
-    id: " " | string;
-    images: "" | Array<string>;
-    name: "" | string;
-    price: number;
-    rating: "" | Array<string>;
-    description: string;
-  }>({
+  const [productData, setProductData] = useState<ProductData>({
     id: "",
-    images: "",
+    images: [],
     name: "",
     price: 0,
-    rating: "",
+    rating: 0,
     description: "",
+    categories: [],
   });
   const router = useRouter();
   const [count, setCount] = useState(0);
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true); // Default to true to show loader initially
+  const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
   const authStore: any = useAuthStore();
 
   const fetchData = async (productId: string) => {
@@ -96,6 +99,7 @@ export default function ProductPageProps({
       setCount(count - 1);
     }
   };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -140,8 +144,8 @@ export default function ProductPageProps({
         console.log("Create Cart Response:", createCartResponse);
 
         if (
-          createCartResponse.status >= 200 &&
-          createCartResponse.status < 300
+          createCartResponse.statusCode >= 200 &&
+          createCartResponse.statusCode < 300
         ) {
           console.log("Product added to cart successfully.");
           Swal.fire({
@@ -167,22 +171,47 @@ export default function ProductPageProps({
   return (
     <div className="mt-4">
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
-        <Image
-          src={productData?.images[0]}
-          width={500}
-          height={500}
-          alt={productData?.name}
-          className="rounded-lg"
-        />
+        <div className="relative w-1/2 h-64 lg:h-96">
+          {" "}
+          {/* Adjust the height as needed */}
+          {productData.images.length > 0 && (
+            <>
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <LoadingPage />
+                </div>
+              )}
+              <Image
+                src={productData.images[selectedImageIndex]}
+                alt={productData.name}
+                fill
+                objectFit="contain" // Adjusted to 'contain' to fit the image inside the container
+                className="rounded-lg"
+                onLoadingComplete={() => setImageLoading(false)}
+                style={{ objectFit: "cover" }}
+              />
+            </>
+          )}
+        </div>
         <div>
-          <h1 className="text-5xl font-bold">{productData?.name}</h1>
+          <h1 className="text-5xl font-bold">{productData.name}</h1>
           <div className="flex items-center">
-            {Array.from({ length: Number(productData.rating) }, (_, i) => (
+            {Array.from({ length: productData.rating }, (_, i) => (
               <Star key={i} className="w-4 h-4 fill-current text-yellow-400" />
             ))}
           </div>
-          <div className="mt-4">${productData?.price}</div>
-          <p>{productData?.description}</p>
+          <div className="flex flex-wrap mt-2 gap-2">
+            {productData.categories.map((category) => (
+              <span
+                key={category.id}
+                className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="mt-4">${productData.price}</div>
+          <p>{productData.description}</p>
           <div className="flex font-bold text-center gap-3 mb-2">
             <Button onClick={decrement}>-</Button>
             <h1 className="flex flex-col items-center my-2">{count}</h1>
@@ -201,8 +230,37 @@ export default function ProductPageProps({
           </div>
         </div>
       </div>
+      <div className="flex mt-4 space-x-2 overflow-x-auto">
+        {Array.isArray(productData.images) &&
+          productData.images.map((image, index) => (
+            <div
+              key={index}
+              className={`relative w-16 h-16 flex-shrink-0 border ${
+                // Adjusted thumbnail size
+                index === selectedImageIndex
+                  ? "border-orange-500"
+                  : "border-gray-300"
+              }`}
+              onClick={() => setSelectedImageIndex(index)}
+            >
+              <Image
+                src={image}
+                alt={`Thumbnail ${index}`}
+                layout="fill"
+                objectFit="cover"
+                className={`cursor-pointer ${
+                  index === selectedImageIndex ? "opacity-100" : "opacity-50"
+                }`}
+                onLoadingComplete={() => setImageLoading(false)}
+              />
+            </div>
+          ))}
+      </div>
       <CommentForm />
-      <Recommended products={productsData.products} />
+      <div className="mb-4">
+        {" "}
+        <Recommended products={productsData.products} />
+      </div>
     </div>
   );
 }
