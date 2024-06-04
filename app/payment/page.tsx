@@ -40,7 +40,6 @@ const paymentMethods = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const accessToken = getJwt("AT");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("vnpay");
   const [voucherCode, setVoucherCode] = useState("");
@@ -84,7 +83,7 @@ export default function CheckoutPage() {
     };
 
     fetchProfile();
-  }, [accessToken]);
+  }, []);
 
   const handleVoucherCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVoucherCode(e.target.value);
@@ -163,9 +162,6 @@ export default function CheckoutPage() {
       const res = await AXIOS.POST({
         uri: orderEndpoints.createOrder,
         params: orderData,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
       });
 
       if (res.statusCode >= 200 && res.statusCode <= 300) {

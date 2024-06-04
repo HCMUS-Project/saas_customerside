@@ -18,7 +18,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const fetchRefreshToken = async (refreshToken: string) => {
     try {
       const response = await AXIOS.POST({
-        uri: authEndpoint.refeshToken,
+        uri: authEndpoint.refreshToken,
         headers: {
           Authorization: `Bearer ${refreshToken}`,
         },

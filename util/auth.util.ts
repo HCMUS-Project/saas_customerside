@@ -70,7 +70,7 @@ const fetchRefreshToken = async ({ router }: { router: any }) => {
     const refreshToken = getJwt("RT");
 
     const response = await AXIOS.POST({
-      uri: authEndpoint.refeshToken,
+      uri: authEndpoint.refreshToken,
       params: {
         refreshToken,
       },
