@@ -112,7 +112,7 @@ export default function Bookings() {
   }, []);
 
   return (
-    <div className=" py-6">
+    <div className="py-6">
       <div className="container sm:flex justify-between items-center space-x-2">
         <div>
           <ComboBoxResponsiveDestination />
@@ -129,7 +129,7 @@ export default function Bookings() {
               <AlignJustify />
             </PopoverTrigger>
             <PopoverContent className="size-20 w-full h-full">
-              <div className="border-b font-bold ">filter</div>
+              <div className="border-b font-bold">filter</div>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}

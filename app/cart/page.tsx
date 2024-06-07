@@ -8,6 +8,8 @@ import { productEndpoints } from "@/constants/api/product.api";
 import { cartEndpoints } from "@/constants/api/cart.api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCart } from "@/constants/use-cart";
 
 interface Product {
   productId: string;
@@ -21,10 +23,12 @@ export default function CartPage() {
   const [count, setCount] = useState<number[]>([]);
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [loading, setLoading] = useState(true); // Loading state
   const [showAlert, setShowAlert] = useState(false);
   const [cartID, setCartID] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
   const router = useRouter();
+  const { removeFromCart } = useCart(); // Use removeFromCart from the custom hook
 
   const fetchCartData = async () => {
     try {
@@ -35,9 +39,11 @@ export default function CartPage() {
           response.data.carts[0].cartItems
         );
         if (result) setCartItems(result);
+        setLoading(false); // Set loading to false after data is fetched
       }
     } catch (error) {
       console.error("Error fetching cart data:", error);
+      setLoading(false); // Set loading to false if there's an error
     }
   };
 
@@ -143,14 +149,12 @@ export default function CartPage() {
     });
   };
 
-  const removeFromCart = async (index: number) => {
+  const handleRemoveFromCart = (index: number) => {
     setCartItems((prevCartItems) => {
-      const newCartItems = [...prevCartItems];
-      newCartItems.splice(index, 1);
-      updateCart(index, 0);
-      setShowAlert(true);
+      const newCartItems = prevCartItems.filter((_, i) => i !== index);
       return newCartItems;
     });
+    removeFromCart(index); // Call removeFromCart from the custom hook
   };
 
   const checkout = () => {
@@ -163,55 +167,102 @@ export default function CartPage() {
 
   return (
     <div className="mt-2">
-      {cartItems.map((item, index) => (
-        <div className="mt-4 flex justify-between" key={item.productId}>
-          <div className="flex flex-wrap items-center gap-4">
-            <Checkbox
-              checked={selectedItems[index]}
-              onCheckedChange={() => handleCheckboxChange(index)}
-            />
-            {item.images && item.images.length > 0 ? (
-              <Image
-                src={item.images}
-                width={200}
-                height={200}
-                alt={item.name}
-                className="rounded-lg"
-              />
-            ) : (
-              <div>No Image Available</div>
-            )}
-            <div>
-              <Link href={`product/product-detail?id=${item.productId}`}>
-                <div className="font-bold">{item.name}</div>
-              </Link>
-              <div>${item.price}</div>
-              <div className="my-1 flex item-center gap-2">
-                Quantity:
-                <div className="flex font-bold text-center gap-3 mb-2">
-                  <Button onClick={() => decrement(index)}>-</Button>
-                  <h1 className="flex flex-col items-center my-2">
-                    {count[index]}
-                  </h1>
-                  <Button onClick={() => increment(index)}>+</Button>
+      {loading ? (
+        <div>
+          {[...Array(3)].map((_, index) => (
+            <div className="mt-4 flex justify-between" key={index}>
+              <div className="flex flex-wrap items-center gap-4">
+                <Skeleton className="w-[20px] h-[20px] rounded-full" />
+                <Skeleton className="w-[200px] h-[200px] rounded-lg" />
+                <div>
+                  <Skeleton className="w-[100px] h-[20px] rounded-full" />
+                  <Skeleton className="w-[50px] h-[20px] rounded-full mt-2" />
+                  <div className="my-1 flex item-center gap-2">
+                    <Skeleton className="w-[70px] h-[20px] rounded-full" />
+                    <div className="flex font-bold text-center gap-3 mb-2">
+                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
+                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
+                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="w-[100px] h-[20px] rounded-full" />
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                Total Price: ${item.price * count[index]}
+              <div className="flex items-center">
+                <Skeleton className="w-[70px] h-[30px] rounded-full" />
               </div>
             </div>
-          </div>
-          <div className="flex items-center">
-            <Button onClick={() => removeFromCart(index)}>Remove</Button>
-          </div>
+          ))}
         </div>
-      ))}
-      <div className="flex flex-col items-end sm:items-center">
-        <p className="mb-3 font-bold">Total: ${totalPrice}</p>
-        <Button onClick={checkout} className="btn btn-primary sm:w-[200px]">
-          Checkout
-        </Button>
-      </div>
+      ) : (
+        <>
+          {cartItems.length === 0 ? (
+            <div className="px-4 py-4 flex flex-col items-center">
+              <p>No items in the cart.</p>
+              <Button onClick={() => router.push("/product")}>Shop Now</Button>
+            </div>
+          ) : (
+            <>
+              {cartItems.map((item, index) => (
+                <div className="mt-4 flex justify-between" key={item.productId}>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Checkbox
+                      checked={selectedItems[index]}
+                      onCheckedChange={() => handleCheckboxChange(index)}
+                    />
+                    {item.images && item.images.length > 0 ? (
+                      <Image
+                        src={item.images}
+                        width={200}
+                        height={200}
+                        alt={item.name}
+                        className="rounded-lg"
+                      />
+                    ) : (
+                      <div>No Image Available</div>
+                    )}
+                    <div>
+                      <Link
+                        href={`product/product-detail?id=${item.productId}`}
+                      >
+                        <div className="font-bold">{item.name}</div>
+                      </Link>
+                      <div>{item.price}VND</div>
+                      <div className="my-1 flex item-center gap-2">
+                        Quantity:
+                        <div className="flex font-bold text-center gap-3 mb-2">
+                          <Button onClick={() => decrement(index)}>-</Button>
+                          <h1 className="flex flex-col items-center my-2">
+                            {count[index]}
+                          </h1>
+                          <Button onClick={() => increment(index)}>+</Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        Total Price: {item.price * count[index]}VND
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Button onClick={() => handleRemoveFromCart(index)}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex flex-col items-end sm:items-center">
+                <p className="mb-3 font-bold">Total: {totalPrice}VND</p>
+                <Button
+                  onClick={checkout}
+                  className="btn btn-primary sm:w-[200px]"
+                >
+                  Checkout
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }
