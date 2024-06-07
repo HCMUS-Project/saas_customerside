@@ -148,14 +148,7 @@ export default function ProductPageProps({
           createCartResponse.statusCode < 300
         ) {
           console.log("Product added to cart successfully.");
-          addToCart({
-            // Call addToCart from the custom hook
-            productId: productData.id,
-            images: productData.images,
-            name: productData.name,
-            price: productData.price,
-            quantity: count,
-          });
+
           Swal.fire({
             icon: "success",
             title: "Success!",
