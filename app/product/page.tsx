@@ -1,4 +1,5 @@
 "use client";
+
 import { Input } from "@/components/ui/input";
 import { ComboBoxResponsiveDestination } from "@/app/product/combobox-destination";
 import { AlignJustify } from "lucide-react";
@@ -12,12 +13,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,11 +29,9 @@ import BestSeller from "./best-seller";
 import AllProduct from "./all-products";
 import { useEffect, useState } from "react";
 import { AXIOS } from "@/constants/network/axios";
-
 import { useDebounce } from "use-debounce";
 import Search from "@/app/product/search";
 import { productEndpoints } from "@/constants/api/product.api";
-import { getJwt } from "@/util/auth.util";
 
 const FormSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item)),
@@ -44,7 +41,9 @@ export default function Product() {
   const [productsData, setProductsData] = useState<{ products: any[] }>({
     products: [],
   });
-  const [searchProduct, setSearchProduct] = useState<string | undefined>("");
+  const [bestSellerProducts, setBestSellerProducts] = useState<any[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true); // Loading state
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -55,19 +54,49 @@ export default function Product() {
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBestSellers = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findBestSeller("30shine.com"),
+        });
+        setBestSellerProducts(res.data.products);
+        console.log("Best sellers fetched:", res.data.products);
+      } catch (error) {
+        console.error("Error fetching best sellers:", error);
+      }
+    };
+
+    const fetchProducts = async () => {
       try {
         const res = await AXIOS.GET({
           uri: productEndpoints.findAll("30shine.com"),
         });
         setProductsData(res.data);
-        console.log(res.data);
+        console.log("All products fetched:", res.data);
       } catch (error) {
-        console.error("Error fetching product data:", error);
+        console.error("Error fetching all products:", error);
       }
     };
 
-    fetchData();
+    const fetchRecommendedProducts = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: productEndpoints.findRecommend("30shine.com"),
+        });
+        setRecommendedProducts(res.data.products);
+        console.log("Recommended products fetched:", res.data.products);
+      } catch (error) {
+        console.error("Error fetching recommended products:", error);
+      }
+    };
+
+    Promise.all([
+      fetchBestSellers(),
+      fetchProducts(),
+      fetchRecommendedProducts(),
+    ]).finally(() => {
+      setLoading(false); // Set loading to false after data is fetched
+    });
   }, []);
 
   const items = [
@@ -101,9 +130,8 @@ export default function Product() {
     console.log(data);
   }
 
-  console.log(productsData);
   return (
-    <div className=" py-2">
+    <div className="py-2">
       <div className="container sm:flex justify-between items-center space-x-2">
         <div>
           <ComboBoxResponsiveDestination />
@@ -251,8 +279,8 @@ export default function Product() {
           </div>
         </div>
       </div>
-      <Recommended products={productsData?.products} />
-      <BestSeller products={productsData?.products} />
+      <Recommended products={recommendedProducts} />
+      <BestSeller products={bestSellerProducts} />
       <AllProduct products={productsData?.products} />
     </div>
   );

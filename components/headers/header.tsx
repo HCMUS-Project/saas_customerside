@@ -26,6 +26,7 @@ import {
 import { getJwt } from "@/util/auth.util";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import CartButton from "./cart-button";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -71,9 +72,9 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
   const authStore = useAuthStore();
   const profileStore = useProfileStore();
 
-  const handleCartClick = () => {
-    router.push("/cart");
-  };
+  // const handleCartClick = () => {
+  //   router.push("/cart");
+  // };
 
   const handleLoginClick = () => {
     router.push("/auth/login");
@@ -109,13 +110,14 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
       {authStore.isAuthorized ? (
         <div className="flex items-center">
           <UserMenu onLogout={handleLogout} />
-          <Button
+          <CartButton />
+          {/* <Button
             className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
             onClick={handleCartClick}
             style={{ bottom: "20px", right: "20px" }}
           >
             <ShoppingCart className="w-6 h-6" />
-          </Button>
+          </Button> */}
         </div>
       ) : (
         <Button

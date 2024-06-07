@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/store/auth.store";
@@ -17,6 +16,7 @@ import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
 import { getDomain } from "@/util/get-domain";
 import LoadingPage from "@/app/loading";
+import { useCart } from "@/constants/use-cart";
 
 interface CartItem {
   id: string;
@@ -65,7 +65,7 @@ export default function ProductPageProps({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
-  const authStore = useAuthStore();
+  const authStore: any = useAuthStore();
 
   const fetchData = async (productId: string) => {
     const domain = getDomain();
@@ -148,6 +148,7 @@ export default function ProductPageProps({
           createCartResponse.statusCode < 300
         ) {
           console.log("Product added to cart successfully.");
+
           Swal.fire({
             icon: "success",
             title: "Success!",
@@ -185,10 +186,8 @@ export default function ProductPageProps({
                 src={productData.images[selectedImageIndex]}
                 alt={productData.name}
                 fill
-                objectFit="contain" // Adjusted to 'contain' to fit the image inside the container
-                className="rounded-lg"
+                className="object-contain"
                 onLoadingComplete={() => setImageLoading(false)}
-                style={{ objectFit: "cover" }}
               />
             </>
           )}
@@ -210,7 +209,7 @@ export default function ProductPageProps({
               </span>
             ))}
           </div>
-          <div className="mt-4">${productData.price}</div>
+          <div className="mt-4">{productData.price}VND</div>
           <p>{productData.description}</p>
           <div className="flex font-bold text-center gap-3 mb-2">
             <Button onClick={decrement}>-</Button>
@@ -256,7 +255,7 @@ export default function ProductPageProps({
             </div>
           ))}
       </div>
-      <CommentForm />
+      <CommentForm productId={productData.id} />
       <div className="mb-4">
         {" "}
         <Recommended products={productsData.products} />

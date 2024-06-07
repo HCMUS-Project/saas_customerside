@@ -108,14 +108,16 @@ export default function ServicePageProps({
                   <LoadingPage />
                 </div>
               )}
+
               <Image
                 src={bookingData.images[selectedImageIndex]}
                 alt={bookingData.name}
-                fill
-                objectFit="contain" // Adjusted to 'contain' to fit the image inside the container
-                className="rounded-lg"
+                layout="fill"
+                objectFit="cover" // Adjusted to 'contain' to fit the image inside the container
+                className={`cursor-pointer ${
+                  selectedImageIndex ? "opacity-100" : "opacity-50"
+                }`}
                 onLoadingComplete={() => setImageLoading(false)}
-                style={{ objectFit: "cover" }}
               />
             </>
           )}
@@ -127,7 +129,7 @@ export default function ServicePageProps({
               <Star key={i} className="w-4 h-4 fill-current text-yellow-400" />
             ))}
           </div>
-          <div className="mt-4">${bookingData.price}</div>
+          <div className="mt-4">{bookingData.price}VND</div>
           <p>{bookingData.description}</p>
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleOrderNow}>
