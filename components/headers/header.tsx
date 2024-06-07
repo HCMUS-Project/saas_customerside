@@ -33,9 +33,9 @@ interface HeaderProps {
 
 const NavLinks = () => (
   <div className="flex justify-evenly gap-48">
-    <Link href="/">Trang Chu</Link>
-    <Link href="/bookings">Dich Vu</Link>
-    <Link href="/product">San Pham</Link>
+    <Link href="/">Home</Link>
+    <Link href="/bookings">Services</Link>
+    <Link href="/product">Products</Link>
   </div>
 );
 
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           onClick={handleLoginClick}
           className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
         >
-          Dang nhap
+          Login
         </Button>
       )}
     </div>
@@ -144,9 +144,9 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           />
         </DrawerHeader>
         <div className="flex flex-col gap-4 pl-5 my-5">
-          <Link href="/">Trang Chu</Link>
-          <Link href="/bookings">Dich Vu</Link>
-          <Link href="/product">San Pham</Link>
+          <Link href="/">Home</Link>
+          <Link href="/product">Products</Link>
+          <Link href="/bookings">Services</Link>
           {authStore.isAuthorized ? (
             <div className="flex flex-col gap-4 mt-8">
               <Link href="/user-info">Profile</Link>
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
               onClick={handleLoginClick}
               className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
             >
-              Dang nhap
+              Login
             </Button>
           )}
         </div>

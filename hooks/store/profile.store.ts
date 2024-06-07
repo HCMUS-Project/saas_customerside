@@ -4,6 +4,8 @@ import { persist } from "zustand/middleware";
 interface Profile {
   logo: string;
   description: string;
+  address: string;
+  serviceName: string;
   facebookUrl: string;
   instagramUrl: string;
   youtubeUrl: string;
@@ -25,6 +27,8 @@ interface Theme {
 interface ProfileState {
   logo: string;
   description: string;
+  address: string;
+  serviceName: string;
   facebookUrl: string;
   instagramUrl: string;
   youtubeUrl: string;
@@ -48,6 +52,8 @@ const useProfileStore = create<ProfileState>()(
     (set) => ({
       logo: "",
       description: "",
+      address: "",
+      serviceName: "",
       facebookUrl: "",
       instagramUrl: "",
       youtubeUrl: "",
@@ -65,6 +71,8 @@ const useProfileStore = create<ProfileState>()(
         set({
           logo: profile.logo,
           description: profile.description,
+          address: profile.address,
+          serviceName: profile.serviceName,
           facebookUrl: profile.facebookUrl,
           instagramUrl: profile.instagramUrl,
           youtubeUrl: profile.facebookUrl,
@@ -88,6 +96,7 @@ const useProfileStore = create<ProfileState>()(
         set({
           logo: "",
           description: "",
+          address: "",
           facebookUrl: "",
           instagramUrl: "",
           youtubeUrl: "",
