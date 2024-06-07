@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,6 +25,7 @@ import {
 } from "../ui/dropdown-menu";
 import { getJwt } from "@/util/auth.util";
 import { useAuthStore } from "@/hooks/store/auth.store";
+import { useProfileStore } from "@/hooks/store/profile.store";
 import CartButton from "./cart-button";
 
 interface HeaderProps {
@@ -67,13 +69,8 @@ const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
 export const Header: React.FC<HeaderProps> = ({ children }) => {
   const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const authStore: any = useAuthStore();
-
-  // useEffect(() => {
-  //   const accessToken = getJwt("AT");
-  //   setIsLoggedIn(accessToken !== ""); // Kiểm tra token khi tải trang
-  // }, [setIsLoggedIn]);
+  const authStore = useAuthStore();
+  const profileStore = useProfileStore();
 
   // const handleCartClick = () => {
   //   router.push("/cart");
@@ -87,7 +84,6 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
     try {
       await AXIOS.GET({ uri: authEndpoint.logOut });
       localStorage.removeItem("AT"); // Xóa token khỏi localStorage
-      // setIsLoggedIn(false);
       authStore.setIsAuthorized(false);
       router.push("/");
     } catch (error) {
@@ -96,9 +92,15 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
   };
 
   return isDesktop ? (
-    <div className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm">
+    <div
+      className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm"
+      style={{
+        backgroundColor: profileStore.headerColor,
+        color: profileStore.headerTextColor,
+      }}
+    >
       <Image
-        src="https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1395880969.1710252000&semt=sph"
+        src={profileStore.logo}
         alt="Logo"
         width={40}
         height={40}

@@ -1,13 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface AuthState {
+interface AuthStoreState {
   isAuthorized: boolean;
   domain: string;
-  email: string;
   setIsAuthorized: (isAuthorized: boolean) => void;
-  setDomain: (domain: string) => void;
-  setEmail: (email: string) => void;
   reset: () => void;
 }
 

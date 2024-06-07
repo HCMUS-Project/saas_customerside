@@ -1,6 +1,9 @@
 import { getJwt, storeJwt } from "@/util/auth.util";
 import axios, { AxiosError } from "axios";
 import { authEndpoint } from "../api/auth.api";
+import { useAuthStore } from "@/hooks/store/auth.store";
+
+const authStore = useAuthStore.getState();
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API,
@@ -52,6 +55,7 @@ API.interceptors.response.use(
 
           return await API(originalRequest);
         } catch (err) {
+          authStore.setIsAuthorized(false);
           return Promise.reject(err);
         } finally {
           isRefreshing = false;

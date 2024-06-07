@@ -38,7 +38,7 @@ const LoginForm = () => {
       password: "",
     },
   });
-  const authStore: any = useAuthStore();
+  const authStore = useAuthStore();
 
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);

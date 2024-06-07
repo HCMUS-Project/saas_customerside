@@ -66,7 +66,6 @@ export default function ProductPageProps({
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
   const authStore: any = useAuthStore();
-  const { addToCart } = useCart(); // Use addToCart from the custom hook
 
   const fetchData = async (productId: string) => {
     const domain = getDomain();
