@@ -65,7 +65,7 @@ export default function ProductPageProps({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
-  const authStore: any = useAuthStore();
+  const authStore = useAuthStore();
 
   const fetchData = async (productId: string) => {
     const domain = getDomain();
