@@ -71,8 +71,8 @@ const BestSeller = ({ products }: BestSellerProps) => {
             className="w-full"
           >
             <CarouselContent className="flex">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <CarouselItem key={index} className="basis-1/3 px-2">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                   <Card className="h-full">
                     <div className="w-full h-[200px] relative">
                       <Skeleton className="w-full h-full" />
@@ -102,7 +102,7 @@ const BestSeller = ({ products }: BestSellerProps) => {
           >
             <CarouselContent className="flex">
               {extendedProducts.map((product, index) => (
-                <CarouselItem key={index} className="basis-1/3 px-2">
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                   <Card className="h-full">
                     <Link href={`/product/${product.id}`}>
                       <div className="w-full h-[200px] relative">
@@ -115,7 +115,7 @@ const BestSeller = ({ products }: BestSellerProps) => {
                       </div>
 
                       <CardContent className="space-y-2 py-2">
-                        <h2 className="text-accent font-medium uppercase">
+                        <h4 className="font-medium uppercase">
                           {product.name}
                           <div className="flex items-center">
                             {Array.from(
@@ -128,10 +128,8 @@ const BestSeller = ({ products }: BestSellerProps) => {
                               )
                             )}
                           </div>
-                        </h2>
-                        <p className="text-gray-500 max-w-[150px]">
-                          {product.description}
-                        </p>
+                        </h4>
+                        <p className="max-w-[150px]">{product.description}</p>
                         <div className="font-bold">{product.price}VND</div>
                       </CardContent>
                     </Link>

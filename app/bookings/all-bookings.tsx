@@ -71,8 +71,8 @@ const AllBooking = ({ bookings = [] }: AllBookingProps) => {
         >
           <CarouselContent className="flex">
             {loading
-              ? Array.from({ length: 6 }).map((_, index) => (
-                  <CarouselItem key={index} className="basis-1/3 px-2">
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                     <Card className="h-full">
                       <div className="w-full h-[200px] relative">
                         <Skeleton className="w-full h-full" />
@@ -86,7 +86,7 @@ const AllBooking = ({ bookings = [] }: AllBookingProps) => {
                   </CarouselItem>
                 ))
               : extendedBookings.map((booking, index) => (
-                  <CarouselItem key={index} className="basis-1/3 px-2">
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                     <Card className="h-full">
                       <Link href={`/bookings/services/${booking.id}`}>
                         <div className="w-full h-[200px] relative">

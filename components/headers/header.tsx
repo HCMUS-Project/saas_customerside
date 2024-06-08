@@ -93,19 +93,21 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
 
   return isDesktop ? (
     <div
-      className="px-[10%] flex justify-between h-[60px] items-center bg-accent border rounded-sm"
+      className="px-[10%] flex justify-evenly h-[60px] items-center border rounded-sm"
       style={{
         backgroundColor: profileStore.headerColor,
         color: profileStore.headerTextColor,
       }}
     >
-      <Image
-        src={profileStore.logo}
-        alt="Logo"
-        width={40}
-        height={40}
-        className="ml-4"
-      />
+      <Link href="/">
+        <Image
+          src={profileStore.logo}
+          alt="Logo"
+          width={40}
+          height={40}
+          className="ml-4"
+        />
+      </Link>
       <NavLinks />
       {authStore.isAuthorized ? (
         <div className="flex items-center">
@@ -131,11 +133,34 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
   ) : (
     <Drawer direction="left">
       <DrawerTrigger>
-        <div className="px-4 py-2">
+        <div
+          className="px-4 py-2 flex justify-between h-[60px] w-screen items-center border rounded-sm"
+          style={{
+            backgroundColor: profileStore.headerColor,
+            color: profileStore.headerTextColor,
+          }}
+        >
           <MenuIcon size={24} />
+
+          <Link href="/">
+            <Image
+              src={profileStore.logo}
+              alt="Logo"
+              width={40}
+              height={40}
+              className="ml-4"
+            />
+          </Link>
+
+          <div className="w-[24px]"></div>
         </div>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent
+        style={{
+          backgroundColor: profileStore.headerColor,
+          color: profileStore.headerTextColor,
+        }}
+      >
         <DrawerHeader>
           <Image
             src="https://img.freepik.com/free-vector/bird-colorful-logo-gradient-vector_343694-1365.jpg?size=338&ext=jpg&ga=GA1.1.1395880969.1710252000&semt=sph"
@@ -150,17 +175,21 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           <Link href="/product">Products</Link>
           <Link href="/bookings">Services</Link>
           {authStore.isAuthorized ? (
-            <div className="flex flex-col gap-4 mt-8">
-              <Link href="/user-info">Profile</Link>
-              <Link href="/">Settings</Link>
-              <Link href="#" onClick={handleLogout}>
-                Logout
-              </Link>
+            <div className="flex items-center">
+              <UserMenu onLogout={handleLogout} />
+              <CartButton />
+              {/* <Button
+            className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
+            onClick={handleCartClick}
+            style={{ bottom: "20px", right: "20px" }}
+          >
+            <ShoppingCart className="w-6 h-6" />
+          </Button> */}
             </div>
           ) : (
             <Button
               onClick={handleLoginClick}
-              className="my-2 mr-4 bg-secondary-focus bg-opacity-80"
+              className="my-2 mr-4"
             >
               Login
             </Button>

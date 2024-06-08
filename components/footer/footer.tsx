@@ -20,7 +20,7 @@ export default function Footer() {
       }}
     >
       <div className="flex justify-around mx-[10%] max-w-screen-xl">
-        <div className="w-full grid grid-cols-2 gap-8 px-4 py-6 lg:py-8 md:grid-cols-3">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 px-4 py-6 lg:py-8 ">
           <div className="flex flex-col justify-center">
             <h2 className="mb-6 text-sm font-semibold ">Information</h2>
             <ul>
@@ -79,7 +79,10 @@ export default function Footer() {
               </li>
               <li className="mb-4">
                 <a href={profileStore.facebookUrl} className="hover:underline">
-                 <div className="flex gap-4"> <Facebook /> Facebook</div>
+                  <div className="flex gap-4">
+                    {" "}
+                    <Facebook /> Facebook
+                  </div>
                 </a>
               </li>
             </ul>

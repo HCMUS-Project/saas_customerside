@@ -69,7 +69,7 @@ const Search = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <Input
         className="border p-2 px-4 rounded-lg w-full"
         type="text"

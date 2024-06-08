@@ -173,7 +173,7 @@ export default function Home() {
                       </div>
                     </CardHeader>
 
-                    <CardContent>
+                    <CardContent className="flex flex-col items-center">
                       {product.images.length > 0 && (
                         <Carousel>
                           <CarouselContent className="flex justify-center">
@@ -259,7 +259,7 @@ export default function Home() {
                       </div>
                     </CardHeader>
 
-                    <CardContent>
+                    <CardContent className="flex flex-col items-center">
                       {product.images.length > 0 && (
                         <Carousel>
                           <CarouselContent className="flex justify-center">

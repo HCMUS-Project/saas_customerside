@@ -114,13 +114,7 @@ export default function Bookings() {
   return (
     <div className="py-6">
       <div className="container sm:flex justify-between items-center space-x-2">
-        <div>
-          <ComboBoxResponsiveDestination />
-        </div>
-        <div>
-          <ComboBoxResponsiveCoupon />
-        </div>
-        <div className="w-full sm:w-[300px] md:w-[70%] relative">
+        <div className="flex flex-grow min-w-0 relative">
           <SearchBooking />
         </div>
         <div>
@@ -187,79 +181,7 @@ export default function Bookings() {
           </Popover>
         </div>
       </div>
-      <div className="hidden lg:block">
-        <div className="container">
-          <div className="flex w-fit gap-10 mx-auto font-medium py-4 tex-blackish">
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
 
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-          </div>
-          <div className="flex w-fit gap-10 mx-auto font-medium py-4 tex-blackish">
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-            <div className="flex flex-col items-center">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-
-              <Link href="/bookings/form">Booking</Link>
-            </div>
-          </div>
-        </div>
-      </div>
       <Recommended bookings={bookingsData.services} />
       <BestSeller bookings={bookingsData.services} />
       <AllBooking bookings={bookingsData.services} />

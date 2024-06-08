@@ -4,11 +4,12 @@ import { persist } from "zustand/middleware";
 interface AuthStoreState {
   isAuthorized: boolean;
   domain: string;
+  email: string;
   setIsAuthorized: (isAuthorized: boolean) => void;
   reset: () => void;
 }
 
-const useAuthStore = create<AuthState>()(
+const useAuthStore = create<AuthStoreState>()(
   persist(
     (set) => ({
       isAuthorized: false,

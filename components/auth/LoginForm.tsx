@@ -121,8 +121,8 @@ const LoginForm = () => {
               </Button>
             </Link>
           </div>
-          <p className="text-center font-extralight">OR</p>
-          <div className="flex">
+          {/* <p className="text-center font-extralight">OR</p> */}
+          {/* <div className="flex">
             <div className="flex justify-between w-full space-x-2">
               <Link href="/auth/google">
                 <Button
@@ -150,7 +150,7 @@ const LoginForm = () => {
                 Sign In with Facebook
               </Button>
             </div>
-          </div>
+          </div> */}
         </form>
       </Form>
     </CardWrapper>

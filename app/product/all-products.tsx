@@ -71,8 +71,8 @@ const AllProduct = ({ products = [] }: AllProductProps) => {
         >
           <CarouselContent className="flex">
             {loading
-              ? Array.from({ length: 6 }).map((_, index) => (
-                  <CarouselItem key={index} className="basis-1/3 px-2">
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                     <Card className="h-full">
                       <div className="w-full h-[200px] relative">
                         <Skeleton className="w-full h-full" />
@@ -86,7 +86,7 @@ const AllProduct = ({ products = [] }: AllProductProps) => {
                   </CarouselItem>
                 ))
               : extendedProducts.map((product, index) => (
-                  <CarouselItem key={index} className="basis-1/3 px-2">
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
                     <Card className="h-full">
                       <Link href={`/product/${product.id}`}>
                         <div className="w-full h-[200px] relative">
@@ -99,7 +99,7 @@ const AllProduct = ({ products = [] }: AllProductProps) => {
                         </div>
 
                         <CardContent className="space-y-2 py-2">
-                          <h2 className="text-accent font-medium uppercase">
+                          <h2 className="font-medium uppercase">
                             {product.name}
                             <div className="flex items-center">
                               {Array.from(
