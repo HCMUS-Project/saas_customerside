@@ -99,7 +99,7 @@ const Recommended = ({ bookings = [] }: RecommendedProps) => {
                         </div>
 
                         <CardContent className="space-y-2 py-2">
-                          <h2 className="text-accent font-medium uppercase">
+                          <h2 className=" font-medium uppercase">
                             {booking.name}
                             <div className="flex items-center">
                               {Array.from(
