@@ -46,7 +46,7 @@ const LoginForm = () => {
       const response = await AXIOS.POST({
         uri: authEndpoint.signIn,
         params: {
-          domain: getDomain(),
+          domain: "30shine.com",
           email: data.email,
           password: data.password,
         },

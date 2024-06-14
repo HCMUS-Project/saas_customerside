@@ -238,8 +238,11 @@ export default function CheckoutPage() {
         address: `${selectedAddress?.addressLine1}, ${selectedAddress?.addressLine2}, ${selectedAddress?.city}`,
         voucherId: voucherData ? voucherData.id : null,
         paymentMethod: selectedPaymentMethod,
-        paymentCallbackUrl:
-          "http://nvukhoi.id.vn/api/payment/url/return?domain=http://localhost:8090/payment/payment-success",
+        paymentCallbackUrl: `http://nvukhoi.id.vn/api/payment/url/return?domain=${
+          process.env.NEXT_PUBLIC_ENVIRONMENT == "DEV"
+            ? "http://localhost:8090"
+            : window.location.href.split("/payment")[0]
+        }/payment/payment-success`,
       };
 
       const res = await AXIOS.POST({

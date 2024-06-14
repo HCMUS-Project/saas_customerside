@@ -48,7 +48,7 @@ const RegisterForm = () => {
           username: data.username,
           phone: data.phone,
           password: data.password,
-          domain: getDomain(),
+          domain: "30shine.com",
           device: "web", // Assuming device is constant
         },
       });

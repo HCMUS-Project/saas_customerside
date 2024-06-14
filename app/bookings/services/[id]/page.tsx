@@ -59,7 +59,7 @@ export default function ServicePageProps({
     try {
       const domain = getDomain();
       const res = await AXIOS.GET({
-        uri: bookingEndpoints.findById(domain, serviceId),
+        uri: bookingEndpoints.findById("30shine.com", serviceId),
       });
       const booking = res.data;
       setBookingData(booking);

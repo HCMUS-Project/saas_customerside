@@ -48,7 +48,7 @@ export default function RegisterOTP() {
       const response = await AXIOS.POST({
         uri: authEndpoint.sendMailOTP,
         params: {
-          domain: getDomain(),
+          domain: "30shine.com",
           email: form.getValues("email"), // Sử dụng email từ form
         },
       });

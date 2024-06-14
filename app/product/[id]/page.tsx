@@ -73,7 +73,7 @@ export default function ProductPageProps({
       setLoading(true);
 
       const res = await AXIOS.GET({
-        uri: productEndpoints.findById(domain, params.id),
+        uri: productEndpoints.findById("30shine.com", params.id),
       });
 
       const product = res.data;
