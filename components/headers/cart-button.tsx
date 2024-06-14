@@ -24,9 +24,8 @@ const CartButton = () => {
 
   return (
     <Button
-      className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
+      className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full  text-white"
       onClick={handleCartClick}
-      style={{ bottom: "20px", right: "20px" }}
     >
       <ShoppingCart className="w-6 h-6" />
       {cartItemCount > 0 && (

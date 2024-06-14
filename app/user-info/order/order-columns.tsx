@@ -2,13 +2,20 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+
+// Define and export the type for your product data
+export interface Product {
+  productId: string;
+  quantity: number;
+  imgSrc: string;
+  name: string;
+}
 
 // Define the type for your order data
 export type Order = {
   orderId: string;
-  products: { productId: string; quantity: number; imgSrc: string }[];
+  products: Product[];
   totalPrice: number;
   address: string;
   orderTime: string;
@@ -26,10 +33,7 @@ export const getOrderColumns = (
       accessorKey: "productImages",
       header: "Product Images",
       cell: ({ row }) => {
-        const products = row.original.products as {
-          productId: string;
-          imgSrc: string;
-        }[];
+        const products = row.original.products;
         return (
           <div className="flex space-x-2">
             {products.map((product) => (
@@ -40,7 +44,7 @@ export const getOrderColumns = (
                 {product.imgSrc ? (
                   <Image
                     src={product.imgSrc}
-                    alt={product.productId}
+                    alt={product.name}
                     width={100}
                     height={100}
                   />
@@ -59,10 +63,7 @@ export const getOrderColumns = (
       accessorKey: "productQuantities",
       header: "Product Quantities",
       cell: ({ row }) => {
-        const products = row.original.products as {
-          productId: string;
-          quantity: number;
-        }[];
+        const products = row.original.products;
         return (
           <div className="flex space-x-2">
             {products.map((product) => (

@@ -112,7 +112,15 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
       {authStore.isAuthorized ? (
         <div className="flex items-center">
           <UserMenu onLogout={handleLogout} />
-          <CartButton />
+          <div
+            style={{
+              backgroundColor: profileStore.headerColor,
+              color: profileStore.headerTextColor,
+            }}
+          >
+            <CartButton />
+          </div>
+
           {/* <Button
             className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full"
             onClick={handleCartClick}
@@ -187,10 +195,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           </Button> */}
             </div>
           ) : (
-            <Button
-              onClick={handleLoginClick}
-              className="my-2 mr-4"
-            >
+            <Button onClick={handleLoginClick} className="my-2 mr-4">
               Login
             </Button>
           )}

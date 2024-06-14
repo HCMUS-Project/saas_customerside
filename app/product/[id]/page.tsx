@@ -211,11 +211,14 @@ export default function ProductPageProps({
           </div>
           <div className="mt-4">{productData.price}VND</div>
           <p>{productData.description}</p>
-          <div className="flex font-bold text-center gap-3 mb-2">
+          <div className="flex font-bold text-center gap-3 mb-2 items-center ">
             <Button onClick={decrement}>-</Button>
-            <h1 className="flex flex-col items-center my-2">{count}</h1>
+            <h1 className="flex flex-col items-center my-2 w-12 text-center">
+              {count}
+            </h1>
             <Button onClick={increment}>+</Button>
           </div>
+
           <div className="flex gap-3">
             <Link href="/cart">
               <Button variant="outline">Order now</Button>

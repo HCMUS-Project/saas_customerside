@@ -166,7 +166,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="mt-2">
+    <div className=" mt-2 pb-10">
       {loading ? (
         <div>
           {[...Array(3)].map((_, index) => (
@@ -228,16 +228,17 @@ export default function CartPage() {
                         <div className="font-bold">{item.name}</div>
                       </Link>
                       <div>{item.price}VND</div>
-                      <div className="my-1 flex item-center gap-2">
+                      <div className="my-1 flex items-center gap-2">
                         Quantity:
-                        <div className="flex font-bold text-center gap-3 mb-2">
+                        <div className="flex items-center font-bold text-center gap-3 mb-2">
                           <Button onClick={() => decrement(index)}>-</Button>
-                          <h1 className="flex flex-col items-center my-2">
+                          <h1 className="flex items-center justify-center my-2 w-12 text-center">
                             {count[index]}
                           </h1>
                           <Button onClick={() => increment(index)}>+</Button>
                         </div>
                       </div>
+
                       <div className="flex items-center gap-3">
                         Total Price: {item.price * count[index]}VND
                       </div>

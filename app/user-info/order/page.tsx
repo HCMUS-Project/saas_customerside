@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -7,18 +6,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AXIOS } from "@/constants/network/axios";
 import { OrderDataTable } from "./order-data-table";
-import { getOrderColumns, Order } from "./order-columns";
+import { getOrderColumns, Order, Product } from "./order-columns"; // Import Product type here
 import { ecommerceEndpoints } from "@/constants/api/ecommerce";
 import { productEndpoints } from "@/constants/api/product.api";
-import Loader from "@/app/loading"; // Import the Loader component
+import Loader from "@/app/loading";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { Form } from "@/components/ui/form";
@@ -27,7 +24,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { reviewEndpoint } from "@/constants/api/review.api";
 import { authEndpoint } from "@/constants/api/auth.api";
-import { CameraIcon, Star, VideoIcon } from "lucide-react";
+import { CameraIcon, Star, StarHalf, StarHalfIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -39,7 +36,29 @@ interface Comment {
   rating: number;
 }
 
-async function fetchProductDetails(productId: string) {
+interface ProductDetails extends Product {
+  rating?: number;
+}
+
+interface ReviewState {
+  [productId: string]: string;
+}
+
+interface RatingState {
+  [productId: string]: number;
+}
+
+interface CommentsState {
+  [productId: string]: Comment[];
+}
+
+interface HasUserCommentedState {
+  [productId: string]: boolean;
+}
+
+async function fetchProductDetails(
+  productId: string
+): Promise<ProductDetails | null> {
   const domain = "30shine.com"; // Replace with your valid domain
   try {
     const res = await AXIOS.GET({
@@ -47,7 +66,8 @@ async function fetchProductDetails(productId: string) {
     });
     const productDetails = res.data;
     const imgSrc = productDetails.images?.[0] || "";
-    return { ...productDetails, imgSrc };
+    const name = productDetails.name || "Unknown Product"; // Assuming product name is in `productDetails.name`
+    return { productId, imgSrc, name, quantity: 1 }; // Adding a default quantity
   } catch (error) {
     console.error("Failed to fetch product details:", error);
     return null;
@@ -68,7 +88,10 @@ async function fetchOrders(
     const fetchProductPromises = orders.map(async (order: Order) => {
       const productDetailsPromises = order.products.map(async (product) => {
         const productDetails = await fetchProductDetails(product.productId);
-        product.imgSrc = productDetails?.imgSrc || "";
+        if (productDetails) {
+          product.imgSrc = productDetails.imgSrc;
+          product.name = productDetails.name;
+        }
         return product;
       });
       order.products = await Promise.all(productDetailsPromises);
@@ -89,16 +112,17 @@ const OrderPage = () => {
   const [stage, setStage] = useState("pending");
   const [page, setPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<
+    ProductDetails[] | null
+  >(null);
+  const [comments, setComments] = useState<CommentsState>({});
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
-  const [review, setReview] = useState<string>("");
-  const [rating, setRating] = useState<number>(0);
-  const [editMode, setEditMode] = useState<string | null>(null);
-  const [editReview, setEditReview] = useState<string>("");
-  const [editRating, setEditRating] = useState<number>(0);
-  const [hasUserCommented, setHasUserCommented] = useState<boolean>(false);
+  const [review, setReview] = useState<ReviewState>({});
+  const [rating, setRating] = useState<RatingState>({});
+  const [hasUserCommented, setHasUserCommented] =
+    useState<HasUserCommentedState>({});
+  const [successMessage, setSuccessMessage] = useState<string>("");
   const limit = 10;
 
   const formSchema = z.object({
@@ -141,113 +165,106 @@ const OrderPage = () => {
         commentsResponse.data &&
         Array.isArray(commentsResponse.data.reviews)
       ) {
-        setComments(commentsResponse.data.reviews);
+        setComments((prevComments) => ({
+          ...prevComments,
+          [productId]: commentsResponse.data.reviews,
+        }));
         console.log("Fetched comments:", commentsResponse.data.reviews);
+        const userComment = commentsResponse.data.reviews.find(
+          (comment: Comment) => comment.userId === userId
+        );
+        setHasUserCommented((prev) => ({
+          ...prev,
+          [productId]: !!userComment,
+        }));
       } else {
         console.error("Unexpected response format:", commentsResponse.data);
-        setComments([]);
+        setComments((prevComments) => ({
+          ...prevComments,
+          [productId]: [],
+        }));
       }
     } catch (error) {
       console.error("Error fetching data", error);
     }
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchAndSetOrders = useCallback(
+    async (stage: string, page: number, limit: number) => {
+      setLoading(true);
       const { orders, total } = await fetchOrders(stage, page, limit);
       setOrders(orders);
       setTotalOrders(total);
       setLoading(false);
-    };
-    fetchData();
-  }, [stage, page]);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (userId && comments.length > 0) {
-      const userComment = comments.find(
-        (comment: Comment) => comment.userId === userId
-      );
-      setHasUserCommented(!!userComment);
-      console.log("User has commented:", !!userComment);
-    }
-  }, [userId, comments]);
+    fetchAndSetOrders(stage, page, limit);
+  }, [fetchAndSetOrders, stage, page]);
 
   const handleStageChange = (newStage: string) => {
-    setLoading(true);
     setStage(newStage);
     setPage(1); // Reset to first page when stage changes
+    fetchAndSetOrders(newStage, 1, limit);
   };
 
   const handlePreviousPage = () => {
     if (page > 1) {
-      setPage(page - 1);
+      const newPage = page - 1;
+      setPage(newPage);
+      fetchAndSetOrders(stage, newPage, limit);
     }
   };
 
   const handleNextPage = () => {
     if (page * limit < totalOrders) {
-      setPage(page + 1);
+      const newPage = page + 1;
+      setPage(newPage);
+      fetchAndSetOrders(stage, newPage, limit);
     }
   };
 
-  const handleRatingClick = async (order: Order) => {
-    setSelectedOrder(order);
-    await fetchProfileAndComments(order.orderId);
+  const handleRatingClick = async (products: ProductDetails[]) => {
+    setSelectedProducts(products);
+    await Promise.all(
+      products.map((product) => fetchProfileAndComments(product.productId))
+    );
   };
 
-  const handleDelete = async (commentId: string) => {
+  const handleDelete = async (productId: string, commentId: string) => {
     try {
       await AXIOS.DELETE({
         uri: reviewEndpoint.ecommerceReviewDelete(commentId),
       });
-      setComments(comments.filter((c) => c.id !== commentId));
-      setHasUserCommented(false);
-      fetchProfileAndComments(selectedOrder!.orderId); // Refetch comments after deletion
+      setComments((prevComments) => ({
+        ...prevComments,
+        [productId]: prevComments[productId].filter((c) => c.id !== commentId),
+      }));
+      setHasUserCommented((prev) => ({
+        ...prev,
+        [productId]: false,
+      }));
+      fetchProfileAndComments(productId); // Refetch comments after deletion
     } catch (error) {
       console.error("Error deleting comment", error);
     }
   };
 
-  const handleEdit = async (editedComment: Omit<Comment, "user">) => {
-    try {
-      await AXIOS.POST({
-        uri: reviewEndpoint.ecommerceReviewUpdate,
-        params: editedComment,
-      });
-      setComments(
-        comments.map((c) =>
-          c.id === editedComment.id ? { ...editedComment, user: c.user } : c
-        )
-      );
-      setEditMode(null);
-      fetchProfileAndComments(selectedOrder!.orderId); // Refetch comments after editing
-    } catch (error) {
-      console.error("Error updating comment", error);
-    }
-  };
-
-  const handleSaveEdit = () => {
-    if (editMode) {
-      const editedComment = {
-        id: editMode,
-        review: editReview,
-        rating: editRating,
-        userId: userId,
-      };
-      handleEdit(editedComment);
-    }
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    productId: string,
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
-    if (hasUserCommented) {
+    if (hasUserCommented[productId]) {
       alert("You can only comment once on this product.");
       return;
     }
     const newComment = {
-      review: review,
-      rating: rating,
-      productId: selectedOrder!.orderId,
+      review: review[productId],
+      rating: rating[productId],
+      productId: productId,
       userId: userId,
     };
     try {
@@ -256,19 +273,31 @@ const OrderPage = () => {
         params: newComment,
       });
       console.log("Response data:", response.data);
-      if (response.status >= 200 && response.status < 300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         const createdComment = {
-          ...response.data,
+          ...response.data.review,
           user: userEmail,
         };
-        setComments((prevComments) => [...prevComments, createdComment]);
-        setHasUserCommented(true);
-        fetchProfileAndComments(selectedOrder!.orderId); // Refetch comments after adding a new one
+        setComments((prevComments) => ({
+          ...prevComments,
+          [productId]: [...prevComments[productId], createdComment],
+        }));
+        setHasUserCommented((prev) => ({
+          ...prev,
+          [productId]: true,
+        }));
+        setSuccessMessage("Review submitted successfully!");
       } else {
         console.error("Unexpected response format:", response.data);
       }
-      setReview("");
-      setRating(0);
+      setReview((prev) => ({
+        ...prev,
+        [productId]: "",
+      }));
+      setRating((prev) => ({
+        ...prev,
+        [productId]: 0,
+      }));
     } catch (error) {
       console.error("Error creating comment", error);
     }
@@ -290,7 +319,7 @@ const OrderPage = () => {
         <p>Order Page</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
-        <p>user@example.com</p>
+        <p>{userEmail}</p>
       </div>
       <div className="mt-8 overflow-x-hidden relative space-x-6">
         <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
@@ -348,15 +377,17 @@ const OrderPage = () => {
             </Button>
           </div>
           <OrderDataTable
-            columns={getOrderColumns(stage, handleRatingClick)}
+            columns={getOrderColumns(stage, (order) =>
+              handleRatingClick(order.products)
+            )}
             data={orders}
           />
         </div>
       </div>
 
       <Dialog
-        open={!!selectedOrder}
-        onOpenChange={() => setSelectedOrder(null)}
+        open={!!selectedProducts}
+        onOpenChange={() => setSelectedProducts(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -365,80 +396,121 @@ const OrderPage = () => {
               Để lại đánh giá của bạn về sản phẩm này.
             </DialogDescription>
           </DialogHeader>
-          {selectedOrder && (
-            <div>
-              <div className="flex items-center">
-                <Image
-                  src={selectedOrder.products[0].imgSrc}
-                  alt={selectedOrder.products[0].productId}
-                  width={100}
-                  height={100}
-                />
-                <div className="ml-4">
-                  <h3>{selectedOrder.products[0].productId}</h3>
-                  <p>Chất lượng sản phẩm: {selectedOrder.rating || "N/A"}</p>
+          {selectedProducts && selectedProducts.length > 0 && (
+            <div className="overflow-y-auto max-h-96">
+              {selectedProducts.map((product) => (
+                <div key={product.productId} className="mb-6">
+                  <div className="flex items-center">
+                    <Image
+                      src={product.imgSrc}
+                      alt={product.name}
+                      width={100}
+                      height={100}
+                    />
+                    <div className="ml-4">
+                      <h3>{product.name}</h3>
+                      <p>Chất lượng sản phẩm: {product.rating || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    {hasUserCommented[product.productId] ? (
+                      <div className="text-green-500">
+                        Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
+                      </div>
+                    ) : (
+                      <Form {...form}>
+                        <form
+                          onSubmit={(e) => handleSubmit(product.productId, e)}
+                          className="space-y-4"
+                        >
+                          <div className="flex items-center mb-4">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="relative w-8 h-8 flex items-center"
+                                onClick={(e) => {
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
+                                  const clickX = e.clientX - rect.left;
+                                  if (clickX <= rect.width / 2) {
+                                    setRating((prev) => ({
+                                      ...prev,
+                                      [product.productId]: i + 0.5,
+                                    }));
+                                  } else {
+                                    setRating((prev) => ({
+                                      ...prev,
+                                      [product.productId]: i + 1,
+                                    }));
+                                  }
+                                }}
+                              >
+                                <Star
+                                  className={`w-8 h-8 cursor-pointer ${
+                                    rating[product.productId] >= i + 1
+                                      ? "text-yellow-500"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                                {rating[product.productId] < i + 1 && (
+                                  <StarHalf
+                                    className={`absolute left-0 w-8 h-8 cursor-pointer ${
+                                      rating[product.productId] >= i + 0.5
+                                        ? "text-yellow-500"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                            <span className="ml-2 text-yellow-500 text-xl">
+                              {
+                                ratingLabels[
+                                  Math.ceil(rating[product.productId]) - 1
+                                ]
+                              }
+                            </span>
+                          </div>
+
+                          <div className="mb-4">
+                            <Label
+                              htmlFor="review"
+                              className="block text-sm font-medium text-gray-700"
+                            >
+                              Đúng với mô tả:
+                            </Label>
+                            <Textarea
+                              id="review"
+                              value={review[product.productId] || ""}
+                              onChange={(e) =>
+                                setReview((prev) => ({
+                                  ...prev,
+                                  [product.productId]: e.target.value,
+                                }))
+                              }
+                              placeholder="Hãy chia sẻ những điều bạn thích về sản phẩm này với những người mua khác nhé."
+                              required
+                              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600"
+                          >
+                            Submit
+                          </Button>
+                          {successMessage && (
+                            <div className="mt-4 text-green-500">
+                              {successMessage}
+                            </div>
+                          )}
+                        </form>
+                      </Form>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4">
-                <Form {...form}>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex items-center mb-4">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-6 h-6 cursor-pointer ${
-                            rating >= i + 1
-                              ? "text-yellow-500"
-                              : "text-gray-300"
-                          }`}
-                          onClick={() => setRating(i + 1)}
-                        />
-                      ))}
-                      <span className="ml-2 text-yellow-500">
-                        {ratingLabels[rating - 1]}
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <Label
-                        htmlFor="review"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Đúng với mô tả:
-                      </Label>
-                      <Textarea
-                        id="review"
-                        value={review}
-                        onChange={(e) => setReview(e.target.value)}
-                        placeholder="Hãy chia sẻ những điều bạn thích về sản phẩm này với những người mua khác nhé."
-                        required
-                        className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        className="flex items-center px-4 py-2 "
-                      >
-                        <CameraIcon className="icon-camera mr-2"></CameraIcon>{" "}
-                        Thêm Hình ảnh
-                      </Button>
-                      <Button
-                        type="button"
-                        className="flex items-center px-4 py-2 "
-                      >
-                        <VideoIcon className="icon-video mr-2"></VideoIcon> Thêm
-                        Video
-                      </Button>
-                    </div>
-                    <Button
-                      type="submit"
-                      className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600"
-                    >
-                      Submit
-                    </Button>
-                  </form>
-                </Form>
-              </div>
+              ))}
             </div>
           )}
         </DialogContent>
