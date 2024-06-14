@@ -144,11 +144,13 @@ export default function CheckoutPage() {
           uri: paymentEndpoints.PaymentMethod,
         });
 
+        console.log("Payment Methods Response:", res.data);
+
         if (res.statusCode >= 200 && res.statusCode <= 300) {
           const methods = res.data.paymentMethods.map((method: any) => ({
             id: method.id,
             type: method.type,
-            label: method.type === "vnpay" ? "VNPay" : "ZaloPay",
+            label: method.type.charAt(0).toUpperCase() + method.type.slice(1),
           }));
           setPaymentMethods(methods);
         } else {
