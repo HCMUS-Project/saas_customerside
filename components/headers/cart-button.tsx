@@ -4,10 +4,12 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useCartListener } from "@/constants/use-cart";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 const CartButton = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const router = useRouter();
+  const profileStore = useProfileStore();
 
   useCartListener((updatedCart) => {
     setCartItemCount(updatedCart.length);
@@ -26,6 +28,10 @@ const CartButton = () => {
     <Button
       className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full  text-white"
       onClick={handleCartClick}
+      style={{
+        backgroundColor: profileStore.buttonColor,
+        color: profileStore.headerTextColor,
+      }}
     >
       <ShoppingCart className="w-6 h-6" />
       {cartItemCount > 0 && (

@@ -71,9 +71,12 @@ const AllBooking = ({ bookings = [] }: AllBookingProps) => {
         >
           <CarouselContent className="flex">
             {loading
-              ? Array.from({ length: 3 }).map((_, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                    <Card className="h-full">
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="md:basis-1/2 lg:basis-1/4 p-2"
+                  >
+                    <Card className="h-full border border-gray-200">
                       <div className="w-full h-[200px] relative">
                         <Skeleton className="w-full h-full" />
                       </div>
@@ -86,12 +89,15 @@ const AllBooking = ({ bookings = [] }: AllBookingProps) => {
                   </CarouselItem>
                 ))
               : extendedBookings.map((booking, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                    <Card className="h-full">
+                  <CarouselItem
+                    key={index}
+                    className="md:basis-1/2 lg:basis-1/4 p-2"
+                  >
+                    <Card className="h-full border border-gray-200 shadow-md rounded-md pb-10">
                       <Link href={`/bookings/services/${booking.id}`}>
                         <div className="w-full h-[200px] relative">
                           <Image
-                            className="object-contain"
+                            className="object-cover h-full w-full"
                             src={booking.images[0]}
                             alt={booking.name}
                             fill
@@ -99,24 +105,25 @@ const AllBooking = ({ bookings = [] }: AllBookingProps) => {
                         </div>
 
                         <CardContent className="space-y-2 py-2">
-                          <h2 className=" font-medium uppercase">
+                          <h4 className="font-medium uppercase text-sm">
                             {booking.name}
-                            <div className="flex items-center">
-                              {Array.from(
-                                { length: booking.rating },
-                                (_, i) => (
-                                  <Star
-                                    key={i}
-                                    className="w-4 h-4 text-yellow-400"
-                                  />
-                                )
-                              )}
-                            </div>
-                          </h2>
-                          <p className="text-gray-500 max-w-[150px]">
-                            {booking.description}
-                          </p>
-                          <div className="font-bold">{booking.price}VND</div>
+                          </h4>
+                          <div className="flex items-center space-x-1">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < booking.rating
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+
+                          <div className="font-bold text-sm">
+                            {booking.price} VND
+                          </div>
                         </CardContent>
                       </Link>
                     </Card>

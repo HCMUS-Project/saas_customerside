@@ -8,4 +8,6 @@ export const bookingEndpoints = {
   createBookings: "api/booking/bookings/create",
   slotBookings: (date: string, serviceId: string) =>
     `/api/booking/bookings/search?date=${date}&service=${serviceId}`,
+  findAllVoucher: "api/booking/voucher/find/all",
+  findVoucher: (id: string) => `api/booking/voucher/find/${id}`,
 };

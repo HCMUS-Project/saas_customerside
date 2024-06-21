@@ -83,9 +83,10 @@ const UserInfo = () => {
 
   const handleSaveProfile = async () => {
     try {
+      const { email, ...updatedUserData } = userData; // Remove email field
       const response = await AXIOS.POST({
         uri: authEndpoint.updateProfile,
-        params: { ...userData, age: parseInt(userData?.age.toString()) },
+        params: { ...updatedUserData, age: parseInt(userData?.age.toString()) },
       });
 
       if (response) {

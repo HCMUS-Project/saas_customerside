@@ -171,56 +171,65 @@ export default function CheckoutPage() {
     setVoucherCode(e.target.value);
   };
 
-  const fetchVoucher = useCallback(async () => {
-    if (appliedVouchers.includes(voucherCode)) {
-      Swal.fire("Error", "Voucher already applied.", "error");
-      return;
-    }
-
-    try {
-      const domain = "30shine.com";
-
-      const res = await AXIOS.GET({
-        uri: voucherEnpoint.findVoucher(domain, voucherCode),
-      });
-
-      console.log("Voucher Response:", res.data);
-
-      const voucher = res.data.voucher;
-
-      if (!voucher) {
-        throw new Error("Voucher not found in the response");
-      }
-
-      if (calculateTotalAmount() < voucher.minAppValue) {
-        Swal.fire(
-          "Error",
-          "Order value is less than the minimum applicable value for this voucher.",
-          "error"
-        );
+  const fetchVoucher = useCallback(
+    async (code: string) => {
+      if (appliedVouchers.includes(code)) {
+        Swal.fire("Error", "Voucher already applied.", "error");
         return;
       }
 
-      setVoucherData(voucher);
-      setVoucherApplied(true);
-      setAppliedVouchers([...appliedVouchers, voucherCode]);
+      try {
+        const domain = "30shine.com";
 
-      const discount = Math.min(
-        voucher.maxDiscount,
-        (voucher.discountPercent || 0) * calculateTotalAmount()
-      );
+        const res = await AXIOS.GET({
+          uri: voucherEnpoint.findVoucher(domain, code),
+        });
 
-      console.log("Discount Amount:", discount);
+        console.log("Voucher Response:", res.data);
 
-      setDiscountAmount(discount);
-      Swal.fire("Success", "Voucher applied successfully!", "success");
-    } catch (error) {
-      console.error("Error fetching voucher data:", error);
-    }
-  }, [voucherCode, appliedVouchers]);
+        const voucher = res.data.voucher;
+
+        if (!voucher) {
+          throw new Error("Voucher not found in the response");
+        }
+
+        if (calculateTotalAmount() < voucher.minAppValue) {
+          Swal.fire(
+            "Error",
+            "Order value is less than the minimum applicable value for this voucher.",
+            "error"
+          );
+          return;
+        }
+
+        setVoucherData(voucher);
+        setVoucherApplied(true);
+        setAppliedVouchers([...appliedVouchers, code]);
+
+        const discount = Math.min(
+          voucher.maxDiscount,
+          (voucher.discountPercent || 0) * calculateTotalAmount()
+        );
+
+        console.log("Discount Amount:", discount);
+
+        setDiscountAmount(discount);
+        Swal.fire("Success", "Voucher applied successfully!", "success");
+      } catch (error) {
+        console.error("Error fetching voucher data:", error);
+      }
+    },
+    [appliedVouchers]
+  );
 
   const handleApplyVoucher = () => {
-    fetchVoucher();
+    fetchVoucher(voucherCode);
+  };
+
+  const handleVoucherSelect = (code: string) => {
+    setVoucherCode(code);
+    fetchVoucher(code);
+    closeVoucherDialog();
   };
 
   const handlePlaceOrder = async () => {
@@ -349,9 +358,9 @@ export default function CheckoutPage() {
   const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Đảm bảo số điện thoại có đầu số +84
+    // Ensure the phone number has the +84 prefix
     if (name === "phoneNumber") {
-      let formattedValue = value.replace(/\D/g, ""); // Loại bỏ tất cả các ký tự không phải số
+      let formattedValue = value.replace(/\D/g, ""); // Remove all non-numeric characters
       if (formattedValue.startsWith("84")) {
         formattedValue = `+${formattedValue}`;
       } else if (!formattedValue.startsWith("+84")) {
@@ -425,7 +434,7 @@ export default function CheckoutPage() {
           {/* Address Section */}
           <div className="mb-8 p-4 border border-dashed border-gray-300 rounded-lg">
             <div className="border-b border-dashed border-gray-300 pb-2 mb-4">
-              <h2 className="text-lg font-semibold">Địa Chỉ Nhận Hàng</h2>
+              <h2 className="text-lg font-semibold">Shipping Address</h2>
             </div>
             {selectedAddress && (
               <div className="mb-2 flex justify-between items-center">
@@ -435,14 +444,14 @@ export default function CheckoutPage() {
                   {selectedAddress.addressLine2}, {selectedAddress.city},{" "}
                   {selectedAddress.postalCode}
                   <div className="bg-white border border-red-500 text-red-500 px-2 py-1 rounded-md inline-block ml-2">
-                    Mặc Định
+                    Default
                   </div>
                 </div>
                 <Button
                   onClick={openAddressDialog}
                   className="bg-white border border-blue-500 text-blue-500 px-2 py-1 rounded-md"
                 >
-                  Thay Đổi
+                  Change
                 </Button>
               </div>
             )}
@@ -452,10 +461,10 @@ export default function CheckoutPage() {
           <div className="mb-8 p-4 border rounded-lg">
             <div className="space-y-4">
               <div className="grid grid-cols-12 gap-4 font-semibold text-gray-700">
-                <div className="col-span-6">Sản phẩm</div>
-                <div className="col-span-2 text-center">Đơn giá</div>
-                <div className="col-span-2 text-center">Số lượng</div>
-                <div className="col-span-2 text-center">Thành tiền</div>
+                <div className="col-span-6">Product</div>
+                <div className="col-span-2 text-center">Price</div>
+                <div className="col-span-2 text-center">Quantity</div>
+                <div className="col-span-2 text-center">Total</div>
               </div>
               {cartProducts.map((product) => (
                 <div
@@ -503,12 +512,12 @@ export default function CheckoutPage() {
                   onClick={openVoucherDialog}
                   className="border border-red-500 text-red-500 px-2 py-1 rounded-md cursor-pointer"
                 >
-                  Voucher của Shop
+                  Shop Vouchers
                 </span>
               </div>
               <div className="text-right">
                 <span className="text-gray-600">
-                  Tổng số tiền ({cartProducts.length} sản phẩm):
+                  Total ({cartProducts.length} products):
                 </span>
                 <span className="text-red-500 font-semibold ml-2">
                   {totalAmount.toFixed(3)}
@@ -556,9 +565,7 @@ export default function CheckoutPage() {
 
           {/* Payment Method Section */}
           <div className="mb-8 p-4 border rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">
-              Phương thức thanh toán
-            </h2>
+            <h2 className="text-lg font-semibold mb-2">Payment Method</h2>
             <div className="flex space-x-4 mb-4">
               {paymentMethods.map((method) => (
                 <button
@@ -576,12 +583,12 @@ export default function CheckoutPage() {
             </div>
             {selectedPaymentMethod === "vnpay" && (
               <div className="p-4 border rounded-lg mb-4">
-                <span>VNPay - Ví VNPay</span>
+                <span>VNPay - VNPay Wallet</span>
               </div>
             )}
             {selectedPaymentMethod === "cod" && (
               <div className="p-4 border rounded-lg mb-4">
-                <span>Thanh toán khi nhận hàng</span>
+                <span>Cash on Delivery</span>
               </div>
             )}
           </div>
@@ -590,21 +597,21 @@ export default function CheckoutPage() {
           <div className="p-4 border rounded-lg">
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
-                <span>Tổng tiền hàng</span>
+                <span>Total Products</span>
                 <span>{totalAmount.toFixed(3)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Phí vận chuyển</span>
+                <span>Shipping Fee</span>
                 <span>{shippingFee.toFixed(3)}</span>
               </div>
               {voucherApplied && (
                 <div className="flex justify-between">
-                  <span>Giảm giá</span>
+                  <span>Discount</span>
                   <span>-{discountAmount.toFixed(3)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Tổng thanh toán</span>
+                <span>Total Payment</span>
                 <span className="text-red-500 font-semibold">
                   {finalAmount.toFixed(3)}
                 </span>
@@ -615,12 +622,12 @@ export default function CheckoutPage() {
               variant="secondary"
               className="mt-4 w-full text-white py-2 rounded-md "
             >
-              Đặt hàng
+              Place Order
             </Button>
             <p className="text-sm text-gray-500 mt-2 text-center">
-              Nhấn {"Đặt hàng"} đồng nghĩa với việc bạn đồng ý tuân theo{" "}
+              By clicking {"Place Order"} you agree to our{" "}
               <Link href="#" className="text-blue-500">
-                Điều khoản của chúng tôi
+                Terms and Conditions
               </Link>
             </p>
           </div>
@@ -632,9 +639,9 @@ export default function CheckoutPage() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Địa Chỉ Của Tôi</DialogTitle>
+                <DialogTitle>My Addresses</DialogTitle>
                 <DialogDescription>
-                  Vui lòng chọn hoặc thêm một địa chỉ giao hàng mới
+                  Please select or add a new shipping address
                 </DialogDescription>
               </DialogHeader>
               {addresses.length > 0 &&
@@ -657,16 +664,16 @@ export default function CheckoutPage() {
                       onClick={() => handleAddressSelect(address)}
                       className="bg-blue-500 text-white px-4 py-2 rounded-md"
                     >
-                      Chọn
+                      Select
                     </Button>
                   </div>
                 ))}
               <div className="border-t pt-4 mt-4">
-                <h3 className="text-lg font-semibold mb-2">Địa chỉ mới</h3>
+                <h3 className="text-lg font-semibold mb-2">New Address</h3>
                 <div className="space-y-4">
                   <Input
                     type="text"
-                    placeholder="Họ và tên"
+                    placeholder="Full Name"
                     name="fullName"
                     value={newAddress.fullName}
                     onChange={handleNewAddressChange}
@@ -674,7 +681,7 @@ export default function CheckoutPage() {
                   />
                   <Input
                     type="text"
-                    placeholder="Số điện thoại"
+                    placeholder="Phone Number"
                     name="phoneNumber"
                     value={newAddress.phoneNumber}
                     onChange={handleNewAddressChange}
@@ -682,7 +689,7 @@ export default function CheckoutPage() {
                   />
                   <Input
                     type="text"
-                    placeholder="Tỉnh/ Thành phố, Quận/Huyện, Phường/Xã"
+                    placeholder="City, District, Ward"
                     name="city"
                     value={newAddress.city}
                     onChange={handleNewAddressChange}
@@ -690,7 +697,7 @@ export default function CheckoutPage() {
                   />
                   <Input
                     type="text"
-                    placeholder="Địa chỉ cụ thể"
+                    placeholder="Specific Address"
                     name="addressLine1"
                     value={newAddress.addressLine1}
                     onChange={handleNewAddressChange}
@@ -704,20 +711,20 @@ export default function CheckoutPage() {
                       onChange={handleNewAddressChange}
                       className="form-checkbox h-4 w-4 text-red-500"
                     />
-                    <span>Đặt làm địa chỉ mặc định</span>
+                    <span>Set as default address</span>
                   </div>
                   <div className="flex space-x-4">
                     <Button
                       onClick={handleNewAddressSubmit}
                       className="bg-red-500 text-white px-4 py-2 rounded-md"
                     >
-                      Hoàn thành
+                      Complete
                     </Button>
                     <Button
                       onClick={closeAddressDialog}
                       className="bg-gray-500 text-white px-4 py-2 rounded-md"
                     >
-                      Trở Lại
+                      Back
                     </Button>
                   </div>
                 </div>
@@ -732,9 +739,9 @@ export default function CheckoutPage() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Danh Sách Voucher</DialogTitle>
+                <DialogTitle>Voucher List</DialogTitle>
                 <DialogDescription>
-                  Vui lòng chọn một voucher để áp dụng
+                  Please select a voucher to apply
                 </DialogDescription>
               </DialogHeader>
               {vouchers.length > 0 &&
@@ -745,17 +752,17 @@ export default function CheckoutPage() {
                   >
                     <div>
                       <p>
-                        <strong>Mã: {voucher.voucherCode}</strong>
+                        <strong>Code: {voucher.voucherCode}</strong>
                       </p>
-                      <p>Giảm: {voucher.discountPercent * 100}%</p>
-                      <p>Tối đa: {voucher.maxDiscount} đ</p>
-                      <p>Tối thiểu áp dụng: {voucher.minAppValue} đ</p>
+                      <p>Discount: {voucher.discountPercent * 100}%</p>
+                      <p>Max Discount: {voucher.maxDiscount} đ</p>
+                      <p>Min Applicable Value: {voucher.minAppValue} đ</p>
                     </div>
                     <Button
-                      onClick={() => setVoucherCode(voucher.voucherCode)}
+                      onClick={() => handleVoucherSelect(voucher.voucherCode)}
                       className="bg-blue-500 text-white px-4 py-2 rounded-md"
                     >
-                      Chọn
+                      Select
                     </Button>
                   </div>
                 ))}

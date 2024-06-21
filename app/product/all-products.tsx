@@ -1,17 +1,10 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
 
 interface Product {
@@ -29,6 +22,7 @@ interface AllProductProps {
 
 const AllProduct = ({ products = [] }: AllProductProps) => {
   const [loading, setLoading] = useState(true); // State to manage loading
+  const [displayedProducts, setDisplayedProducts] = useState(4); // State to manage displayed products
 
   useEffect(() => {
     // Simulate fetching data
@@ -39,94 +33,78 @@ const AllProduct = ({ products = [] }: AllProductProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-
-  const handleViewAllClick = () => {
-    router.push("/all-products");
+  const handleViewMoreClick = () => {
+    setDisplayedProducts((prev) => prev + 4); // Load 4 more products
   };
 
-  const extendedProducts =
-    products.length > 0 ? [...products, ...products, ...products] : [];
+  const displayed = products.slice(0, displayedProducts);
 
   return (
-    <div className="container pt-16">
+    <div className="container pt-16 pb-20">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-medium text-2xl">All Products</h2>
-        <Button
-          variant="link"
-          onClick={handleViewAllClick}
-          className="text-blue-500"
-        >
-          View All
-        </Button>
       </div>
 
-      <div className="relative">
-        <Carousel
-          opts={{
-            align: "start",
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="flex">
-            {loading
-              ? Array.from({ length: 3 }).map((_, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                    <Card className="h-full">
-                      <div className="w-full h-[200px] relative">
-                        <Skeleton className="w-full h-full" />
-                      </div>
-                      <CardContent className="space-y-2 py-2">
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-4 w-1/4" />
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))
-              : extendedProducts.map((product, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                    <Card className="h-full">
-                      <Link href={`/product/${product.id}`}>
-                        <div className="w-full h-[200px] relative">
-                          <Image
-                            className="object-contain"
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {loading
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="h-full">
+                <div className="w-full h-[200px] relative">
+                  <Skeleton className="w-full h-full" />
+                </div>
+                <CardContent className="space-y-2 py-2">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/4" />
+                </CardContent>
+              </Card>
+            ))
+          : displayed.map((product, index) => (
+              <Card
+                key={index}
+                className="h-full border border-gray-200 shadow-md rounded-md mb-10"
+              >
+                <Link href={`/product/${product.id}`}>
+                  <div className="w-full h-[200px] relative">
+                    <Image
+                      className="object-contain"
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                    />
+                  </div>
+                  <CardContent className="space-y-2 py-2">
+                    <div className="flex flex-col space-y-1">
+                      <h4 className="font-medium uppercase text-sm">
+                        {product.name}
+                      </h4>
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < product.rating
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            }`}
                           />
-                        </div>
+                        ))}
+                      </div>
+                    </div>
 
-                        <CardContent className="space-y-2 py-2">
-                          <h2 className="font-medium uppercase">
-                            {product.name}
-                            <div className="flex items-center">
-                              {Array.from(
-                                { length: product.rating },
-                                (_, i) => (
-                                  <Star
-                                    key={i}
-                                    className="w-4 h-4 text-yellow-400"
-                                  />
-                                )
-                              )}
-                            </div>
-                          </h2>
-                          <p className="text-gray-500 max-w-[150px]">
-                            {product.description}
-                          </p>
-                          <div className="font-bold">{product.price}VND</div>
-                        </CardContent>
-                      </Link>
-                    </Card>
-                  </CarouselItem>
-                ))}
-          </CarouselContent>
-          <CarouselPrevious className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 cursor-pointer" />
-          <CarouselNext className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 cursor-pointer" />
-        </Carousel>
+                    <div className="font-bold text-sm">{product.price} VND</div>
+                  </CardContent>
+                </Link>
+              </Card>
+            ))}
       </div>
+      {displayedProducts < products.length && (
+        <div className="flex justify-center mt-4">
+          <Button variant="outline" onClick={handleViewMoreClick}>
+            View More
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

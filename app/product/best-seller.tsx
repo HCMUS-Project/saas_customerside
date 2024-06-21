@@ -71,9 +71,12 @@ const BestSeller = ({ products }: BestSellerProps) => {
             className="w-full"
           >
             <CarouselContent className="flex">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                  <Card className="h-full">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <CarouselItem
+                  key={index}
+                  className="md:basis-1/2 lg:basis-1/4 p-2"
+                >
+                  <Card className="h-full border border-gray-200">
                     <div className="w-full h-[200px] relative">
                       <Skeleton className="w-full h-full" />
                     </div>
@@ -102,8 +105,11 @@ const BestSeller = ({ products }: BestSellerProps) => {
           >
             <CarouselContent className="flex">
               {extendedProducts.map((product, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 px-2">
-                  <Card className="h-full">
+                <CarouselItem
+                  key={index}
+                  className="md:basis-1/2 lg:basis-1/4 p-2"
+                >
+                  <Card className="h-full border border-gray-200 shadow-md rounded-md mb-10">
                     <Link href={`/product/${product.id}`}>
                       <div className="w-full h-[200px] relative">
                         <Image
@@ -115,22 +121,25 @@ const BestSeller = ({ products }: BestSellerProps) => {
                       </div>
 
                       <CardContent className="space-y-2 py-2">
-                        <h4 className="font-medium uppercase">
+                        <h4 className="font-medium uppercase text-sm">
                           {product.name}
-                          <div className="flex items-center">
-                            {Array.from(
-                              { length: Math.round(product.rating) },
-                              (_, i) => (
-                                <Star
-                                  key={i}
-                                  className="w-4 h-4 text-yellow-400"
-                                />
-                              )
-                            )}
-                          </div>
                         </h4>
-                        <p className="max-w-[150px]">{product.description}</p>
-                        <div className="font-bold">{product.price}VND</div>
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < product.rating
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <div className="font-bold text-sm">
+                          {product.price} VND
+                        </div>
                       </CardContent>
                     </Link>
                   </Card>

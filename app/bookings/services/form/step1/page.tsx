@@ -22,6 +22,7 @@ import {
 import { useForm } from "react-hook-form";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { AXIOS } from "@/constants/network/axios";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 interface Service {
   id: string;
@@ -54,6 +55,7 @@ export default function ServiceCards() {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const router = useRouter();
+  const profileStore = useProfileStore();
 
   useEffect(() => {
     const getData = async () => {
@@ -120,6 +122,10 @@ export default function ServiceCards() {
                   </CardContent>
                   <CardFooter>
                     <Button
+                      style={{
+                        backgroundColor: profileStore.buttonColor,
+                        color: profileStore.headerTextColor,
+                      }}
                       type="button"
                       className="w-full"
                       onClick={() => handleSelectService(service)}
@@ -147,6 +153,9 @@ export default function ServiceCards() {
                     {""}
 
                     <Button
+                      style={{
+                        color: profileStore.headerTextColor,
+                      }}
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedService(null)}
@@ -162,7 +171,14 @@ export default function ServiceCards() {
                   {selectedService ? selectedService.price.toLocaleString() : 0}{" "}
                   VND
                 </p>
-                <Button type="submit" disabled={!selectedService}>
+                <Button
+                  style={{
+                    backgroundColor: profileStore.buttonColor,
+                    color: profileStore.headerTextColor,
+                  }}
+                  type="submit"
+                  disabled={!selectedService}
+                >
                   Xong
                 </Button>
               </div>

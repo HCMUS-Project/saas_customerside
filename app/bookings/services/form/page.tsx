@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { format, addDays } from "date-fns";
 import Swal from "sweetalert2";
@@ -33,10 +33,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { AXIOS } from "@/constants/network/axios";
 import { employeeEndpoints } from "@/constants/api/employee.api";
-import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import LoadingPage from "@/app/loading"; // Import loader component
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton component
+import { bookingEndpoints } from "@/constants/api/bookings.api";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 interface Service {
   id: string;
@@ -62,6 +71,16 @@ interface Slot {
   employees: Employee[];
 }
 
+interface Voucher {
+  id: string;
+  voucherCode: string;
+  voucherName: string;
+  discountPercent: number;
+  maxDiscount: number;
+  minAppValue: number;
+  expireAt: string;
+}
+
 const FormSchema = z.object({
   bookingDate: z.date({
     required_error: "Booking date is required.",
@@ -81,7 +100,15 @@ export default function BookingForm() {
   const [bookedSlots, setBookedSlots] = useState<Slot[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [loadingEmployees, setLoadingEmployees] = useState(false); // State for employee loading
+  const [isVoucherDialogOpen, setIsVoucherDialogOpen] = useState(false);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [voucherCode, setVoucherCode] = useState<string>("");
+  const [voucherApplied, setVoucherApplied] = useState(false);
+  const [voucherData, setVoucherData] = useState<any>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedVouchers, setAppliedVouchers] = useState<string[]>([]);
   const router = useRouter();
+  const profileStore = useProfileStore();
 
   useEffect(() => {
     const storedService = localStorage.getItem("selectedService");
@@ -95,6 +122,12 @@ export default function BookingForm() {
       fetchAvailableDates();
     }
   }, [selectedService]);
+
+  useEffect(() => {
+    if (isVoucherDialogOpen) {
+      fetchVouchers();
+    }
+  }, [isVoucherDialogOpen]);
 
   const fetchAvailableDates = async () => {
     const storedService = localStorage.getItem("selectedService");
@@ -240,16 +273,13 @@ export default function BookingForm() {
     localStorage.removeItem("selectedService");
   };
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault(); // Prevent the default form submission
-
+  const handleSubmit = async (data: any) => {
     if (
       !selectedDate ||
       !selectedTime ||
       !selectedService ||
       !selectedEmployee
     ) {
-      console.error("Date, time, service, or employee not selected");
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -273,25 +303,20 @@ export default function BookingForm() {
       bookingDateTime.getTime() - bookingDateTime.getTimezoneOffset() * 60000
     );
 
-    console.log("Selected Date and Time:", selectedDate, selectedTime);
-    console.log("UTC Date and Time:", utcDateTime.toISOString());
-
     const bookingData = {
       date: utcDateTime.toISOString().split("T")[0], // Use the UTC date part
       note: "đặt chỗ",
       service: serviceId, // Pass the service ID directly
       startTime: utcDateTime.toISOString(),
       employee: selectedEmployee,
+      voucher: voucherData ? voucherData.id : null,
     };
-    console.log(bookingData);
 
     try {
       const response = await AXIOS.POST({
         uri: bookingEndpoints.createBookings,
         params: bookingData,
       });
-
-      console.log("Booking response:", response.data);
 
       Swal.fire({
         icon: "success",
@@ -308,11 +333,7 @@ export default function BookingForm() {
       setSelectedEmployee(null);
       await fetchAvailableDates(); // Fetch available dates again
       router.push("/bookings");
-
-      console.log("Booking successful:", bookingData);
     } catch (error) {
-      console.log(error);
-
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -321,197 +342,399 @@ export default function BookingForm() {
     }
   };
 
-  const totalAmount = selectedService ? selectedService.price : 0;
+  const fetchVouchers = async () => {
+    try {
+      const res = await AXIOS.GET({
+        uri: bookingEndpoints.findAllVoucher,
+      });
+
+      if (res.statusCode >= 200 && res.statusCode <= 300) {
+        setVouchers(res.data.vouchers || []);
+      } else {
+        Swal.fire("Error", "Failed to fetch vouchers.", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching vouchers:", error);
+      Swal.fire("Error", "Failed to fetch vouchers.", "error");
+    }
+  };
+
+  const handleVoucherCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVoucherCode(e.target.value);
+  };
+
+  const fetchVoucher = useCallback(
+    async (code: string) => {
+      if (appliedVouchers.includes(code)) {
+        Swal.fire("Error", "Voucher already applied.", "error");
+        return;
+      }
+
+      try {
+        const res = await AXIOS.GET({
+          uri: bookingEndpoints.findVoucher(code),
+        });
+
+        const voucher = res.data.voucher;
+
+        if (!voucher) {
+          throw new Error("Voucher not found in the response");
+        }
+
+        if (selectedService && selectedService.price < voucher.minAppValue) {
+          Swal.fire(
+            "Error",
+            "Service value is less than the minimum applicable value for this voucher.",
+            "error"
+          );
+          return;
+        }
+
+        setVoucherData(voucher);
+        setVoucherApplied(true);
+        setAppliedVouchers([...appliedVouchers, code]);
+
+        const discount = Math.min(
+          voucher.maxDiscount,
+          (voucher.discountPercent || 0) *
+            (selectedService ? selectedService.price : 0)
+        );
+
+        setDiscountAmount(discount);
+        Swal.fire("Success", "Voucher applied successfully!", "success");
+      } catch (error) {
+        console.log("error");
+      }
+    },
+    [appliedVouchers, selectedService, router]
+  );
+
+  const handleApplyVoucher = () => {
+    fetchVoucher(voucherCode);
+  };
+
+  const handleVoucherSelect = (code: string) => {
+    const selectedVoucher = vouchers.find(
+      (voucher) => voucher.voucherCode === code
+    );
+    if (selectedVoucher) {
+      setVoucherCode(selectedVoucher.voucherCode);
+      fetchVoucher(selectedVoucher.id);
+      setIsVoucherDialogOpen(false);
+    }
+  };
+
+  const openVoucherDialog = () => setIsVoucherDialogOpen(true);
+  const closeVoucherDialog = () => setIsVoucherDialogOpen(false);
+
+  const totalAmount = selectedService
+    ? selectedService.price - discountAmount
+    : 0;
 
   return (
-    <div className="container mx-auto mt-8">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>BOOKING</CardTitle>
-          <CardDescription>Choose time to...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              className="space-y-1.5 pt-2"
-              onSubmit={(e) => handleSubmit(e)}
-            >
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="service">Chọn dịch vụ</Label>
-                <div className="border p-2 rounded">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      {selectedService ? (
-                        <span className="ml-2">Đã chọn 1 dịch vụ</span>
-                      ) : (
-                        <span className="ml-2">No service selected</span>
+    <div className="container mb-20 mx-auto mt-8">
+      <div className="max-w-4xl mx-auto">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>BOOKING</CardTitle>
+            <CardDescription>Choose time to...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                className="space-y-1.5 pt-2"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="service">Select Service</Label>
+                  <div className="border p-2 rounded">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        {selectedService ? (
+                          <span className="ml-2">Service Selected</span>
+                        ) : (
+                          <span className="ml-2">No service selected</span>
+                        )}
+                      </div>
+                      <Button
+                        style={{
+                          color: profileStore.bodyTextColor,
+                        }}
+                        type="button"
+                        className="ml-auto "
+                        variant="link"
+                        onClick={() =>
+                          router.push("/bookings/services/form/step1")
+                        }
+                      >
+                        {selectedService ? "Change Service" : "Select Service"}
+                      </Button>
+                      {selectedService && (
+                        <Button
+                          style={{
+                            color: profileStore.bodyTextColor,
+                          }}
+                          variant="link"
+                          type="button"
+                          className="ml-2 text-red-500"
+                          onClick={handleClearService}
+                        >
+                          <XIcon className="h-5 w-5" />
+                        </Button>
                       )}
                     </div>
-                    <Button
-                      type="button"
-                      className="ml-auto "
-                      variant="link"
-                      onClick={() =>
-                        router.push("/bookings/services/form/step1")
-                      }
-                    >
-                      {selectedService ? "Change Service" : "Select Service"}
-                    </Button>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedService ? (
+                        <span className="bg-gray-200 px-2 py-1 rounded">
+                          {selectedService.name}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          No service selected
+                        </span>
+                      )}
+                    </div>
                     {selectedService && (
-                      <Button
-                        variant="link"
-                        type="button"
-                        className="ml-2 text-red-500"
-                        onClick={handleClearService}
-                      >
-                        <XIcon className="h-5 w-5" />
-                      </Button>
+                      <div className="mt-2 text-green-500">
+                        Total Amount to Pay: {totalAmount.toLocaleString()} VND
+                      </div>
                     )}
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedService ? (
-                      <span className="bg-gray-200 px-2 py-1 rounded">
-                        {selectedService.name}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        No service selected
-                      </span>
-                    )}
+                </div>
+
+                <div className="mb-8 p-4 border rounded-lg">
+                  <h2 className="text-lg font-semibold mb-2">Voucher</h2>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="text"
+                      placeholder="Enter voucher code"
+                      value={voucherCode}
+                      onChange={handleVoucherCodeChange}
+                      className="border border-gray-300 rounded-md p-2 w-full"
+                    />
+                    <Button
+                      style={{
+                        backgroundColor: profileStore.buttonColor,
+                        color: profileStore.headerTextColor,
+                      }}
+                      onClick={handleApplyVoucher}
+                      className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    >
+                      Apply
+                    </Button>
                   </div>
-                  {selectedService && (
-                    <div className="mt-2 text-green-500">
-                      Tổng số tiền bạn cần thanh toán:{" "}
-                      {totalAmount.toLocaleString()} VND
+                  <Button
+                    style={{
+                      backgroundColor: profileStore.buttonColor,
+                      color: profileStore.headerTextColor,
+                    }}
+                    onClick={openVoucherDialog}
+                    className="mt-4"
+                  >
+                    View Available Vouchers
+                  </Button>
+                  {voucherApplied && (
+                    <div className="mt-2">
+                      <p className="text-green-500">
+                        Voucher applied successfully!
+                      </p>
+                      <p className="text-gray-500">
+                        Discount:{" "}
+                        <span className="font-semibold text-black">
+                          {discountAmount.toFixed(3)}
+                        </span>
+                      </p>
+                      <p className="text-gray-500">
+                        Total after discount:{" "}
+                        <span className="font-semibold text-black">
+                          {totalAmount.toFixed(3)}
+                        </span>
+                      </p>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <FormField
-                control={form.control}
-                name="bookingDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Booking date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            type="button"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            field.onChange(date);
-                            if (date) {
-                              setSelectedDate(date);
-                              handleBookingDateSelect(date);
+                <FormField
+                  control={form.control}
+                  name="bookingDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Booking date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              style={{
+                                color: profileStore.bodyTextColor,
+                              }}
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              type="button"
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              if (date) {
+                                setSelectedDate(date);
+                                handleBookingDateSelect(date);
+                              }
+                            }}
+                            disabled={(date) =>
+                              !availableDates.some(
+                                (d) =>
+                                  d.getDate() === date.getDate() &&
+                                  d.getMonth() === date.getMonth() &&
+                                  d.getFullYear() === date.getFullYear()
+                              )
                             }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {availableSlots.length > 0 && (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Select Time</FormLabel>
+                    <div className="grid grid-cols-4 gap-2">
+                      {availableSlots.map((slot) => (
+                        <Button
+                          style={{
+                            backgroundColor: profileStore.buttonColor,
+                            color: profileStore.headerTextColor,
                           }}
-                          disabled={(date) =>
-                            !availableDates.some(
-                              (d) =>
-                                d.getDate() === date.getDate() &&
-                                d.getMonth() === date.getMonth() &&
-                                d.getFullYear() === date.getFullYear()
-                            )
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                          key={slot.startTime}
+                          type="button"
+                          onClick={() => handleTimeClick(slot.startTime)}
+                          className={`py-2 px-4 rounded-md ${
+                            selectedTime === slot.startTime
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-200 text-gray-700"
+                          }`}
+                          disabled={slot.employees.length === 0}
+                        >
+                          {slot.startTime}
+                        </Button>
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-              {availableSlots.length > 0 && (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Chọn giờ</FormLabel>
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableSlots.map((slot) => (
-                      <Button
-                        key={slot.startTime}
-                        type="button"
-                        onClick={() => handleTimeClick(slot.startTime)}
-                        className={`py-2 px-4 rounded-md ${
-                          selectedTime === slot.startTime
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-gray-700"
-                        }`}
-                        disabled={slot.employees.length === 0}
-                      >
-                        {slot.startTime}
-                      </Button>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-              {selectedTime && (
-                <>
-                  {loadingEmployees ? (
-                    <div className="flex justify-center items-center h-32">
-                      <LoadingPage />
-                    </div>
-                  ) : (
-                    employees.length > 0 && (
-                      <div className="space-y-2">
-                        <Label>Nhân viên làm việc</Label>
-                        <div className="flex space-x-2 overflow-x-auto pb-4">
-                          {employees.map((employee) => (
-                            <div
-                              key={employee.id}
-                              className={`border p-2 rounded-lg cursor-pointer ${
-                                selectedEmployee === employee.id
-                                  ? "border-blue-500"
-                                  : "border-gray-300"
-                              }`}
-                              onClick={() => setSelectedEmployee(employee.id)}
-                            >
-                              <Avatar className="justify-self-center">
-                                <AvatarImage
-                                  alt={`${employee.firstName} ${employee.lastName}`}
-                                  src={
-                                    employee.image ||
-                                    "https://github.com/shadcn.png"
-                                  }
-                                />
-                              </Avatar>
-                              <p className="text-center mt-2">
-                                {employee.firstName} {employee.lastName}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
+                {selectedTime && (
+                  <>
+                    {loadingEmployees ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Skeleton className="w-full h-32" />
                       </div>
-                    )
-                  )}
-                </>
-              )}
-              <Button className="w-full" variant="outline" type="submit">
-                Chốt giờ
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                    ) : (
+                      employees.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>Working Employees</Label>
+                          <div className="flex space-x-2 overflow-x-auto pb-4">
+                            {employees.map((employee) => (
+                              <div
+                                key={employee.id}
+                                className={`border p-2 rounded-lg cursor-pointer ${
+                                  selectedEmployee === employee.id
+                                    ? "border-blue-500"
+                                    : "border-gray-300"
+                                }`}
+                                onClick={() => setSelectedEmployee(employee.id)}
+                              >
+                                <Avatar className="justify-self-center">
+                                  <AvatarImage
+                                    alt={`${employee.firstName} ${employee.lastName}`}
+                                    src={
+                                      employee.image ||
+                                      "https://github.com/shadcn.png"
+                                    }
+                                  />
+                                </Avatar>
+                                <p className="text-center mt-2">
+                                  {employee.firstName} {employee.lastName}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
+
+                <Button
+                  style={{
+                    backgroundColor: profileStore.buttonColor,
+                    color: profileStore.headerTextColor,
+                  }}
+                  className="w-full"
+                  variant="outline"
+                  type="submit"
+                >
+                  Confirm Booking
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <Dialog
+          open={isVoucherDialogOpen}
+          onOpenChange={setIsVoucherDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Available Vouchers</DialogTitle>
+              <DialogDescription>
+                Please select a voucher to apply
+              </DialogDescription>
+            </DialogHeader>
+            {vouchers.length > 0 &&
+              vouchers.map((voucher) => (
+                <div
+                  key={voucher.id}
+                  className="mb-4 p-4 border rounded-lg flex justify-between items-center"
+                >
+                  <div>
+                    <p>
+                      <strong>Code: {voucher.voucherCode}</strong>
+                    </p>
+                    <p>Discount: {voucher.discountPercent * 100}%</p>
+                    <p>Max Discount: {voucher.maxDiscount} VND</p>
+                    <p>Minimum Order Value: {voucher.minAppValue} VND</p>
+                  </div>
+                  <Button
+                    style={{
+                      backgroundColor: profileStore.buttonColor,
+                      color: profileStore.headerTextColor,
+                    }}
+                    onClick={() => handleVoucherSelect(voucher.voucherCode)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                  >
+                    Select
+                  </Button>
+                </div>
+              ))}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

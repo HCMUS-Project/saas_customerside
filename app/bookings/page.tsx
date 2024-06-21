@@ -51,6 +51,7 @@ import Recommended from "./recommend-booking";
 import { AXIOS } from "@/constants/network/axios";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import SearchBooking from "./search";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 const items = [
   {
@@ -84,6 +85,7 @@ const FormSchema = z.object({
 });
 
 export default function Bookings() {
+  const profileStore = useProfileStore();
   const [bookingsData, setBookingsData] = useState<{ services: any[] }>({
     services: [],
   });
@@ -174,7 +176,15 @@ export default function Bookings() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Submit</Button>
+                  <Button
+                    style={{
+                      backgroundColor: profileStore.buttonColor,
+                      color: profileStore.headerTextColor,
+                    }}
+                    type="submit"
+                  >
+                    Submit
+                  </Button>
                 </form>
               </Form>
             </PopoverContent>

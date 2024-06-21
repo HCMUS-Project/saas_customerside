@@ -10,6 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/constants/use-cart";
+import { useAuthStore } from "@/hooks/store/auth.store";
+import { useProfileStore } from "@/hooks/store/profile.store";
+import Swal from "sweetalert2";
 
 interface Product {
   productId: string;
@@ -23,12 +26,14 @@ export default function CartPage() {
   const [count, setCount] = useState<number[]>([]);
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const [cartID, setCartID] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
+  const [removing, setRemoving] = useState<number | null>(null);
   const router = useRouter();
-  const { removeFromCart } = useCart(); // Use removeFromCart from the custom hook
+  const { removeFromCart } = useCart();
+  const profileStore = useProfileStore();
 
   const fetchCartData = async () => {
     try {
@@ -39,17 +44,32 @@ export default function CartPage() {
           response.data.carts[0].cartItems
         );
         if (result) setCartItems(result);
-        setLoading(false); // Set loading to false after data is fetched
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching cart data:", error);
-      setLoading(false); // Set loading to false if there's an error
+      setLoading(false);
+    }
+  };
+
+  const updateSelectedItemsFromLocalStorage = () => {
+    const selectedProductId = localStorage.getItem("selectedProductId");
+    if (selectedProductId) {
+      setSelectedItems((prevSelectedItems) =>
+        cartItems.map((item) => item.productId === selectedProductId)
+      );
     }
   };
 
   useEffect(() => {
     fetchCartData();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      updateSelectedItemsFromLocalStorage();
+    }
+  }, [cartItems, loading]);
 
   const fetchDataCartFromID = async (cartItemsTemp: any) => {
     let temp: Array<Product> = [];
@@ -149,15 +169,25 @@ export default function CartPage() {
     });
   };
 
-  const handleRemoveFromCart = (index: number) => {
-    setCartItems((prevCartItems) => {
-      const newCartItems = prevCartItems.filter((_, i) => i !== index);
-      return newCartItems;
-    });
-    removeFromCart(index); // Call removeFromCart from the custom hook
+  const handleRemoveFromCart = async (index: number) => {
+    setRemoving(index);
+    await updateCart(index, 0);
+    await fetchCartData();
+    setRemoving(null);
   };
 
   const checkout = () => {
+    if (!selectedItems.some((item) => item)) {
+      Swal.fire({
+        title: "Error",
+        text: "Please select items to checkout.",
+        icon: "error",
+        confirmButtonColor: profileStore.buttonColor,
+        cancelButtonColor: "Crimson",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
     const selectedProducts = cartItems.filter(
       (_, index) => selectedItems[index]
     );
@@ -166,7 +196,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className=" mt-2 pb-10">
+    <div className="mt-4 mb-10 pb-10 min-h-screen bg-white">
       {loading ? (
         <div>
           {[...Array(3)].map((_, index) => (
@@ -197,70 +227,115 @@ export default function CartPage() {
       ) : (
         <>
           {cartItems.length === 0 ? (
-            <div className="px-4 py-4 flex flex-col items-center">
+            <div className="mt-4 px-4 py-4 flex flex-col items-center">
               <p>No items in the cart.</p>
-              <Button onClick={() => router.push("/product")}>Shop Now</Button>
+              <Button
+                style={{
+                  backgroundColor: profileStore.buttonColor,
+                  color: profileStore.headerTextColor,
+                }}
+                onClick={() => router.push("/product")}
+              >
+                Shop Now
+              </Button>
             </div>
           ) : (
-            <>
+            <div className="container mt-4 mx-auto p-4 bg-white shadow-md rounded-lg space-y-4">
               {cartItems.map((item, index) => (
-                <div className="mt-4 flex justify-between" key={item.productId}>
-                  <div className="flex flex-wrap items-center gap-4">
+                <div
+                  className="flex justify-between items-center border-b pb-4"
+                  key={item.productId}
+                >
+                  <div className="flex items-center gap-4 w-full">
                     <Checkbox
+                      style={{
+                        backgroundColor: selectedItems[index]
+                          ? profileStore.buttonColor
+                          : "",
+                      }}
                       checked={selectedItems[index]}
                       onCheckedChange={() => handleCheckboxChange(index)}
                     />
                     {item.images && item.images.length > 0 ? (
                       <Image
                         src={item.images}
-                        width={200}
-                        height={200}
+                        width={100}
+                        height={100}
                         alt={item.name}
                         className="rounded-lg"
                       />
                     ) : (
                       <div>No Image Available</div>
                     )}
-                    <div>
+                    <div className="flex flex-col w-full">
                       <Link
                         href={`product/product-detail?id=${item.productId}`}
                       >
-                        <div className="font-bold">{item.name}</div>
+                        <div className="font-bold text-lg">{item.name}</div>
                       </Link>
-                      <div>{item.price}VND</div>
-                      <div className="my-1 flex items-center gap-2">
-                        Quantity:
-                        <div className="flex items-center font-bold text-center gap-3 mb-2">
-                          <Button onClick={() => decrement(index)}>-</Button>
-                          <h1 className="flex items-center justify-center my-2 w-12 text-center">
+                      <div className="text-gray-600">{item.price} VND</div>
+                      <div className="flex items-center mt-2 gap-2">
+                        <div>Quantity:</div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            style={{
+                              backgroundColor: profileStore.buttonColor,
+                              color: profileStore.headerTextColor,
+                            }}
+                            onClick={() => decrement(index)}
+                          >
+                            -
+                          </Button>
+                          <span className="w-8 text-center">
                             {count[index]}
-                          </h1>
-                          <Button onClick={() => increment(index)}>+</Button>
+                          </span>
+                          <Button
+                            style={{
+                              backgroundColor: profileStore.buttonColor,
+                              color: profileStore.headerTextColor,
+                            }}
+                            onClick={() => increment(index)}
+                          >
+                            +
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-3">
-                        Total Price: {item.price * count[index]}VND
+                      <div className="mt-2">
+                        Total Price:{" "}
+                        <span className="font-bold">
+                          {item.price * count[index]} VND
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <Button onClick={() => handleRemoveFromCart(index)}>
-                      Remove
-                    </Button>
-                  </div>
+                  <Button
+                    style={{
+                      backgroundColor: profileStore.buttonColor,
+                      color: profileStore.headerTextColor,
+                    }}
+                    onClick={() => handleRemoveFromCart(index)}
+                    disabled={removing === index}
+                  >
+                    {removing === index ? "Removing..." : "Remove"}
+                  </Button>
                 </div>
               ))}
-              <div className="flex flex-col items-end sm:items-center">
-                <p className="mb-3 font-bold">Total: {totalPrice}VND</p>
-                <Button
-                  onClick={checkout}
-                  className="btn btn-primary sm:w-[200px]"
-                >
-                  Checkout
-                </Button>
+              <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4">
+                <div className="container mx-auto flex justify-between items-center">
+                  <p className="font-bold text-xl">Total: {totalPrice} VND</p>
+                  <Button
+                    style={{
+                      backgroundColor: profileStore.buttonColor,
+                      color: profileStore.headerTextColor,
+                    }}
+                    onClick={checkout}
+                    className="px-4 py-2"
+                  >
+                    Checkout
+                  </Button>
+                </div>
               </div>
-            </>
+            </div>
           )}
         </>
       )}
