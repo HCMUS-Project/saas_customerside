@@ -18,22 +18,22 @@ export default function Footer() {
         backgroundColor: profileStore.footerColor,
         color: profileStore.footerTextColor,
       }}
+      className="py-6"
     >
-      <div className="flex justify-around mx-[10%] max-w-screen-xl">
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 px-4 py-6 lg:py-8 ">
-          <div className="flex flex-col justify-center">
+      <div className="flex justify-center w-full max-w-screen-xl mx-auto">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 px-4 py-6 lg:py-8">
+          <div>
             <h2 className="mb-6 text-sm font-semibold ">Information</h2>
-            <ul>
-              <li className="mb-4">{profileStore.serviceName}</li>
-              <li className="mb-4">{profileStore.address}</li>
-              <li className="mb-4">
+            <ul className="space-y-2">
+              <li>{profileStore.serviceName}</li>
+              <li>{profileStore.address}</li>
+              <li>
                 {profileStore.description.length > 30 ? (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         {profileStore.description.slice(0, 30) + "..."}
                       </TooltipTrigger>
-
                       <TooltipContent>
                         <div>{profileStore.description}</div>
                       </TooltipContent>
@@ -47,13 +47,13 @@ export default function Footer() {
           </div>
           <div>
             <h2 className="mb-6 text-sm font-semibold">Legal</h2>
-            <ul className=" font-medium">
-              <li className="mb-4">
+            <ul className="space-y-2 font-medium">
+              <li>
                 <a href="/legal/policy" className="hover:underline">
                   Privacy Policy
                 </a>
               </li>
-              <li className="mb-4">
+              <li>
                 <a href="/legal/term" className="hover:underline">
                   Term Of Use
                 </a>
@@ -62,25 +62,24 @@ export default function Footer() {
           </div>
           <div>
             <h2 className="mb-6 text-sm font-semibold ">Social Contact</h2>
-            <ul className=" font-medium">
-              <li className="mb-4">
+            <ul className="space-y-2 font-medium">
+              <li>
                 <a href={profileStore.youtubeUrl} className="hover:underline">
-                  <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
                     <Youtube /> Youtube
                   </div>
                 </a>
               </li>
-              <li className="mb-4">
+              <li>
                 <a href={profileStore.instagramUrl} className="hover:underline">
-                  <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
                     <Instagram /> Instagram
                   </div>
                 </a>
               </li>
-              <li className="mb-4">
+              <li>
                 <a href={profileStore.facebookUrl} className="hover:underline">
-                  <div className="flex gap-4">
-                    {" "}
+                  <div className="flex items-center gap-2">
                     <Facebook /> Facebook
                   </div>
                 </a>
