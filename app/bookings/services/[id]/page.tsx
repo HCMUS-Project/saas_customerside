@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -7,30 +6,23 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { AXIOS } from "@/constants/network/axios";
-import { ShoppingCart, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { getDomain } from "@/util/get-domain";
 import LoadingPage from "@/app/loading";
-
-interface CartItem {
-  id: string;
-  images: string | string[];
-  name: string;
-  price: number;
-  quantity: number;
-}
+import CommentForm from "./comment";
 
 interface ServiceData {
   id: string;
   images: string[];
   name: string;
   price: number;
-  rating: string;
+  rating: number;
   description: string;
 }
 
-export default function ServicePageProps({
+export default function BookingPageProps({
   params,
 }: {
   params: { id: string };
@@ -47,7 +39,7 @@ export default function ServicePageProps({
     images: [],
     name: "",
     price: 0,
-    rating: "",
+    rating: 0,
     description: "",
   });
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -59,7 +51,7 @@ export default function ServicePageProps({
     try {
       const domain = getDomain();
       const res = await AXIOS.GET({
-        uri: bookingEndpoints.findById("30shine.com", serviceId),
+        uri: bookingEndpoints.findById(domain, serviceId),
       });
       const booking = res.data;
       setBookingData(booking);
@@ -96,76 +88,71 @@ export default function ServicePageProps({
   }
 
   return (
-    <div className="mt-4">
-      <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
-        <div className="relative w-1/3 h-48 lg:h-64">
-          {" "}
-          {/* Adjust the height as needed */}
-          {bookingData.images.length > 0 && (
-            <>
-              {imageLoading && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <LoadingPage />
+    <div className="container mx-auto mt-10 mb-20">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col items-center w-full lg:w-1/2">
+          <div className="relative w-full h-96 mb-4">
+            {bookingData.images.length > 0 && (
+              <>
+                {imageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <LoadingPage />
+                  </div>
+                )}
+                <Image
+                  src={bookingData.images[selectedImageIndex]}
+                  alt={bookingData.name}
+                  fill
+                  className="object-contain"
+                  onLoadingComplete={() => setImageLoading(false)}
+                />
+              </>
+            )}
+          </div>
+          <div className="flex mt-2 space-x-2 overflow-x-auto">
+            {Array.isArray(bookingData.images) &&
+              bookingData.images.map((image, index) => (
+                <div
+                  key={index}
+                  className={`relative w-16 h-16 flex-shrink-0 border ${
+                    index === selectedImageIndex
+                      ? "border-orange-500"
+                      : "border-gray-300"
+                  }`}
+                  onClick={() => setSelectedImageIndex(index)}
+                >
+                  <Image
+                    src={image}
+                    alt={`Thumbnail ${index}`}
+                    fill
+                    className={`cursor-pointer ${
+                      index === selectedImageIndex
+                        ? "opacity-100"
+                        : "opacity-50"
+                    }`}
+                    onLoadingComplete={() => setImageLoading(false)}
+                  />
                 </div>
-              )}
-
-              <Image
-                src={bookingData.images[selectedImageIndex]}
-                alt={bookingData.name}
-                layout="fill"
-                objectFit="cover" // Adjusted to 'contain' to fit the image inside the container
-                className={`cursor-pointer ${
-                  selectedImageIndex ? "opacity-100" : "opacity-50"
-                }`}
-                onLoadingComplete={() => setImageLoading(false)}
-              />
-            </>
-          )}
+              ))}
+          </div>
         </div>
-        <div>
+        <div className="w-full lg:w-1/2">
           <h1 className="text-3xl lg:text-5xl font-bold">{bookingData.name}</h1>
-          <div className="flex items-center">
-            {Array.from({ length: Number(bookingData.rating) }, (_, i) => (
-              <Star key={i} className="w-4 h-4 fill-current text-yellow-400" />
+          <div className="flex items-center mt-2">
+            {Array.from({ length: bookingData.rating }, (_, i) => (
+              <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
             ))}
           </div>
-          <div className="mt-4">{bookingData.price}VND</div>
-          <p>{bookingData.description}</p>
-          <div className="flex gap-3">
+          <div className="mt-4 text-2xl ">{bookingData.price} VND</div>
+          <p className="mt-2">{bookingData.description}</p>
+          <div className="flex gap-3 mt-4">
             <Button variant="outline" onClick={handleOrderNow}>
               Book now
             </Button>
           </div>
         </div>
       </div>
-      <div className="flex mt-4 space-x-2 overflow-x-auto">
-        {Array.isArray(bookingData.images) &&
-          bookingData.images.map((image, index) => (
-            <div
-              key={index}
-              className={`relative w-16 h-16 flex-shrink-0 border ${
-                index === selectedImageIndex
-                  ? "border-orange-500"
-                  : "border-gray-300"
-              }`}
-              onClick={() => setSelectedImageIndex(index)}
-            >
-              <Image
-                src={image}
-                alt={`Thumbnail ${index}`}
-                layout="fill"
-                objectFit="cover"
-                className={`cursor-pointer ${
-                  index === selectedImageIndex ? "opacity-100" : "opacity-50"
-                }`}
-                onLoadingComplete={() => setImageLoading(false)}
-              />
-            </div>
-          ))}
-      </div>
-      {/* Uncomment the following lines if you want to add comments and recommendations */}
-      {/* <CommentForm /> */}
-      {/* <Recommended products={bookingsData.services} /> */}
+      <CommentForm serviceId={bookingData.id} />
     </div>
   );
 }

@@ -10,4 +10,8 @@ export const bookingEndpoints = {
     `/api/booking/bookings/search?date=${date}&service=${serviceId}`,
   findAllVoucher: "api/booking/voucher/find/all",
   findVoucher: (id: string) => `api/booking/voucher/find/${id}`,
+  reviewBooking: (domain: string) =>
+    `api/booking/review/find/?domain=${domain}`,
+  bookingReviewUpdate: "api/booking/review/update",
+  bookingReviewDelete: (id: string) => `api/booking/review/delete/${id}`,
 };
