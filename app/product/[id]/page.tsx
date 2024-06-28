@@ -71,7 +71,7 @@ export default function ProductPageProps({
   const profileStore = useProfileStore();
 
   const fetchData = async (productId: string) => {
-    const domain = getDomain();
+    const domain = "30shine.com";
     try {
       setLoading(true);
 
