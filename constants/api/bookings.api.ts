@@ -14,4 +14,5 @@ export const bookingEndpoints = {
     `api/booking/review/find/?domain=${domain}`,
   bookingReviewUpdate: "api/booking/review/update",
   bookingReviewDelete: (id: string) => `api/booking/review/delete/${id}`,
+  findBookings: "api/",
 };

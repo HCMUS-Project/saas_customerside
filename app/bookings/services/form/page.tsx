@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon, XIcon } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
@@ -273,7 +273,8 @@ export default function BookingForm() {
     localStorage.removeItem("selectedService");
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleFormSubmit = async () => {
+    const formData = form.getValues();
     if (
       !selectedDate ||
       !selectedTime ||
@@ -440,10 +441,13 @@ export default function BookingForm() {
             <CardDescription>Choose time to...</CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
+            <FormProvider {...form}>
               <form
                 className="space-y-1.5 pt-2"
-                onSubmit={form.handleSubmit(handleSubmit)}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleFormSubmit();
+                }}
               >
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="service">Select Service</Label>
@@ -524,6 +528,7 @@ export default function BookingForm() {
                     </Button>
                   </div>
                   <Button
+                    type="button"
                     style={{
                       backgroundColor: profileStore.buttonColor,
                       color: profileStore.headerTextColor,
@@ -610,33 +615,38 @@ export default function BookingForm() {
                     </FormItem>
                   )}
                 />
-                {availableSlots.length > 0 && (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Select Time</FormLabel>
-                    <div className="grid grid-cols-4 gap-2">
-                      {availableSlots.map((slot) => (
-                        <Button
-                          style={{
-                            backgroundColor: profileStore.buttonColor,
-                            color: profileStore.headerTextColor,
-                          }}
-                          key={slot.startTime}
-                          type="button"
-                          onClick={() => handleTimeClick(slot.startTime)}
-                          className={`py-2 px-4 rounded-md ${
-                            selectedTime === slot.startTime
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-200 text-gray-700"
-                          }`}
-                          disabled={slot.employees.length === 0}
-                        >
-                          {slot.startTime}
-                        </Button>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+                <FormField
+                  control={form.control}
+                  name="bookingTime"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Select Time</FormLabel>
+                      <div className="grid grid-cols-4 gap-2">
+                        {availableSlots.map((slot) => (
+                          <Button
+                            key={slot.startTime}
+                            type="button"
+                            onClick={() => {
+                              setSelectedTime(slot.startTime);
+                              field.onChange(slot.startTime);
+                            }}
+                            className={`py-2 px-4 rounded-md ${
+                              selectedTime === slot.startTime
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-700"
+                            }`}
+                            disabled={slot.employees.length === 0}
+                          >
+                            {slot.startTime}
+                          </Button>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {selectedTime && (
                   <>
                     {loadingEmployees ? (
@@ -691,7 +701,7 @@ export default function BookingForm() {
                   Confirm Booking
                 </Button>
               </form>
-            </Form>
+            </FormProvider>
           </CardContent>
         </Card>
 

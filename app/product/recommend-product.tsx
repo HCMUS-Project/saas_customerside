@@ -74,7 +74,7 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
               ? Array.from({ length: 4 }).map((_, index) => (
                   <CarouselItem
                     key={index}
-                    className="md:basis-1/2 lg:basis-1/4 p-2"
+                    className="md:basis-1/2 lg:basis-1/4 "
                   >
                     <Card className="h-full border border-gray-200">
                       <div className="w-full h-[200px] relative">
@@ -91,7 +91,7 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
               : extendedProducts.map((product, index) => (
                   <CarouselItem
                     key={index}
-                    className="md:basis-1/2 lg:basis-1/4 p-2"
+                    className="md:basis-1/2 lg:basis-1/4"
                   >
                     <Card className="h-full border border-gray-200 shadow-md rounded-md mb-10">
                       <Link href={`/product/${product.id}`}>

@@ -29,6 +29,7 @@ interface BestSellerProps {
 
 const BestSeller = ({ products }: BestSellerProps) => {
   const [loading, setLoading] = useState(true); // State to manage loading
+  const router = useRouter();
 
   useEffect(() => {
     // Simulate fetching data
@@ -40,7 +41,6 @@ const BestSeller = ({ products }: BestSellerProps) => {
   }, []);
 
   const carouselRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   const handleViewAllClick = () => {
     router.push("/all-products");
@@ -48,6 +48,7 @@ const BestSeller = ({ products }: BestSellerProps) => {
 
   const extendedProducts =
     products.length > 0 ? [...products, ...products, ...products] : [];
+  const fallbackImage = "/placeholder-image.png"; // Define a fallback image path
 
   return (
     <div className="container pt-16">
@@ -105,16 +106,13 @@ const BestSeller = ({ products }: BestSellerProps) => {
           >
             <CarouselContent className="flex">
               {extendedProducts.map((product, index) => (
-                <CarouselItem
-                  key={index}
-                  className="md:basis-1/2 lg:basis-1/4 p-2"
-                >
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
                   <Card className="h-full border border-gray-200 shadow-md rounded-md mb-10">
                     <Link href={`/product/${product.id}`}>
                       <div className="w-full h-[200px] relative">
                         <Image
                           className="object-contain"
-                          src={product.images[0]}
+                          src={product.images[0] ?? fallbackImage} // Ensure images[0] is defined
                           alt={product.name}
                           fill
                         />

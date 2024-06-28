@@ -5,8 +5,8 @@ import { useDebounce } from "use-debounce";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
-import { productEndpoints } from "@/constants/api/product.api";
 import Image from "next/image";
+import { productEndpoints } from "@/constants/api/product.api";
 
 interface Product {
   id: string;
@@ -65,7 +65,13 @@ const Search = () => {
   }, [query]);
 
   const handleProductClick = (productId: string) => {
-    router.push(`/product/search?${productId}`);
+    router.push(`/product/${productId}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      router.push(`/all-products?search=${text}`);
+    }
   };
 
   return (
@@ -76,6 +82,7 @@ const Search = () => {
         placeholder="Enter any product"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <SearchIcon
         className="absolute top-0 right-0 mr-3 mt-2 text-gray-400"

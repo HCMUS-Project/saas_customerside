@@ -27,6 +27,7 @@ import { authEndpoint } from "@/constants/api/auth.api";
 import { CameraIcon, Star, StarHalf, StarHalfIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 interface Comment {
   id: string;
@@ -124,6 +125,7 @@ const OrderPage = () => {
     useState<HasUserCommentedState>({});
   const [successMessage, setSuccessMessage] = useState<string>("");
   const limit = 10;
+  const profileStore = useProfileStore();
 
   const formSchema = z.object({
     review: z.string().min(2, {
@@ -204,25 +206,25 @@ const OrderPage = () => {
     fetchAndSetOrders(stage, page, limit);
   }, [fetchAndSetOrders, stage, page]);
 
-  const handleStageChange = (newStage: string) => {
+  const handleStageChange = async (newStage: string) => {
     setStage(newStage);
     setPage(1); // Reset to first page when stage changes
-    fetchAndSetOrders(newStage, 1, limit);
+    await fetchAndSetOrders(newStage, 1, limit);
   };
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = async () => {
     if (page > 1) {
       const newPage = page - 1;
       setPage(newPage);
-      fetchAndSetOrders(stage, newPage, limit);
+      await fetchAndSetOrders(stage, newPage, limit);
     }
   };
 
-  const handleNextPage = () => {
+  const handleNextPage = async () => {
     if (page * limit < totalOrders) {
       const newPage = page + 1;
       setPage(newPage);
-      fetchAndSetOrders(stage, newPage, limit);
+      await fetchAndSetOrders(stage, newPage, limit);
     }
   };
 
@@ -363,16 +365,54 @@ const OrderPage = () => {
       <div className="py-6">
         <div className="container mx-auto py-10">
           <div className="flex justify-center space-x-4 mb-4">
-            <Button onClick={() => handleStageChange("pending")}>
+            <Button
+              style={{
+                backgroundColor:
+                  stage === "pending" ? profileStore.buttonColor : "",
+                color: stage === "pending" ? profileStore.headerTextColor : "",
+              }}
+              variant="ghost"
+              onClick={() => handleStageChange("pending")}
+              className={stage === "pending" ? "bg-blue-500 text-white" : ""}
+            >
               Pending
             </Button>
-            <Button onClick={() => handleStageChange("shipping")}>
+            <Button
+              style={{
+                backgroundColor:
+                  stage === "shipping" ? profileStore.buttonColor : "",
+                color: stage === "shipping" ? profileStore.headerTextColor : "",
+              }}
+              variant="ghost"
+              onClick={() => handleStageChange("shipping")}
+              className={stage === "shipping" ? "bg-blue-500 text-white" : ""}
+            >
               Shipping
             </Button>
-            <Button onClick={() => handleStageChange("completed")}>
+            <Button
+              style={{
+                backgroundColor:
+                  stage === "completed" ? profileStore.buttonColor : "",
+                color:
+                  stage === "completed" ? profileStore.headerTextColor : "",
+              }}
+              variant="ghost"
+              onClick={() => handleStageChange("completed")}
+              className={stage === "completed" ? "bg-blue-500 text-white" : ""}
+            >
               Completed
             </Button>
-            <Button onClick={() => handleStageChange("cancelled")}>
+            <Button
+              style={{
+                backgroundColor:
+                  stage === "cancelled" ? profileStore.buttonColor : "",
+                color:
+                  stage === "cancelled" ? profileStore.headerTextColor : "",
+              }}
+              variant="ghost"
+              onClick={() => handleStageChange("cancelled")}
+              className={stage === "cancelled" ? "bg-blue-500 text-white" : ""}
+            >
               Cancelled
             </Button>
           </div>

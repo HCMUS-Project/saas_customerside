@@ -91,7 +91,7 @@ const BestSeller = ({ bookings = [] }: BestSellerProps) => {
               : extendedBookings.map((booking, index) => (
                   <CarouselItem
                     key={index}
-                    className="md:basis-1/2 lg:basis-1/4 p-2"
+                    className="md:basis-1/2 lg:basis-1/4"
                   >
                     <Card className="h-full border border-gray-200 shadow-md rounded-md mb-10">
                       <Link href={`/bookings/services/${booking.id}`}>

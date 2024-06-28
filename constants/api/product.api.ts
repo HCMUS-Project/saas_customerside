@@ -6,6 +6,8 @@ export const productEndpoints = {
   update: "api/ecommerce/product/update",
   searchProductName: (domain: string, name: string) =>
     `api/ecommerce/product/search/?domain=${domain}&name=${name}`,
+  searchProduct: (domain: string, query: string) =>
+    `api/ecommerce/product/search/?domain=${domain}&${query}`,
   deleteById: (id: string) => `api/ecommerce/product/delete/${id}`,
   findBestSeller: (domain: string) =>
     `api/ecommerce/product/find/best/?domain=${domain}`,
