@@ -13,7 +13,7 @@ import {
   DrawerHeader,
   DrawerTrigger,
 } from "../ui/drawer";
-import { MenuIcon, ShoppingCart } from "lucide-react";
+import { Menu as MenuIcon, ShoppingCart } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -32,15 +32,17 @@ interface HeaderProps {
 }
 
 const NavLinks = ({ currentPath }: { currentPath: string }) => (
-  <div className="flex justify-start gap-8">
+  <nav className="hidden lg:flex gap-4 sm:gap-6">
     <Link
-      className={`hover:text-white ${currentPath === "/" && "text-white"}`}
+      className={`text-sm font-medium hover:underline underline-offset-4 ${
+        currentPath === "/" && "text-white"
+      }`}
       href="/"
     >
       Home
     </Link>
     <Link
-      className={`hover:text-white ${
+      className={`text-sm font-medium hover:underline underline-offset-4 ${
         currentPath === "/bookings" && "text-white"
       }`}
       href="/bookings"
@@ -48,14 +50,14 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
       Services
     </Link>
     <Link
-      className={`hover:text-white ${
+      className={`text-sm font-medium hover:underline underline-offset-4 ${
         currentPath === "/product" && "text-white"
       }`}
       href="/product"
     >
       Products
     </Link>
-  </div>
+  </nav>
 );
 
 const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
@@ -115,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           color: profileStore.headerTextColor,
         }}
       >
-        <div className="container mx-auto flex justify-start h-[60px] items-center px-4">
+        <div className="container mx-auto flex justify-between h-[60px] items-center px-4">
           <Link href="/">
             <Image
               src={profileStore.logo}
@@ -126,26 +128,36 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
             />
           </Link>
           <NavLinks currentPath={currentPath} />
-          {authStore.isAuthorized ? (
-            <div className="flex items-center ml-auto">
-              <UserMenu onLogout={handleLogout} />
-              <div
-                style={{
-                  backgroundColor: profileStore.headerColor,
-                  color: profileStore.headerTextColor,
-                }}
-              >
-                <CartButton />
-              </div>
-            </div>
-          ) : (
-            <Button
-              onClick={handleLoginClick}
-              className="my-2 mr-4 bg-secondary-focus bg-opacity-80 ml-auto"
-            >
-              Login
-            </Button>
-          )}
+          <div className="flex gap-2 items-center">
+            {authStore.isAuthorized ? (
+              <>
+                <UserMenu onLogout={handleLogout} />
+                <div
+                  style={{
+                    backgroundColor: profileStore.headerColor,
+                    color: profileStore.headerTextColor,
+                  }}
+                >
+                  <CartButton />
+                </div>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={handleLoginClick}>
+                  Sign In
+                </Button>
+                <Button
+                  style={{
+                    backgroundColor: profileStore.buttonColor,
+                    color: profileStore.headerTextColor,
+                  }}
+                  onClick={() => router.push("/auth/register")}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <div className="container mx-auto px-4">{children}</div>

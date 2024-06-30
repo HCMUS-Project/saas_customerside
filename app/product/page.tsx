@@ -1,12 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useDebounce } from "use-debounce";
+import { AlignJustify } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { ComboBoxResponsiveDestination } from "@/app/product/combobox-destination";
-import { AlignJustify } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
@@ -27,11 +30,9 @@ import Recommended from "./recommend-product";
 import { ComboBoxResponsiveCoupon } from "./combobox-coupon";
 import BestSeller from "./best-seller";
 import AllProduct from "./all-products";
-import { useEffect, useState } from "react";
 import { AXIOS } from "@/constants/network/axios";
-import { useDebounce } from "use-debounce";
-import Search from "@/app/product/search";
 import { productEndpoints } from "@/constants/api/product.api";
+import Search from "@/app/product/search";
 
 const FormSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item)),
@@ -44,12 +45,14 @@ export default function Product() {
   const [bestSellerProducts, setBestSellerProducts] = useState<any[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true); // Loading state
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       items: ["recents", "home"],
     },
   });
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
@@ -132,68 +135,69 @@ export default function Product() {
 
   return (
     <div className="py-2">
-      <div className="container sm:flex justify-between items-center space-x-2">
+      <div className="container sm:flex justify-between items-center space-x-2 mb-6">
         <div className="flex flex-grow min-w-0 relative">
           <Search />
         </div>
         <div>
           <Popover>
             <PopoverTrigger>
-              <AlignJustify />
+              <Button variant="outline" className="flex items-center">
+                <AlignJustify className="mr-2" /> Filter
+              </Button>
             </PopoverTrigger>
-            <PopoverContent className="size-20 w-full h-full">
-              <div className="border-b font-bold ">filter</div>
+            <PopoverContent className="w-64 p-4">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-8"
+                  className="space-y-4"
                 >
                   <FormField
                     control={form.control}
                     name="items"
                     render={() => (
-                      <FormItem className="pt-2">
+                      <FormItem>
                         {items.map((item) => (
                           <FormField
                             key={item.id}
                             control={form.control}
                             name="items"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={item.id}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(item.id)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([
-                                              ...field.value,
-                                              item.id,
-                                            ])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== item.id
-                                              )
-                                            );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {item.label}
-                                  </FormLabel>
-                                </FormItem>
-                              );
-                            }}
+                            render={({ field }) => (
+                              <FormItem
+                                key={item.id}
+                                className="flex items-start space-x-2"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([
+                                            ...field.value,
+                                            item.id,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== item.id
+                                            )
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  {item.label}
+                                </FormLabel>
+                              </FormItem>
+                            )}
                           />
                         ))}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Submit</Button>
+                  <Button type="submit" className="w-full">
+                    Apply
+                  </Button>
                 </form>
               </Form>
             </PopoverContent>
@@ -201,9 +205,11 @@ export default function Product() {
         </div>
       </div>
 
-      <Recommended products={recommendedProducts} />
-      <BestSeller products={bestSellerProducts} />
-      <AllProduct products={productsData?.products} />
+      <div className="container mx-auto">
+        <Recommended products={recommendedProducts} />
+        <BestSeller products={bestSellerProducts} />
+        <AllProduct products={productsData?.products} />
+      </div>
     </div>
   );
 }

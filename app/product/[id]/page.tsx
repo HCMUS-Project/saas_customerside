@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, ShoppingCart } from "lucide-react";
 import CommentForm from "./comment";
 import { AXIOS } from "@/constants/network/axios";
-import { ShoppingCart } from "lucide-react";
 import { productEndpoints } from "@/constants/api/product.api";
 import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
-import { getDomain } from "@/util/get-domain";
 import LoadingPage from "@/app/loading";
 import { useCart } from "@/constants/use-cart";
 import { useProfileStore } from "@/hooks/store/profile.store";
@@ -245,9 +243,17 @@ export default function ProductPageProps({
         <div className="w-full lg:w-1/2">
           <h1 className="text-3xl lg:text-5xl font-bold">{productData.name}</h1>
           <div className="flex items-center mt-2">
-            {Array.from({ length: productData.rating }, (_, i) => (
-              <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4  ${
+                  i < productData.rating
+                    ? "text-yellow-400 fill-current"
+                    : "text-gray-300"
+                }`}
+              />
             ))}
+            <span className="ml-2 text-gray-600">{productData.rating}/5</span>
           </div>
           <div className="flex flex-wrap mt-2 gap-2">
             {productData.categories.map((category) => (
@@ -259,8 +265,9 @@ export default function ProductPageProps({
               </span>
             ))}
           </div>
-          <div className="mt-4 text-2xl ">{productData.price} VND</div>
-          <p className="mt-2">{productData.description}</p>
+          <div className="mt-4 text-2xl font-bold ">
+            {productData.price.toLocaleString()} VND
+          </div>
           <div className="flex items-center mt-4 gap-3">
             <Button
               style={{
@@ -268,18 +275,18 @@ export default function ProductPageProps({
                 color: profileStore.headerTextColor,
               }}
               onClick={decrement}
-              className="flex items-center justify-center"
+              className="flex items-center justify-center w-8 h-8 p-0"
             >
               -
             </Button>
-            <h1 className="flex items-center justify-center my-2">{count}</h1>
+            <span className="text-lg">{count}</span>
             <Button
               style={{
                 backgroundColor: profileStore.buttonColor,
                 color: profileStore.headerTextColor,
               }}
               onClick={increment}
-              className="flex items-center justify-center"
+              className="flex items-center justify-center w-8 h-8 p-0"
             >
               +
             </Button>
@@ -302,7 +309,13 @@ export default function ProductPageProps({
           </div>
         </div>
       </div>
-      <CommentForm productId={productData.id} />
+      <div className="mt-8 shadow-md p-4 border rounded-md">
+        <h2 className="text-2xl font-bold">Description</h2>
+        <p className="mt-2">{productData.description}</p>
+      </div>
+      <div className="mt-8">
+        <CommentForm productId={productData.id} />
+      </div>
       <div className="mt-8">
         <Recommended products={productsData.products} />
       </div>

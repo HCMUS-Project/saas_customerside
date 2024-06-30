@@ -119,7 +119,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ productId }) => {
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="p-4 border rounded-md">
+              <div key={index} className="p-4 border  rounded-md">
                 <Skeleton className="w-[100px] h-[20px] rounded-full" />
                 <Skeleton className="w-[100%] h-[15px] mt-2 rounded-full" />
               </div>
@@ -183,7 +183,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ productId }) => {
                               />
                             ))}
                             <span className="ml-2 text-gray-600">
-                              {comment.rating}
+                              {comment.rating}/5
                             </span>
                           </div>
                         </div>

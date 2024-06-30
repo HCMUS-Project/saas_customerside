@@ -26,7 +26,7 @@ const CartButton = () => {
 
   return (
     <Button
-      className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-12 h-12 rounded-full  text-white"
+      className="fixed bottom-5 right-5 z-10 flex items-center justify-center w-16 h-16 rounded-full  text-white"
       onClick={handleCartClick}
       style={{
         backgroundColor: profileStore.buttonColor,

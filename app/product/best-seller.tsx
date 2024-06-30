@@ -128,7 +128,7 @@ const BestSeller = ({ products }: BestSellerProps) => {
                               key={i}
                               className={`w-4 h-4 ${
                                 i < product.rating
-                                  ? "text-yellow-400"
+                                  ? "text-yellow-400 fill-current"
                                   : "text-gray-300"
                               }`}
                             />
