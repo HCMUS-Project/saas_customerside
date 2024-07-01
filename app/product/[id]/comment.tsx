@@ -177,7 +177,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ productId }) => {
                                 key={i}
                                 className={`w-4 h-4 ${
                                   comment.rating >= i + 1
-                                    ? "text-yellow-500"
+                                    ? "text-yellow-500 fill-current"
                                     : "text-gray-300"
                                 }`}
                               />

@@ -35,7 +35,7 @@ import { AXIOS } from "@/constants/network/axios";
 import { employeeEndpoints } from "@/constants/api/employee.api";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import LoadingPage from "@/app/loading"; // Import loader component
+import { Loader } from "@/app/loading"; // Import loader component
 import {
   Dialog,
   DialogContent,

@@ -10,7 +10,7 @@ import { Star } from "lucide-react";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { getDomain } from "@/util/get-domain";
-import LoadingPage from "@/app/loading";
+import { Loader } from "@/app/loading";
 import CommentForm from "./comment";
 
 interface ServiceData {
@@ -84,7 +84,7 @@ export default function BookingPageProps({
   };
 
   if (loading) {
-    return <LoadingPage />;
+    return <Loader />;
   }
 
   return (
@@ -96,7 +96,7 @@ export default function BookingPageProps({
               <>
                 {imageLoading && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <LoadingPage />
+                    <Loader />
                   </div>
                 )}
                 <Image

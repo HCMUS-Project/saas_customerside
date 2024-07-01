@@ -26,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileStore } from "@/hooks/store/profile.store";
-import Loader from "./loading";
+import { Loader } from "./loading";
 import {
   Shirt,
   Footprints,
@@ -135,7 +135,7 @@ export default function Home() {
         <Star
           key={i}
           className={`w-4 h-4 ${
-            i < rating ? "text-yellow-400" : "text-gray-300"
+            i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
           }`}
         />
       ))}
@@ -144,8 +144,9 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      {loading && <Loader />}
-      {!loading && (
+      {loading ? (
+        <Loader className="h-full flex-grow" />
+      ) : (
         <>
           {banners.length > 0 && (
             <section className="w-full py-8 md:py-16 lg:py-20 bg-cover bg-center">
@@ -188,7 +189,7 @@ export default function Home() {
                                 {truncateText(item.description, 100)}
                               </p>
                             </div>
-                            <div className="pl-4 flex flex-col gap-2 min-[400px]:flex-row justify-start mt-4">
+                            {/* <div className="pl-4 flex flex-col gap-2 min-[400px]:flex-row justify-start mt-4">
                               <Link
                                 style={{
                                   backgroundColor: profileStore.buttonColor,
@@ -207,7 +208,7 @@ export default function Home() {
                               >
                                 Learn More
                               </Link>
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </CarouselItem>
@@ -382,7 +383,7 @@ export default function Home() {
                   {profileStore.description}
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Fast Shipping</CardTitle>
@@ -419,7 +420,7 @@ export default function Home() {
                     <Headphones className="h-8 w-8 text-primary" />
                   </CardContent>
                 </Card>
-              </div>
+              </div> */}
             </div>
           </section>
         </>

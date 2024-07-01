@@ -13,6 +13,7 @@ import { useCart } from "@/constants/use-cart";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import Swal from "sweetalert2";
+import { Trash, Trash2, XIcon } from "lucide-react";
 
 interface Product {
   productId: string;
@@ -197,6 +198,9 @@ export default function CartPage() {
 
   return (
     <div className="mt-4 mb-10 pb-10 min-h-screen bg-white">
+      <div className="flex justify-center">
+        <div className="text-4xl font-bold">Your Cart</div>
+      </div>
       {loading ? (
         <div>
           {[...Array(3)].map((_, index) => (
@@ -227,7 +231,7 @@ export default function CartPage() {
       ) : (
         <>
           {cartItems.length === 0 ? (
-            <div className="mt-4 px-4 py-4 flex flex-col items-center">
+            <div className="mt-8 px-4 py-4 flex flex-col items-center">
               <p>No items in the cart.</p>
               <Button
                 style={{
@@ -240,7 +244,7 @@ export default function CartPage() {
               </Button>
             </div>
           ) : (
-            <div className="container mt-4 mx-auto p-4 bg-white shadow-md rounded-lg space-y-4">
+            <div className="container mt-8 mx-auto p-4 bg-white shadow-md rounded-lg space-y-4">
               {cartItems.map((item, index) => (
                 <div
                   className="flex justify-between items-center border-b pb-4"
@@ -316,7 +320,7 @@ export default function CartPage() {
                     onClick={() => handleRemoveFromCart(index)}
                     disabled={removing === index}
                   >
-                    {removing === index ? "Removing..." : "Remove"}
+                    <Trash2 />
                   </Button>
                 </div>
               ))}

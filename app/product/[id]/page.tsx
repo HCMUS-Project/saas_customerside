@@ -307,12 +307,13 @@ export default function ProductPageProps({
               <ShoppingCart className="ml-2" />
             </Button>
           </div>
+          <div className="mt-8 pt-2 border-t-2 ">
+            <h2 className="text-2xl font-bold">Description</h2>
+            <p className="mt-2">{productData.description}</p>
+          </div>
         </div>
       </div>
-      <div className="mt-8 shadow-md p-4 border rounded-md">
-        <h2 className="text-2xl font-bold">Description</h2>
-        <p className="mt-2">{productData.description}</p>
-      </div>
+
       <div className="mt-8">
         <CommentForm productId={productData.id} />
       </div>

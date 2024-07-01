@@ -9,7 +9,7 @@ import { OrderDataTable } from "./order-data-table";
 import { getOrderColumns, Order, Product } from "./order-columns"; // Import Product type here
 import { ecommerceEndpoints } from "@/constants/api/ecommerce";
 import { productEndpoints } from "@/constants/api/product.api";
-import Loader from "@/app/loading";
+import { Loader } from "@/app/loading";
 import {
   Dialog,
   DialogContent,

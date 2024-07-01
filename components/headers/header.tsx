@@ -32,9 +32,9 @@ interface HeaderProps {
 }
 
 const NavLinks = ({ currentPath }: { currentPath: string }) => (
-  <nav className="hidden lg:flex gap-4 sm:gap-6">
+  <nav className="hidden lg:flex gap-6 sm:gap-8">
     <Link
-      className={`text-sm font-medium hover:underline underline-offset-4 ${
+      className={`text-xl font-medium hover:underline underline-offset-4 ${
         currentPath === "/" && "text-white"
       }`}
       href="/"
@@ -42,7 +42,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
       Home
     </Link>
     <Link
-      className={`text-sm font-medium hover:underline underline-offset-4 ${
+      className={`text-xl font-medium hover:underline underline-offset-4 ${
         currentPath === "/bookings" && "text-white"
       }`}
       href="/bookings"
@@ -50,7 +50,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
       Services
     </Link>
     <Link
-      className={`text-sm font-medium hover:underline underline-offset-4 ${
+      className={`text-xl font-medium hover:underline underline-offset-4 ${
         currentPath === "/product" && "text-white"
       }`}
       href="/product"
