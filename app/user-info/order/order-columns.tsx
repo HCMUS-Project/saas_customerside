@@ -91,7 +91,7 @@ export const getOrderColumns = (
       header: "Order Time",
       cell: ({ row }) => {
         const date = new Date(row.getValue("orderTime"));
-        const formatted = date.toLocaleDateString();
+        const formatted = date.toLocaleDateString("vi-VN");
         return <div className="font-medium">{formatted}</div>;
       },
     },

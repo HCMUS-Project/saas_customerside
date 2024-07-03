@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -9,8 +9,7 @@ import { AXIOS } from "@/constants/network/axios";
 import { Star } from "lucide-react";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useAuthStore } from "@/hooks/store/auth.store";
-import { getDomain } from "@/util/get-domain";
-import { Loader } from "@/app/loading";
+import { Skeleton } from "@/components/ui/skeleton";
 import CommentForm from "./comment";
 
 interface ServiceData {
@@ -29,6 +28,7 @@ export default function BookingPageProps({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const [bookingsData, setBookingsData] = useState<{ services: any[] }>({
     services: [],
   });
@@ -49,9 +49,9 @@ export default function BookingPageProps({
 
   const fetchData = async (serviceId: string) => {
     try {
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const res = await AXIOS.GET({
-        uri: bookingEndpoints.findById(domain, serviceId),
+        uri: bookingEndpoints.findById(domain ?? "", serviceId),
       });
       const booking = res.data;
       setBookingData(booking);
@@ -68,7 +68,7 @@ export default function BookingPageProps({
   }, [servicesId]);
 
   const handleOrderNow = () => {
-    if (authStore.isAuthorized == false) {
+    if (!authStore.isAuthorized) {
       router.push("/auth/login");
       return;
     }
@@ -84,7 +84,45 @@ export default function BookingPageProps({
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <div className="container mx-auto mt-10 mb-20 animate-pulse">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col items-center w-full lg:w-1/2">
+            <div className="relative w-full h-96 mb-4 bg-gray-300"></div>
+            <div className="flex mt-2 space-x-2 overflow-x-auto">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="relative w-16 h-16 flex-shrink-0 border bg-gray-300"
+                ></div>
+              ))}
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2">
+            <div className="h-12 bg-gray-300 mb-4"></div>
+            <div className="flex items-center mt-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-gray-300 fill-current" />
+              ))}
+              <span className="ml-2 h-6 w-12 bg-gray-300"></span>
+            </div>
+            <div className="mt-4 h-8 bg-gray-300"></div>
+            <div className="flex gap-3 mt-4">
+              <div className="h-10 bg-gray-300 w-32"></div>
+              <div className="h-10 bg-gray-300 w-32"></div>
+            </div>
+            <div className="mt-8 pt-2 border-t-2 border-gray-300">
+              <h2 className="h-8 bg-gray-300"></h2>
+              <p className="mt-2 h-20 bg-gray-300"></p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <CommentForm serviceId={bookingData.id} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -96,7 +134,7 @@ export default function BookingPageProps({
               <>
                 {imageLoading && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader />
+                    <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
                 <Image
@@ -139,20 +177,36 @@ export default function BookingPageProps({
         <div className="w-full lg:w-1/2">
           <h1 className="text-3xl lg:text-5xl font-bold">{bookingData.name}</h1>
           <div className="flex items-center mt-2">
-            {Array.from({ length: bookingData.rating }, (_, i) => (
-              <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4  ${
+                  i < bookingData.rating
+                    ? "text-yellow-400 fill-current"
+                    : "text-gray-300"
+                }`}
+              />
             ))}
+            <span className="ml-2 text-gray-600">{bookingData.rating}/5</span>
           </div>
-          <div className="mt-4 text-2xl ">{bookingData.price} VND</div>
-          <p className="mt-2">{bookingData.description}</p>
+          <div className="mt-4 text-2xl font-bold ">
+            {bookingData.price.toLocaleString()} VND
+          </div>
           <div className="flex gap-3 mt-4">
             <Button variant="outline" onClick={handleOrderNow}>
               Book now
             </Button>
           </div>
+          <div className="mt-8 pt-2 border-t-2 ">
+            <h2 className="text-2xl font-bold">Description</h2>
+            <p className="mt-2">{bookingData.description}</p>
+          </div>
         </div>
       </div>
-      <CommentForm serviceId={bookingData.id} />
+
+      <div className="mt-8">
+        <CommentForm serviceId={bookingData.id} />
+      </div>
     </div>
   );
 }

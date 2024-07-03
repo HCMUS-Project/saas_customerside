@@ -179,10 +179,10 @@ export default function CheckoutPage() {
       }
 
       try {
-        const domain = "30shine.com";
+        const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
 
         const res = await AXIOS.GET({
-          uri: voucherEnpoint.findVoucher(domain, code),
+          uri: voucherEnpoint.findVoucher(domain ?? "", code),
         });
 
         console.log("Voucher Response:", res.data);
@@ -251,8 +251,8 @@ export default function CheckoutPage() {
         paymentMethod: selectedPaymentMethod,
         paymentCallbackUrl: `http://nvukhoi.id.vn/api/payment/url/return?domain=${
           process.env.NEXT_PUBLIC_ENVIRONMENT == "DEV"
-            ? "http://localhost:8090"
-            : window.location.href.split("/payment")[0]
+            ? process.env.NEXT_PUBLIC_LOCAL_REDIRECT_URL
+            : process.env.NEXT_PUBLIC_REDIRECT_URL
         }/payment/payment-success`,
       };
 
@@ -309,7 +309,10 @@ export default function CheckoutPage() {
     try {
       for (const item of cartItemsTemp) {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findById("30shine.com", item.productId),
+          uri: productEndpoints.findById(
+            process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? "",
+            item.productId
+          ),
         });
 
         if (res.data) {
@@ -394,9 +397,9 @@ export default function CheckoutPage() {
 
   const fetchVouchers = async () => {
     try {
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const res = await AXIOS.GET({
-        uri: voucherEnpoint.findAllVoucher(domain),
+        uri: voucherEnpoint.findAllVoucher(domain ?? ""),
       });
 
       if (res.statusCode >= 200 && res.statusCode <= 300) {

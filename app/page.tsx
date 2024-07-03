@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,19 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileStore } from "@/hooks/store/profile.store";
-import { Loader } from "./loading";
-import {
-  Shirt,
-  Footprints,
-  ShoppingBag,
-  Watch,
-  Headphones,
-  Truck,
-  Lock,
-  ShoppingCart,
-  HomeIcon,
-  Star,
-} from "lucide-react";
+import { Loader } from "../components/loader/loading";
+import { Star } from "lucide-react";
 
 interface BannerProp {
   image: string;
@@ -52,7 +40,7 @@ interface Product {
   name: string;
   price: string;
   rating: number;
-  id: string; // Add id field to identify the product
+  id: string;
 }
 
 interface Service {
@@ -61,7 +49,7 @@ interface Service {
   price: number;
   description: string;
   rating: number;
-  id: string; // Add id field to identify the service
+  id: string;
 }
 
 export default function Home() {
@@ -81,18 +69,19 @@ export default function Home() {
         const apiToFetch = [
           AXIOS.GET({
             uri: configEnpoints.findBanner,
-            params: { domain: "30shine.com" },
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
           AXIOS.GET({
             uri: ecommerceEndpoints.findBestProducts,
-            params: { domain: "30shine.com" },
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
           AXIOS.GET({
             uri: ecommerceEndpoints.findRecommendedProducts,
-            params: { domain: "30shine.com" },
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
           AXIOS.GET({
-            uri: bookingEndpoints.searchBookings("30shine.com"),
+            uri: bookingEndpoints.searchBookings,
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
         ];
 
@@ -117,9 +106,9 @@ export default function Home() {
       setCurrentBannerIndex((prevIndex) =>
         prevIndex === banners.length - 1 ? 0 : prevIndex + 1
       );
-    }, 5000); // Thời gian chuyển đổi là 5 giây
+    }, 5000);
 
-    return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
+    return () => clearInterval(interval);
   }, [banners.length]);
 
   const truncateText = (text: string, length: number) => {
@@ -143,7 +132,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex flex-col min-h-[100vh]">
       {loading ? (
         <Loader className="h-full flex-grow" />
       ) : (
@@ -189,26 +178,6 @@ export default function Home() {
                                 {truncateText(item.description, 100)}
                               </p>
                             </div>
-                            {/* <div className="pl-4 flex flex-col gap-2 min-[400px]:flex-row justify-start mt-4">
-                              <Link
-                                style={{
-                                  backgroundColor: profileStore.buttonColor,
-                                  color: profileStore.headerTextColor,
-                                }}
-                                href="#"
-                                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                                prefetch={false}
-                              >
-                                Shop Now
-                              </Link>
-                              <Link
-                                href="#"
-                                className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                                prefetch={false}
-                              >
-                                Learn More
-                              </Link>
-                            </div> */}
                           </div>
                         </div>
                       </CarouselItem>
@@ -231,7 +200,13 @@ export default function Home() {
                   Check out our latest and most popular products.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${
+                  bestProducts.length < 4
+                    ? "lg:grid-cols-3 justify-center"
+                    : "lg:grid-cols-4"
+                }`}
+              >
                 {bestProducts.length > 0
                   ? bestProducts.slice(0, 4).map((product, index) => (
                       <Card
@@ -257,7 +232,7 @@ export default function Home() {
                             {renderRating(product.rating)}
                           </div>
                           <p className="text-sm text-gray-500 text-left">
-                            {product.price}
+                            {product.price} VND
                           </p>
                         </CardContent>
                         <CardFooter className="p-4">
@@ -268,7 +243,7 @@ export default function Home() {
                             <Button
                               style={{
                                 backgroundColor: profileStore.buttonColor,
-                                color: profileStore.headerTextColor,
+                                color: profileStore.buttonTextColor,
                               }}
                               className="w-full text-sm"
                             >
@@ -297,7 +272,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="w-full py-8 md:py-16 lg:py-20 bg-muted">
+          <section className="w-full md:py-10 pb-20  bg-muted">
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
@@ -308,7 +283,13 @@ export default function Home() {
                   the best experience.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${
+                  services.length < 4
+                    ? "lg:grid-cols-3 justify-center"
+                    : "lg:grid-cols-4"
+                }`}
+              >
                 {services.length > 0
                   ? services.slice(0, 4).map((service, index) => (
                       <Card
@@ -345,7 +326,7 @@ export default function Home() {
                             <Button
                               style={{
                                 backgroundColor: profileStore.buttonColor,
-                                color: profileStore.headerTextColor,
+                                color: profileStore.buttonTextColor,
                               }}
                               className="w-full text-sm"
                             >
@@ -383,44 +364,6 @@ export default function Home() {
                   {profileStore.description}
                 </p>
               </div>
-              {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Fast Shipping</CardTitle>
-                    <CardDescription>
-                      We offer fast and reliable shipping to ensure your
-                      products arrive quickly.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Truck className="h-8 w-8 text-primary" />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Secure Payments</CardTitle>
-                    <CardDescription>
-                      Your payment information is safe with our advanced
-                      security measures.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Lock className="h-8 w-8 text-primary" />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Excellent Support</CardTitle>
-                    <CardDescription>
-                      Our dedicated customer support team is here to assist you
-                      with any questions or concerns.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Headphones className="h-8 w-8 text-primary" />
-                  </CardContent>
-                </Card>
-              </div> */}
             </div>
           </section>
         </>

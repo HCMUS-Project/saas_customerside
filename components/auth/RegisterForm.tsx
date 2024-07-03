@@ -21,11 +21,14 @@ import { PasswordIput } from "../ui/passwordInput";
 import { useRouter } from "next/navigation";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
-import { getDomain } from "@/util/get-domain";
+
+import { useProfileStore } from "@/hooks/store/profile.store";
+import Swal from "sweetalert2";
 
 const RegisterForm = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const profileStore = useProfileStore();
   const form = useForm({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
@@ -48,18 +51,23 @@ const RegisterForm = () => {
           username: data.username,
           phone: data.phone,
           password: data.password,
-          domain: "30shine.com",
-          device: "web", // Assuming device is constant
+          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
+          // Assuming device is constant
         },
       });
+      Swal.fire({
+        icon: "success",
+        title: "Login completed",
+      });
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        router.push("/auth/registerOTP");
-      } else {
-        console.error("Registration failed");
-      }
+      router.push("/auth/registerOTP");
     } catch (error) {
       console.error("Error during registration:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong! Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -158,7 +166,15 @@ const RegisterForm = () => {
               )}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button
+            style={{
+              backgroundColor: profileStore.buttonColor,
+              color: profileStore.buttonTextColor,
+            }}
+            type="submit"
+            className="w-full"
+            disabled={pending}
+          >
             {loading ? "is loading...." : "Signup"}
           </Button>
         </form>

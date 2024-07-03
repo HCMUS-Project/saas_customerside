@@ -13,7 +13,6 @@ import { AXIOS } from "@/constants/network/axios";
 import { productEndpoints } from "@/constants/api/product.api";
 import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
-import LoadingPage from "@/app/loading";
 import { useCart } from "@/constants/use-cart";
 import { useProfileStore } from "@/hooks/store/profile.store";
 
@@ -69,12 +68,12 @@ export default function ProductPageProps({
   const profileStore = useProfileStore();
 
   const fetchData = async (productId: string) => {
-    const domain = "30shine.com";
+    const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
     try {
       setLoading(true);
 
       const res = await AXIOS.GET({
-        uri: productEndpoints.findById(domain, params.id),
+        uri: productEndpoints.findById(domain ?? "", params.id),
       });
 
       const product = res.data;
@@ -105,7 +104,7 @@ export default function ProductPageProps({
     const fetchData = async () => {
       try {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findAll("30shine.com"),
+          uri: productEndpoints.findAll(process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? ""),
         });
         setProductsData(res.data);
         console.log(res.data);
@@ -182,13 +181,80 @@ export default function ProductPageProps({
       });
       return;
     }
-    await handleAddToCart(); // Add the product to the cart
-    localStorage.setItem("selectedProductId", productData.id); // Store the product ID in localStorage
-    router.push("/cart"); // Redirect to the cart page
+    if (authStore.isAuthorized == false) {
+      router.push("/auth/login");
+      return;
+    } else
+      try {
+        await handleAddToCart(); // Add the product to the cart
+        localStorage.setItem("selectedProductId", productData.id); // Store the product ID in localStorage
+        router.push("/cart"); // Redirect to the cart page
+      } catch (error) {
+        console.error("Error adding product to cart:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong! Please try again.",
+        });
+      }
   };
 
   if (loading) {
-    return <LoadingPage />;
+    return (
+      <div className="container mx-auto mt-10 mb-20 animate-pulse">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col items-center w-full lg:w-1/2">
+            <div className="relative w-full h-96 mb-4 bg-gray-300"></div>
+            <div className="flex mt-2 space-x-2 overflow-x-auto">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="relative w-16 h-16 flex-shrink-0 border bg-gray-300"
+                ></div>
+              ))}
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2">
+            <div className="h-12 bg-gray-300 mb-4"></div>
+            <div className="flex items-center mt-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-gray-300 fill-current" />
+              ))}
+              <span className="ml-2 h-6 w-12 bg-gray-300"></span>
+            </div>
+            <div className="flex flex-wrap mt-2 gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="bg-gray-300 text-gray-300 px-3 py-1 rounded-full text-sm"
+                ></span>
+              ))}
+            </div>
+            <div className="mt-4 h-8 bg-gray-300"></div>
+            <div className="flex items-center mt-4 gap-3">
+              <div className="w-8 h-8 bg-gray-300"></div>
+              <span className="text-lg bg-gray-300 h-8 w-8"></span>
+              <div className="w-8 h-8 bg-gray-300"></div>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <div className="h-10 bg-gray-300 w-32"></div>
+              <div className="h-10 bg-gray-300 w-32"></div>
+            </div>
+            <div className="mt-8 pt-2 border-t-2 border-gray-300">
+              <h2 className="h-8 bg-gray-300"></h2>
+              <p className="mt-2 h-20 bg-gray-300"></p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <CommentForm productId={productData.id} />
+        </div>
+        <div className="mt-8">
+          <Recommended products={productsData.products} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -200,7 +266,7 @@ export default function ProductPageProps({
               <>
                 {imageLoading && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <LoadingPage />
+                    <div className="w-16 h-16 border-4 border-t-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
                 <Image
@@ -272,7 +338,7 @@ export default function ProductPageProps({
             <Button
               style={{
                 backgroundColor: profileStore.buttonColor,
-                color: profileStore.headerTextColor,
+                color: profileStore.buttonTextColor,
               }}
               onClick={decrement}
               className="flex items-center justify-center w-8 h-8 p-0"
@@ -283,7 +349,7 @@ export default function ProductPageProps({
             <Button
               style={{
                 backgroundColor: profileStore.buttonColor,
-                color: profileStore.headerTextColor,
+                color: profileStore.buttonTextColor,
               }}
               onClick={increment}
               className="flex items-center justify-center w-8 h-8 p-0"
@@ -298,7 +364,7 @@ export default function ProductPageProps({
             <Button
               style={{
                 backgroundColor: profileStore.buttonColor,
-                color: profileStore.headerTextColor,
+                color: profileStore.buttonTextColor,
               }}
               onClick={handleAddToCart}
               className="btn btn-primary"

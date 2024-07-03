@@ -35,9 +35,10 @@ interface Service {
 
 const fetchServices = async (): Promise<Service[]> => {
   try {
-    const domain = "30shine.com";
+    const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
     const response = await AXIOS.GET({
-      uri: bookingEndpoints.searchBookings(domain),
+      uri: bookingEndpoints.searchBookings,
+      params: { domain },
     });
     if (response.data && Array.isArray(response.data.services)) {
       return response.data.services;
@@ -124,7 +125,7 @@ export default function ServiceCards() {
                     <Button
                       style={{
                         backgroundColor: profileStore.buttonColor,
-                        color: profileStore.headerTextColor,
+                        color: profileStore.buttonTextColor,
                       }}
                       type="button"
                       className="w-full"
@@ -154,7 +155,7 @@ export default function ServiceCards() {
 
                     <Button
                       style={{
-                        color: profileStore.headerTextColor,
+                        color: profileStore.buttonTextColor,
                       }}
                       variant="ghost"
                       size="sm"
@@ -174,7 +175,7 @@ export default function ServiceCards() {
                 <Button
                   style={{
                     backgroundColor: profileStore.buttonColor,
-                    color: profileStore.headerTextColor,
+                    color: profileStore.buttonTextColor,
                   }}
                   type="submit"
                   disabled={!selectedService}

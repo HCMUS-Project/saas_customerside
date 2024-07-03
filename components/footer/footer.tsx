@@ -23,7 +23,9 @@ export default function Footer() {
       <div className="flex justify-center w-full max-w-screen-xl mx-auto">
         <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 px-4 py-6 lg:py-8">
           <div>
-            <h2 className="mb-6 text-sm font-semibold ">Information</h2>
+            <h2 className="mb-6 text-sm font-semibold drop-shadow-lg ">
+              Information
+            </h2>
             <ul className="space-y-2">
               <li>{profileStore.serviceName}</li>
               <li>{profileStore.address}</li>
@@ -35,7 +37,9 @@ export default function Footer() {
                         {profileStore.description.slice(0, 30) + "..."}
                       </TooltipTrigger>
                       <TooltipContent>
-                        <div>{profileStore.description}</div>
+                        <div className="drop-shadow-lg">
+                          {profileStore.description}
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -46,26 +50,34 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h2 className="mb-6 text-sm font-semibold">Legal</h2>
+            <h2 className="mb-6 text-sm font-semibold drop-shadow-lg">Legal</h2>
             <ul className="space-y-2 font-medium">
               <li>
-                <a href="/legal/policy" className="hover:underline">
+                <a
+                  href="/legal/policy"
+                  className="drop-shadow-lg hover:underline"
+                >
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="/legal/term" className="hover:underline">
+                <a
+                  href="/legal/term"
+                  className="drop-shadow-lg hover:underline"
+                >
                   Term Of Use
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h2 className="mb-6 text-sm font-semibold ">Social Contact</h2>
+            <h2 className="mb-6 text-sm font-semibold drop-shadow-lg ">
+              Social Contact
+            </h2>
             <ul className="space-y-2 font-medium">
               <li>
                 <a href={profileStore.youtubeUrl} className="hover:underline">
-                  <div className="flex items-center gap-2">
+                  <div className="drop-shadow-lg flex items-center gap-2">
                     <Youtube /> Youtube
                   </div>
                 </a>

@@ -29,7 +29,6 @@ import { useRouter } from "next/navigation";
 import { RegisterOTPFSchema } from "@/schema";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
-import { getDomain } from "@/util/get-domain";
 
 export default function RegisterOTP() {
   const router = useRouter();
@@ -48,7 +47,7 @@ export default function RegisterOTP() {
       const response = await AXIOS.POST({
         uri: authEndpoint.sendMailOTP,
         params: {
-          domain: "30shine.com",
+          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
           email: form.getValues("email"), // Sử dụng email từ form
         },
       });
@@ -68,16 +67,14 @@ export default function RegisterOTP() {
       const response = await AXIOS.POST({
         uri: authEndpoint.verifyAccount,
         params: {
-          domain: "30shine.com",
+          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
           email: data.email,
           otp: data.pin,
         },
       });
 
       // If verification is successful, redirect to the home page
-      if (response.status === 200) {
-        router.push("/"); // Redirect to the home page
-      }
+      router.push("/auth/login"); // Redirect to the home page
     } catch (error) {
       // Handle error
       console.error("Verification failed:", error);

@@ -5,6 +5,7 @@ import { Header } from "@/components/headers/header";
 import CustomThemeProvider from "@/components/providers/custom-theme-provider";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 
 interface LayoutHolderProps {
   children: React.ReactNode;
@@ -18,7 +19,10 @@ const LayoutHolder: React.FC<LayoutHolderProps> = ({ children }) => {
     <CustomThemeProvider>
       <Header />
       <div
-        className={isDesktop ? "px-[10%]" : "px-[5%]"}
+        className={cn(
+          isDesktop ? "px-[10%]" : "px-[5%]",
+          "flex-1 overflow-y-auto"
+        )}
         style={{
           backgroundColor: profileStore.bodyColor,
           color: profileStore.bodyTextColor,

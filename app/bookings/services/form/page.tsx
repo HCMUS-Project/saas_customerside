@@ -35,7 +35,7 @@ import { AXIOS } from "@/constants/network/axios";
 import { employeeEndpoints } from "@/constants/api/employee.api";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Loader } from "@/app/loading"; // Import loader component
+import { Loader } from "@/components/loader/loading"; // Import loader component
 import {
   Dialog,
   DialogContent,
@@ -138,9 +138,9 @@ export default function BookingForm() {
     }
 
     try {
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee(domain),
+        uri: employeeEndpoints.searchEmployee(domain ?? ""),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -245,9 +245,9 @@ export default function BookingForm() {
     const formattedDate = format(selectedDate, "EEEE").toUpperCase();
 
     try {
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const response = await AXIOS.GET({
-        uri: employeeEndpoints.searchEmployee(domain),
+        uri: employeeEndpoints.searchEmployee(domain ?? ""),
         params: {
           services: [JSON.parse(storedService).id],
         },
@@ -344,19 +344,22 @@ export default function BookingForm() {
   };
 
   const fetchVouchers = async () => {
-    try {
-      const res = await AXIOS.GET({
-        uri: bookingEndpoints.findAllVoucher,
-      });
+    const service = selectedService ? selectedService.id : null;
+    if (service) {
+      try {
+        const res = await AXIOS.GET({
+          uri: bookingEndpoints.findAllVoucher(service),
+        });
 
-      if (res.statusCode >= 200 && res.statusCode <= 300) {
-        setVouchers(res.data.vouchers || []);
-      } else {
+        if (res.statusCode >= 200 && res.statusCode <= 300) {
+          setVouchers(res.data.vouchers || []);
+        } else {
+          Swal.fire("Error", "Failed to fetch vouchers.", "error");
+        }
+      } catch (error) {
+        console.error("Error fetching vouchers:", error);
         Swal.fire("Error", "Failed to fetch vouchers.", "error");
       }
-    } catch (error) {
-      console.error("Error fetching vouchers:", error);
-      Swal.fire("Error", "Failed to fetch vouchers.", "error");
     }
   };
 
@@ -519,7 +522,7 @@ export default function BookingForm() {
                     <Button
                       style={{
                         backgroundColor: profileStore.buttonColor,
-                        color: profileStore.headerTextColor,
+                        color: profileStore.buttonTextColor,
                       }}
                       onClick={handleApplyVoucher}
                       className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
@@ -531,7 +534,7 @@ export default function BookingForm() {
                     type="button"
                     style={{
                       backgroundColor: profileStore.buttonColor,
-                      color: profileStore.headerTextColor,
+                      color: profileStore.buttonTextColor,
                     }}
                     onClick={openVoucherDialog}
                     className="mt-4"
@@ -692,7 +695,7 @@ export default function BookingForm() {
                 <Button
                   style={{
                     backgroundColor: profileStore.buttonColor,
-                    color: profileStore.headerTextColor,
+                    color: profileStore.buttonTextColor,
                   }}
                   className="w-full"
                   variant="outline"
@@ -716,7 +719,8 @@ export default function BookingForm() {
                 Please select a voucher to apply
               </DialogDescription>
             </DialogHeader>
-            {vouchers.length > 0 &&
+
+            {vouchers.length > 0 ? (
               vouchers.map((voucher) => (
                 <div
                   key={voucher.id}
@@ -733,7 +737,7 @@ export default function BookingForm() {
                   <Button
                     style={{
                       backgroundColor: profileStore.buttonColor,
-                      color: profileStore.headerTextColor,
+                      color: profileStore.buttonTextColor,
                     }}
                     onClick={() => handleVoucherSelect(voucher.voucherCode)}
                     className="bg-blue-500 text-white px-4 py-2 rounded-md"
@@ -741,7 +745,10 @@ export default function BookingForm() {
                     Select
                   </Button>
                 </div>
-              ))}
+              ))
+            ) : (
+              <div> We dont have voucher for this service T.T </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

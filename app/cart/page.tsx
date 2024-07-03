@@ -13,7 +13,15 @@ import { useCart } from "@/constants/use-cart";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import Swal from "sweetalert2";
-import { Trash, Trash2, XIcon } from "lucide-react";
+import { Trash2, Minus, Plus } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface Product {
   productId: string;
@@ -28,7 +36,6 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showAlert, setShowAlert] = useState(false);
   const [cartID, setCartID] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
   const [removing, setRemoving] = useState<number | null>(null);
@@ -77,7 +84,10 @@ export default function CartPage() {
     try {
       for (const item of cartItemsTemp) {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findById("30shine.com", item.productId),
+          uri: productEndpoints.findById(
+            process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? "",
+            item.productId
+          ),
         });
 
         if (res.data) {
@@ -197,152 +207,156 @@ export default function CartPage() {
   };
 
   return (
-    <div className="mt-4 mb-10 pb-10 min-h-screen bg-white">
-      <div className="flex justify-center">
-        <div className="text-4xl font-bold">Your Cart</div>
-      </div>
-      {loading ? (
-        <div>
-          {[...Array(3)].map((_, index) => (
-            <div className="mt-4 flex justify-between" key={index}>
-              <div className="flex flex-wrap items-center gap-4">
-                <Skeleton className="w-[20px] h-[20px] rounded-full" />
-                <Skeleton className="w-[200px] h-[200px] rounded-lg" />
-                <div>
-                  <Skeleton className="w-[100px] h-[20px] rounded-full" />
-                  <Skeleton className="w-[50px] h-[20px] rounded-full mt-2" />
-                  <div className="my-1 flex item-center gap-2">
-                    <Skeleton className="w-[70px] h-[20px] rounded-full" />
-                    <div className="flex font-bold text-center gap-3 mb-2">
-                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
-                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
-                      <Skeleton className="w-[30px] h-[30px] rounded-full" />
-                    </div>
-                  </div>
-                  <Skeleton className="w-[100px] h-[20px] rounded-full" />
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Skeleton className="w-[70px] h-[30px] rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          {cartItems.length === 0 ? (
-            <div className="mt-8 px-4 py-4 flex flex-col items-center">
-              <p>No items in the cart.</p>
-              <Button
-                style={{
-                  backgroundColor: profileStore.buttonColor,
-                  color: profileStore.headerTextColor,
-                }}
-                onClick={() => router.push("/product")}
-              >
-                Shop Now
-              </Button>
-            </div>
-          ) : (
-            <div className="container mt-8 mx-auto p-4 bg-white shadow-md rounded-lg space-y-4">
-              {cartItems.map((item, index) => (
-                <div
-                  className="flex justify-between items-center border-b pb-4"
-                  key={item.productId}
-                >
-                  <div className="flex items-center gap-4 w-full">
-                    <Checkbox
-                      style={{
-                        backgroundColor: selectedItems[index]
-                          ? profileStore.buttonColor
-                          : "",
-                      }}
-                      checked={selectedItems[index]}
-                      onCheckedChange={() => handleCheckboxChange(index)}
-                    />
-                    {item.images && item.images.length > 0 ? (
-                      <Image
-                        src={item.images}
-                        width={100}
-                        height={100}
-                        alt={item.name}
-                        className="rounded-lg"
-                      />
-                    ) : (
-                      <div>No Image Available</div>
-                    )}
-                    <div className="flex flex-col w-full">
-                      <Link
-                        href={`product/product-detail?id=${item.productId}`}
-                      >
-                        <div className="font-bold text-lg">{item.name}</div>
-                      </Link>
-                      <div className="text-gray-600">{item.price} VND</div>
-                      <div className="flex items-center mt-2 gap-2">
-                        <div>Quantity:</div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            style={{
-                              backgroundColor: profileStore.buttonColor,
-                              color: profileStore.headerTextColor,
-                            }}
-                            onClick={() => decrement(index)}
-                          >
-                            -
-                          </Button>
-                          <span className="w-8 text-center">
-                            {count[index]}
-                          </span>
-                          <Button
-                            style={{
-                              backgroundColor: profileStore.buttonColor,
-                              color: profileStore.headerTextColor,
-                            }}
-                            onClick={() => increment(index)}
-                          >
-                            +
-                          </Button>
+    <div className="container mx-auto px-4 md:px-6 py-12 flex-grow h-full">
+      <h1 className="text-2xl font-bold mb-8">Shopping Cart</h1>
+      <div className="grid md:grid-cols-[1fr_300px] gap-8">
+        <div className="grid gap-6">
+          {loading ? (
+            <div>
+              {[...Array(3)].map((_, index) => (
+                <div className="mt-4 flex justify-between" key={index}>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Skeleton className="w-[20px] h-[20px] rounded-full" />
+                    <Skeleton className="w-[200px] h-[200px] rounded-lg" />
+                    <div>
+                      <Skeleton className="w-[100px] h-[20px] rounded-full" />
+                      <Skeleton className="w-[50px] h-[20px] rounded-full mt-2" />
+                      <div className="my-1 flex item-center gap-2">
+                        <Skeleton className="w-[70px] h-[20px] rounded-full" />
+                        <div className="flex font-bold text-center gap-3 mb-2">
+                          <Skeleton className="w-[30px] h-[30px] rounded-full" />
+                          <Skeleton className="w-[30px] h/[30px] rounded-full" />
+                          <Skeleton className="w/[30px] h/[30px] rounded-full" />
                         </div>
                       </div>
-                      <div className="mt-2">
-                        Total Price:{" "}
-                        <span className="font-bold">
-                          {item.price * count[index]} VND
-                        </span>
-                      </div>
+                      <Skeleton className="w/[100px] h/[20px] rounded-full" />
                     </div>
                   </div>
-                  <Button
-                    style={{
-                      backgroundColor: profileStore.buttonColor,
-                      color: profileStore.headerTextColor,
-                    }}
-                    onClick={() => handleRemoveFromCart(index)}
-                    disabled={removing === index}
-                  >
-                    <Trash2 />
-                  </Button>
+                  <div className="flex items-center">
+                    <Skeleton className="w/[70px] h/[30px] rounded-full" />
+                  </div>
                 </div>
               ))}
-              <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4">
-                <div className="container mx-auto flex justify-between items-center">
-                  <p className="font-bold text-xl">Total: {totalPrice} VND</p>
+            </div>
+          ) : (
+            <>
+              {cartItems.length === 0 ? (
+                <div className="mt-8 px-4 py-4 flex flex-col items-center flex-grow h-full">
+                  <p>No items in the cart.</p>
                   <Button
                     style={{
                       backgroundColor: profileStore.buttonColor,
-                      color: profileStore.headerTextColor,
+                      color: profileStore.buttonTextColor,
                     }}
-                    onClick={checkout}
-                    className="px-4 py-2"
+                    onClick={() => router.push("/product")}
                   >
-                    Checkout
+                    Shop Now
                   </Button>
                 </div>
-              </div>
-            </div>
+              ) : (
+                <>
+                  {cartItems.map((item, index) => (
+                    <div
+                      key={item.productId}
+                      className="grid grid-cols-[24px_100px_1fr_auto] items-center gap-4"
+                    >
+                      <Checkbox
+                        style={{
+                          backgroundColor: selectedItems[index]
+                            ? profileStore.buttonColor
+                            : "",
+                        }}
+                        checked={selectedItems[index]}
+                        onCheckedChange={() => handleCheckboxChange(index)}
+                      />
+                      <Image
+                        src={item.images || "/placeholder.svg"}
+                        alt={item.name}
+                        width={100}
+                        height={100}
+                        className="rounded-lg object-cover"
+                      />
+                      <div className="grid gap-1">
+                        <Link href={`product/${item.productId}`}>
+                          <h3 className="font-semibold">{item.name}</h3>
+                        </Link>
+                        <p className="text-muted-foreground text-sm">
+                          {item.price} VND
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => decrement(index)}
+                          disabled={count[index] <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="font-medium">{count[index]}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => increment(index)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveFromCart(index)}
+                          className="bg-red-500 text-white"
+                        >
+                          <Trash2 className="w-4 h-4 " />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+        {cartItems.length > 0 && !loading && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{totalPrice.toFixed(2)} VND</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span>Free</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-medium">
+                <span>Total</span>
+                <span>{totalPrice.toFixed(2)} VND</span>
+              </div>
+            </CardContent>
+            <CardFooter className="grid gap-2">
+              <Button
+                className="w-full"
+                onClick={checkout}
+                style={{
+                  backgroundColor: profileStore.buttonColor,
+                  color: profileStore.buttonTextColor,
+                }}
+              >
+                Proceed to Checkout
+              </Button>
+              <Link href="/products">
+                <Button variant="outline" className="w-full">
+                  Continue Shopping
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

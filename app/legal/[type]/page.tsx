@@ -21,7 +21,7 @@ const LegalPage = () => {
         const res = await AXIOS.GET({
           uri: configEnpoints.findPolicy,
           params: {
-            domain: "30shine.com",
+            domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
           },
         });
 

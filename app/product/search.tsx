@@ -32,9 +32,9 @@ const Search = () => {
           return;
         }
         setLoading(true);
-        const domain = "30shine.com"; // Change this to your actual domain
+        const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Change this to your actual domain
         const res = await AXIOS.GET({
-          uri: productEndpoints.searchProductName(domain, query),
+          uri: productEndpoints.searchProductName(domain ?? "", query),
         });
 
         // Normalize query to lowercase for case-insensitive comparison

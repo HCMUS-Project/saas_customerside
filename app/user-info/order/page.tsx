@@ -9,7 +9,7 @@ import { OrderDataTable } from "./order-data-table";
 import { getOrderColumns, Order, Product } from "./order-columns"; // Import Product type here
 import { ecommerceEndpoints } from "@/constants/api/ecommerce";
 import { productEndpoints } from "@/constants/api/product.api";
-import { Loader } from "@/app/loading";
+import { Loader } from "@/components/loader/loading";
 import {
   Dialog,
   DialogContent,
@@ -60,10 +60,10 @@ interface HasUserCommentedState {
 async function fetchProductDetails(
   productId: string
 ): Promise<ProductDetails | null> {
-  const domain = "30shine.com"; // Replace with your valid domain
+  const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Replace with your valid domain
   try {
     const res = await AXIOS.GET({
-      uri: productEndpoints.findById(domain, productId),
+      uri: productEndpoints.findById(domain ?? "", productId),
     });
     const productDetails = res.data;
     const imgSrc = productDetails.images?.[0] || "";
@@ -159,9 +159,9 @@ const OrderPage = () => {
       console.log("Fetched user profile:", userEmail, userId);
 
       // Fetch comments
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const commentsResponse = await AXIOS.GET({
-        uri: reviewEndpoint.ecommerceReviewFind(domain, productId),
+        uri: reviewEndpoint.ecommerceReviewFind(domain ?? "", productId),
       });
       if (
         commentsResponse.data &&
@@ -305,12 +305,8 @@ const OrderPage = () => {
     }
   };
 
-  if (loading) {
-    return <Loader />; // Display the Loader component when loading
-  }
-
   return (
-    <div className="py-6">
+    <div className="py-6 flex-grow h-full">
       <div className="mt-6 flex justify-center">
         <Avatar className="h-20 w-20">
           <AvatarImage src="https://github.com/shadcn.png" />
@@ -323,7 +319,7 @@ const OrderPage = () => {
       <div className="flex justify-center text-align-center font-thin">
         <p>{userEmail}</p>
       </div>
-      <div className="mt-8 overflow-x-hidden relative space-x-6">
+      <div className="mt-8 ml-12 pl-4 overflow-x-hidden relative space-x-6">
         <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
           <Link
             href="/user-info"
@@ -369,7 +365,7 @@ const OrderPage = () => {
               style={{
                 backgroundColor:
                   stage === "pending" ? profileStore.buttonColor : "",
-                color: stage === "pending" ? profileStore.headerTextColor : "",
+                color: stage === "pending" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStageChange("pending")}
@@ -416,12 +412,20 @@ const OrderPage = () => {
               Cancelled
             </Button>
           </div>
-          <OrderDataTable
-            columns={getOrderColumns(stage, (order) =>
-              handleRatingClick(order.products)
-            )}
-            data={orders}
-          />
+          {loading ? (
+            <div className="flex justify-center">
+              <Loader />
+            </div>
+          ) : orders.length > 0 ? (
+            <OrderDataTable
+              columns={getOrderColumns(stage, (order) =>
+                handleRatingClick(order.products)
+              )}
+              data={orders}
+            />
+          ) : (
+            <p className="text-center text-gray-500">No orders found.</p>
+          )}
         </div>
       </div>
 

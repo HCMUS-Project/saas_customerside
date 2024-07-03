@@ -21,12 +21,12 @@ const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({
         const apiToFetch = [
           AXIOS.GET({
             uri: configEnpoints.findProfile,
-            params: { domain: "30shine.com" },
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
           AXIOS.GET({
             uri: configEnpoints.findTheme,
             params: {
-              domain: "30shine.com",
+              domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
             },
           }),
         ];

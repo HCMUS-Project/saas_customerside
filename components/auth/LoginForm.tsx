@@ -25,7 +25,9 @@ import { useRouter } from "next/navigation";
 import { storeJwt } from "@/util/auth.util";
 
 import { useAuthStore } from "@/hooks/store/auth.store";
-import { getDomain } from "@/util/get-domain";
+
+import Swal from "sweetalert2";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -39,6 +41,7 @@ const LoginForm = () => {
     },
   });
   const authStore = useAuthStore();
+  const profileStore = useProfileStore();
 
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);
@@ -46,7 +49,7 @@ const LoginForm = () => {
       const response = await AXIOS.POST({
         uri: authEndpoint.signIn,
         params: {
-          domain: "30shine.com",
+          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
           email: data.email,
           password: data.password,
         },
@@ -55,8 +58,17 @@ const LoginForm = () => {
       storeJwt(accessToken, "AT");
       storeJwt(refreshToken, "RT");
       authStore.setIsAuthorized(true);
+      Swal.fire({
+        icon: "success",
+        title: "Login completed",
+      });
       router.push("/"); // Chuyển hướng đến trang chủ
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong! Please try again.",
+      });
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);
@@ -108,8 +120,12 @@ const LoginForm = () => {
           </div>
           <div>
             <Button
+              style={{
+                backgroundColor: profileStore.buttonColor,
+                color: profileStore.buttonTextColor,
+              }}
               type="submit"
-              className="w-full bg-blue-500"
+              className="w-full "
               variant="ghost"
               disabled={loading}
             >

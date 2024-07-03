@@ -24,8 +24,9 @@ import {
 } from "../ui/dropdown-menu";
 import { getJwt } from "@/util/auth.util";
 import { useAuthStore } from "@/hooks/store/auth.store";
-import { useProfileStore } from "@/hooks/store/profile.store";
+
 import CartButton from "./cart-button";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -35,7 +36,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
   <nav className="hidden lg:flex gap-6 sm:gap-8">
     <Link
       className={`text-xl font-medium hover:underline underline-offset-4 ${
-        currentPath === "/" && "text-white"
+        currentPath === "/" ? "text-white" : ""
       }`}
       href="/"
     >
@@ -43,7 +44,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
     </Link>
     <Link
       className={`text-xl font-medium hover:underline underline-offset-4 ${
-        currentPath === "/bookings" && "text-white"
+        currentPath.includes("bookings") ? "text-white" : ""
       }`}
       href="/bookings"
     >
@@ -51,7 +52,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
     </Link>
     <Link
       className={`text-xl font-medium hover:underline underline-offset-4 ${
-        currentPath === "/product" && "text-white"
+        currentPath.includes("product") ? "text-white" : ""
       }`}
       href="/product"
     >
@@ -62,7 +63,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => (
 
 const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
   const router = useRouter();
-
+  const profileStore = useProfileStore();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -75,11 +76,20 @@ const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
         <DropdownMenuItem onClick={() => router.push("/user-info")}>
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Link href="/">Settings</Link>
+        <DropdownMenuItem onClick={() => router.push("/cart")}>
+          Your Cart
         </DropdownMenuItem>
+
         <DropdownMenuItem>
-          <Button onClick={onLogout}>Logout</Button>
+          <Button
+            style={{
+              backgroundColor: profileStore.buttonColor,
+              color: profileStore.buttonTextColor,
+            }}
+            onClick={onLogout}
+          >
+            Logout
+          </Button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -149,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                 <Button
                   style={{
                     backgroundColor: profileStore.buttonColor,
-                    color: profileStore.headerTextColor,
+                    color: profileStore.buttonTextColor,
                   }}
                   onClick={() => router.push("/auth/register")}
                 >

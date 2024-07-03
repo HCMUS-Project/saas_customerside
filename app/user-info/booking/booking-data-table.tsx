@@ -1,4 +1,6 @@
 "use client";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   ColumnDef,
@@ -7,7 +9,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -16,23 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import React from "react";
 
-interface DataTableProps<TData, TValue> {
+interface BookingDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  userData: {
-    email: string;
-    name: string;
-    avatar: string;
-  };
 }
 
-export function DataTable<TData, TValue>({
+export function BookingDataTable<TData, TValue>({
   columns,
   data,
-  userData,
-}: DataTableProps<TData, TValue>) {
+}: BookingDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,

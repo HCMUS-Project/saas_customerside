@@ -30,7 +30,7 @@ const CartButton = () => {
       onClick={handleCartClick}
       style={{
         backgroundColor: profileStore.buttonColor,
-        color: profileStore.headerTextColor,
+        color: profileStore.buttonTextColor,
       }}
     >
       <ShoppingCart className="w-6 h-6" />

@@ -1,215 +1,351 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useDebounce } from "use-debounce";
-import { AlignJustify } from "lucide-react";
-
-import { Input } from "@/components/ui/input";
-import { ComboBoxResponsiveDestination } from "@/app/product/combobox-destination";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import Recommended from "./recommend-product";
-import { ComboBoxResponsiveCoupon } from "./combobox-coupon";
-import BestSeller from "./best-seller";
-import AllProduct from "./all-products";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { AXIOS } from "@/constants/network/axios";
 import { productEndpoints } from "@/constants/api/product.api";
-import Search from "@/app/product/search";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { SearchIcon, Star } from "lucide-react";
+import { ecommerceEndpoints } from "@/constants/api/ecommerce";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
-const FormSchema = z.object({
-  items: z.array(z.string()).refine((value) => value.some((item) => item)),
-});
+interface FiltersProps {
+  selectedCategory: string[];
+  setSelectedCategory: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedPriceRange: number[];
+  setSelectedPriceRange: React.Dispatch<React.SetStateAction<number[]>>;
+  selectedRating: number | null;
+  setSelectedRating: React.Dispatch<React.SetStateAction<number | null>>;
+  resetFilters: () => void;
+}
 
-export default function Product() {
-  const [productsData, setProductsData] = useState<{ products: any[] }>({
-    products: [],
-  });
-  const [bestSellerProducts, setBestSellerProducts] = useState<any[]>([]);
-  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true); // Loading state
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      items: ["recents", "home"],
-    },
-  });
-
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+const Filters: React.FC<FiltersProps> = ({
+  selectedCategory,
+  setSelectedCategory,
+  selectedPriceRange,
+  setSelectedPriceRange,
+  selectedRating,
+  setSelectedRating,
+  resetFilters,
+}) => {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
+  const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Change this to your actual domain
+  const profileStore = useProfileStore();
 
   useEffect(() => {
-    const fetchBestSellers = async () => {
+    const fetchCategories = async () => {
       try {
+        setLoadingCategories(true);
         const res = await AXIOS.GET({
-          uri: productEndpoints.findBestSeller("30shine.com"),
+          uri: ecommerceEndpoints.findCategories(domain ?? ""),
         });
-        setBestSellerProducts(res.data.products);
-        console.log("Best sellers fetched:", res.data.products);
+        // Extract the category names from the response
+        const categoryNames = res.data.categories.map(
+          (category: { name: string }) => category.name
+        );
+        setCategories(categoryNames);
       } catch (error) {
-        console.error("Error fetching best sellers:", error);
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoadingCategories(false);
       }
     };
 
-    const fetchProducts = async () => {
-      try {
-        const res = await AXIOS.GET({
-          uri: productEndpoints.findAll("30shine.com"),
-        });
-        setProductsData(res.data);
-        console.log("All products fetched:", res.data);
-      } catch (error) {
-        console.error("Error fetching all products:", error);
-      }
-    };
-
-    const fetchRecommendedProducts = async () => {
-      try {
-        const res = await AXIOS.GET({
-          uri: productEndpoints.findRecommend("30shine.com"),
-        });
-        setRecommendedProducts(res.data.products);
-        console.log("Recommended products fetched:", res.data.products);
-      } catch (error) {
-        console.error("Error fetching recommended products:", error);
-      }
-    };
-
-    Promise.all([
-      fetchBestSellers(),
-      fetchProducts(),
-      fetchRecommendedProducts(),
-    ]).finally(() => {
-      setLoading(false); // Set loading to false after data is fetched
-    });
+    fetchCategories();
   }, []);
 
-  const items = [
-    {
-      id: "recents",
-      label: "Recents",
-    },
-    {
-      id: "home",
-      label: "Home",
-    },
-    {
-      id: "applications",
-      label: "Applications",
-    },
-    {
-      id: "desktop",
-      label: "Desktop",
-    },
-    {
-      id: "downloads",
-      label: "Downloads",
-    },
-    {
-      id: "documents",
-      label: "Documents",
-    },
-  ] as const;
+  return (
+    <div className="p-4 w-64 bg-white rounded-lg shadow-md">
+      <h2 className="font-bold mb-4">Filters</h2>
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">Category</h3>
+        <ul>
+          {loadingCategories ? (
+            <Skeleton className="h-6 w-full mb-2" />
+          ) : (
+            categories.map((category) => (
+              <li key={category}>
+                <input
+                  type="checkbox"
+                  checked={selectedCategory.includes(category)}
+                  onChange={() => {
+                    if (selectedCategory.includes(category)) {
+                      setSelectedCategory(
+                        selectedCategory.filter((cat) => cat !== category)
+                      );
+                    } else {
+                      setSelectedCategory([...selectedCategory, category]);
+                    }
+                  }}
+                />
+                <span className="ml-2">{category}</span>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">Price</h3>
+        <ul>
+          {[
+            { label: "0 - 100k", value: [0, 100000] },
+            { label: "100k - 500k", value: [100000, 500000] },
+            { label: "500k - 1m", value: [500000, 1000000] },
+          ].map((range) => (
+            <li key={range.label}>
+              <input
+                type="radio"
+                name="price"
+                checked={
+                  selectedPriceRange[0] === range.value[0] &&
+                  selectedPriceRange[1] === range.value[1]
+                }
+                onChange={() => setSelectedPriceRange(range.value)}
+              />
+              <span className="ml-2">{range.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h3 className="font-semibold mb-2">Rating</h3>
+        <ul>
+          {[5, 4, 3].map((rating) => (
+            <li key={rating}>
+              <input
+                type="radio"
+                name="rating"
+                checked={selectedRating === rating}
+                onChange={() => setSelectedRating(rating)}
+              />
+              <span className="ml-2">{rating} Stars & up</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <Button
+        style={{
+          backgroundColor: profileStore.buttonColor,
+          color: profileStore.buttonTextColor,
+        }}
+        onClick={resetFilters}
+        className="mt-4"
+      >
+        Reset All Filters
+      </Button>
+    </div>
+  );
+};
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
-  }
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  rating: number;
+  category: string;
+  images: string[];
+}
+
+const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {
+  const profileStore = useProfileStore();
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {products.map((product) => (
+        <Link
+          className=" bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
+          href={`/product/${product.id}`}
+          key={product.id}
+        >
+          <div className="relative w-full h-48">
+            <Image
+              className="object-contain rounded-t-lg"
+              src={product.images?.[0] ?? "/placeholder-image.png"}
+              alt={product.name}
+              layout="fill"
+            />
+          </div>
+
+          <h3 className="font-semibold text-lg truncate">{product.name}</h3>
+          <div className="flex items-center mt-1 ">
+            {Array.from({ length: product.rating }).map((_, index) => (
+              <Star key={index} className="text-yellow-400 fill-current"></Star>
+            ))}
+            {Array.from({ length: 5 - product.rating }).map((_, index) => (
+              <Star key={index} className="text-gray-300"></Star>
+            ))}
+          </div>
+          <p className="text-sm text-gray-600 mt-1 font-semibold mb-2">
+            {product.price} VND
+          </p>
+          <Button
+            className="w-full mt1"
+            style={{
+              backgroundColor: profileStore.buttonColor,
+              color: profileStore.buttonTextColor,
+            }}
+          >
+            add to cart
+          </Button>
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+const AllProductList: React.FC = () => {
+  const [productsData, setProductsData] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<number[]>([
+    0, 1000000,
+  ]);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(true);
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search");
+  const router = useRouter();
+
+  const fetchProducts = async (page = 1, query?: string) => {
+    try {
+      setLoading(true);
+      const queryParams = [
+        `category=${selectedCategory.join(",")}`,
+        `minPrice=${selectedPriceRange[0] || ""}`,
+        `maxPrice=${selectedPriceRange[1] || ""}`,
+        `rating=${selectedRating || ""}`,
+        query ? `name=${query}` : "",
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      const res = await AXIOS.GET({
+        uri: productEndpoints.searchProduct(
+          process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? "",
+          queryParams
+        ),
+      });
+
+      setProductsData(res.data.products);
+      setTotalPages(res.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(currentPage, searchQuery || undefined);
+  }, [
+    selectedCategory,
+    selectedPriceRange,
+    selectedRating,
+    currentPage,
+    searchQuery,
+  ]);
+
+  const resetFilters = () => {
+    setSelectedCategory([]);
+    setSelectedPriceRange([0, 1000000]);
+    setSelectedRating(null);
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    router.push(`/product?search=${e.target.value}`);
+  };
 
   return (
-    <div className="py-2">
-      <div className="container sm:flex justify-between items-center space-x-2 mb-6">
-        <div className="flex flex-grow min-w-0 relative">
-          <Search />
-        </div>
-        <div>
-          <Popover>
-            <PopoverTrigger>
-              <Button variant="outline" className="flex items-center">
-                <AlignJustify className="mr-2" /> Filter
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-4">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="items"
-                    render={() => (
-                      <FormItem>
-                        {items.map((item) => (
-                          <FormField
-                            key={item.id}
-                            control={form.control}
-                            name="items"
-                            render={({ field }) => (
-                              <FormItem
-                                key={item.id}
-                                className="flex items-start space-x-2"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([
-                                            ...field.value,
-                                            item.id,
-                                          ])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== item.id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {item.label}
-                                </FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full">
-                    Apply
-                  </Button>
-                </form>
-              </Form>
-            </PopoverContent>
-          </Popover>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <div className="relative w-full">
+          <Input
+            className="border p-2 px-4 rounded-lg w-full"
+            type="text"
+            placeholder="Search for products"
+            defaultValue={searchQuery || ""}
+            onChange={handleSearch}
+          />
+          <SearchIcon
+            className="absolute top-0 right-0 mr-3 mt-2 text-gray-400"
+            size={20}
+          />
         </div>
       </div>
-
-      <div className="container mx-auto">
-        <Recommended products={recommendedProducts} />
-        <BestSeller products={bestSellerProducts} />
-        <AllProduct products={productsData?.products} />
+      <div className="flex">
+        <Filters
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedPriceRange={selectedPriceRange}
+          setSelectedPriceRange={setSelectedPriceRange}
+          selectedRating={selectedRating}
+          setSelectedRating={setSelectedRating}
+          resetFilters={resetFilters}
+        />
+        <div className="flex-1 ml-6">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+                  <Skeleton className="h-48 w-full mb-2 rounded-lg" />
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ProductList products={productsData} />
+          )}
+          <Pagination className="mt-8">
+            <PaginationContent>
+              {currentPage > 1 && (
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  />
+                </PaginationItem>
+              )}
+              {Array.from({ length: totalPages }).map((_, page) => (
+                <PaginationItem key={page + 1}>
+                  <PaginationLink
+                    href="#"
+                    onClick={() => setCurrentPage(page + 1)}
+                    isActive={currentPage === page + 1}
+                  >
+                    {page + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              {currentPage < totalPages && (
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default AllProductList;

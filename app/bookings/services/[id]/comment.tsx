@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { AXIOS } from "@/constants/network/axios";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { authEndpoint } from "@/constants/api/auth.api";
-import { Star } from "lucide-react";
+import { Star, Edit3, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,8 +24,8 @@ interface CommentFormProps {
 
 const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState<string | null>(null);
   const [editReview, setEditReview] = useState<string>("");
   const [editRating, setEditRating] = useState<number>(0);
@@ -33,20 +33,10 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
 
   const fetchProfileAndComments = useCallback(async () => {
     try {
-      // Fetch user profile
-      const profileResponse = await AXIOS.GET({
-        uri: authEndpoint.getProfile,
-      });
-      const userEmail = profileResponse.data.email;
-      const userId = profileResponse.data.id;
-      setUserEmail(userEmail);
-      setUserId(userId);
-      console.log("Fetched user profile:", userEmail, userId);
-
       // Fetch comments
-      const domain = "30shine.com";
+      const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
       const commentsResponse = await AXIOS.GET({
-        uri: bookingEndpoints.reviewBooking(domain),
+        uri: bookingEndpoints.reviewBooking(domain ?? ""),
         params: { serviceId },
       });
       if (
@@ -58,6 +48,22 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
       } else {
         console.error("Unexpected response format:", commentsResponse.data);
         setComments([]);
+      }
+
+      // Fetch user profile
+      try {
+        const profileResponse = await AXIOS.GET({
+          uri: authEndpoint.getProfile,
+        });
+        const userEmail = profileResponse.data.email;
+        const userId = profileResponse.data.id;
+        setUserEmail(userEmail);
+        setUserId(userId);
+        console.log("Fetched user profile:", userEmail, userId);
+      } catch (profileError) {
+        console.log("User not logged in:", profileError);
+        setUserEmail(null);
+        setUserId(null);
       }
     } catch (error) {
       console.error("Error fetching data", error);
@@ -106,7 +112,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
         id: editMode,
         review: editReview,
         rating: editRating,
-        userId: userId,
+        userId: "something",
       };
       handleEdit(editedComment);
     }
@@ -179,7 +185,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
                                 key={i}
                                 className={`w-4 h-4 ${
                                   comment.rating >= i + 1
-                                    ? "text-yellow-500"
+                                    ? "text-yellow-500 fill-current"
                                     : "text-gray-300"
                                 }`}
                               />
@@ -191,24 +197,18 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
                         </div>
                         {userEmail === comment.user && (
                           <div className="flex gap-2">
-                            <Button
-                              variant="link"
-                              className="text-green-500"
+                            <Edit3
+                              className="w-5 h-5 text-green-500 cursor-pointer"
                               onClick={() => {
                                 setEditMode(comment.id);
                                 setEditReview(comment.review);
                                 setEditRating(comment.rating);
                               }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="link"
-                              className="text-gray-500"
+                            />
+                            <Trash2
+                              className="w-5 h-5 cursor-pointer text-red-500"
                               onClick={() => handleDelete(comment.id)}
-                            >
-                              Delete
-                            </Button>
+                            />
                           </div>
                         )}
                       </div>
