@@ -19,4 +19,7 @@ export const bookingEndpoints = {
     `api/booking/bookings/find/all?status=${status}`,
   findBookingReview: (domain: string, serviceId: string) =>
     `api/booking/review/find?serviceId=${serviceId}&domain=${domain} `,
+  findRecommended: (domain: string) =>
+    `api/booking/services/find/recommend?domain=${domain}`,
+  findBestServices: `api/booking/services/find/best`,
 };

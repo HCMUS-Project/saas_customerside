@@ -68,7 +68,7 @@ const Filters: React.FC<FiltersProps> = ({
   }, []);
 
   return (
-    <div className="p-4 w-64 bg-white rounded-lg shadow-md">
+    <div className="p-4 w-64 h-full bg-white rounded-lg shadow-md">
       <h2 className="font-bold mb-4">Filters</h2>
       <div className="mb-4">
         <h3 className="font-semibold mb-2">Category</h3>
@@ -213,21 +213,24 @@ const AllProductList: React.FC = () => {
   ]);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search");
   const router = useRouter();
 
-  const fetchProducts = async (page = 1, query?: string) => {
+  const itemsPerPage = 9;
+
+  const fetchProducts = async () => {
     try {
       setLoading(true);
       const queryParams = [
         `category=${selectedCategory.join(",")}`,
         `minPrice=${selectedPriceRange[0] || ""}`,
-        `maxPrice=${selectedPriceRange[1] || ""}`,
+        selectedPriceRange[1] !== 1000000
+          ? `maxPrice=${selectedPriceRange[1]}`
+          : "",
         `rating=${selectedRating || ""}`,
-        query ? `name=${query}` : "",
+        searchQuery ? `name=${searchQuery}` : "",
       ]
         .filter(Boolean)
         .join("&");
@@ -240,7 +243,6 @@ const AllProductList: React.FC = () => {
       });
 
       setProductsData(res.data.products);
-      setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -249,14 +251,18 @@ const AllProductList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchProducts(currentPage, searchQuery || undefined);
-  }, [
-    selectedCategory,
-    selectedPriceRange,
-    selectedRating,
-    currentPage,
-    searchQuery,
-  ]);
+    fetchProducts();
+  }, [selectedCategory, selectedPriceRange, selectedRating, searchQuery]);
+
+  // Get current products
+  const indexOfLastProduct = currentPage * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = productsData.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const totalPages = Math.ceil(productsData.length / itemsPerPage);
 
   const resetFilters = () => {
     setSelectedCategory([]);
@@ -309,7 +315,7 @@ const AllProductList: React.FC = () => {
               ))}
             </div>
           ) : (
-            <ProductList products={productsData} />
+            <ProductList products={currentProducts} />
           )}
           <Pagination className="mt-8">
             <PaginationContent>

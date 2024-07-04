@@ -60,6 +60,7 @@ export default function Home() {
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const profileStore = useProfileStore();
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,8 +81,15 @@ export default function Home() {
             params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
           }),
           AXIOS.GET({
+            uri: bookingEndpoints.findBestServices,
+            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? "" },
+          }),
+          AXIOS.GET({
             uri: bookingEndpoints.searchBookings,
-            params: { domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN },
+            params: {
+              domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
+              rating: selectedRating,
+            },
           }),
         ];
 
@@ -90,7 +98,9 @@ export default function Home() {
         setBanners(res[0].data.banners);
         setBestProducts(res[1].data.products);
         setRecommendedProducts(res[2].data.products);
-        setServices(res[3].data.services);
+        if (res[3].data.services === 0) {
+          setServices(res[4].data.services);
+        } else setServices(res[3].data.services);
       } catch (error) {
         console.error(error);
       } finally {
@@ -284,11 +294,13 @@ export default function Home() {
                 </p>
               </div>
               <div
-                className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${
-                  services.length < 4
-                    ? "lg:grid-cols-3 justify-center"
-                    : "lg:grid-cols-4"
-                }`}
+                className={`grid grid-cols-1 sm:grid-cols-2  gap-6 lg:${(() => {
+                  if (services.length == 1) return "grid-cols-1";
+                  if (services.length == 2) return "grid-cols-2";
+                  if (services.length == 3) return "grid-cols-3";
+                  if (services.length >= 4) return "grid-cols-4";
+                  return "";
+                })()}`}
               >
                 {services.length > 0
                   ? services.slice(0, 4).map((service, index) => (
@@ -296,7 +308,7 @@ export default function Home() {
                         key={index}
                         className="card rounded-lg shadow-lg overflow-hidden"
                       >
-                        <div className="relative w-full h-48 rounded-t-lg overflow-hidden">
+                        <div className="relative h-48 rounded-t-lg overflow-hidden">
                           {service.images.length > 0 && (
                             <Image
                               src={service.images[0]}

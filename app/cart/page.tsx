@@ -208,7 +208,7 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-12 flex-grow h-full">
-      <h1 className="text-2xl font-bold mb-8">Shopping Cart</h1>
+      <h1 className="text-2xl font-bold mb-8">Your Shopping Cart</h1>
       <div className="grid md:grid-cols-[1fr_300px] gap-8">
         <div className="grid gap-6">
           {loading ? (
@@ -241,7 +241,7 @@ export default function CartPage() {
           ) : (
             <>
               {cartItems.length === 0 ? (
-                <div className="mt-8 px-4 py-4 flex flex-col items-center flex-grow h-full">
+                <div className="flex flex-col items-center justify-center  ">
                   <p>No items in the cart.</p>
                   <Button
                     style={{
@@ -317,7 +317,7 @@ export default function CartPage() {
             </>
           )}
         </div>
-        {cartItems.length > 0 && !loading && (
+        {!loading && (
           <Card>
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
@@ -329,7 +329,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>Free</span>
+                <span>17.000 VND</span>
               </div>
               <Separator />
               <div className="flex justify-between font-medium">
@@ -339,6 +339,7 @@ export default function CartPage() {
             </CardContent>
             <CardFooter className="grid gap-2">
               <Button
+                disabled={cartItems.length === 0}
                 className="w-full"
                 onClick={checkout}
                 style={{

@@ -7,4 +7,5 @@ export const authEndpoint = {
   getProfile: "api/auth/get-profile",
   refreshToken: "api/auth/refresh-token",
   logOut: "api/auth/sign-out",
+  changePassword: "api/auth/change-password",
 };

@@ -68,11 +68,11 @@ const Filters: React.FC<FiltersProps> = ({
   // }, []);
 
   return (
-    <div className="p-4 w-64 bg-white rounded-lg shadow-md">
+    <div className="p-4 w-64 bg-white rounded-lg shadow-md h-fit">
       <h2 className="font-bold mb-4">Filters</h2>
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">Category</h3>
-        <ul>
+        {/* <h3 className="font-semibold mb-2">Category</h3> */}
+        {/* <ul>
           {loadingCategories ? (
             <Skeleton className="h-6 w-full mb-2" />
           ) : (
@@ -95,7 +95,7 @@ const Filters: React.FC<FiltersProps> = ({
               </li>
             ))
           )}
-        </ul>
+        </ul> */}
       </div>
       <div className="mb-4">
         <h3 className="font-semibold mb-2">Price</h3>
@@ -213,11 +213,12 @@ const AllBookingList: React.FC = () => {
   ]);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  // const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search");
   const router = useRouter();
+  const itemsPerPage = 9;
 
   const fetchBookings = async (page = 1, query?: string) => {
     try {
@@ -230,13 +231,14 @@ const AllBookingList: React.FC = () => {
           priceHigher: selectedPriceRange[0],
           priceLower: selectedPriceRange[1],
           name: query,
+          rating: selectedRating,
         },
       });
 
       console.log(res);
 
       setBookingsData(res.data.services);
-      setTotalPages(res.data.totalPages);
+      // setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error("Error fetching bookings:", error);
     } finally {
@@ -252,11 +254,21 @@ const AllBookingList: React.FC = () => {
     selectedRating,
     currentPage,
     searchQuery,
+    selectedRating,
   ]);
+
+  // Get current bookings
+  const indexOfLastBooking = currentPage * itemsPerPage;
+  const indexOfFirstBooking = indexOfLastBooking - itemsPerPage;
+  const currentBookings = bookingsData.slice(
+    indexOfFirstBooking,
+    indexOfLastBooking
+  );
+  const totalPages = Math.ceil(bookingsData.length / itemsPerPage);
 
   const resetFilters = () => {
     setSelectedCategory([]);
-    setSelectedPriceRange([0, 1000000]);
+    setSelectedPriceRange([1, 10000000000]);
     setSelectedRating(null);
     setCurrentPage(1);
   };
@@ -305,7 +317,7 @@ const AllBookingList: React.FC = () => {
               ))}
             </div>
           ) : (
-            <BookingList bookings={bookingsData} />
+            <BookingList bookings={currentBookings} />
           )}
           <Pagination className="mt-8">
             <PaginationContent>

@@ -11,6 +11,7 @@ import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useAuthStore } from "@/hooks/store/auth.store";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentForm from "./comment";
+import Recommended from "../../recommend-booking";
 
 interface ServiceData {
   id: string;
@@ -46,7 +47,23 @@ export default function BookingPageProps({
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
   const authStore = useAuthStore();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await AXIOS.GET({
+          uri: bookingEndpoints.findRecommended(
+            process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? ""
+          ),
+        });
+        setBookingsData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
+    };
 
+    fetchData();
+  }, []);
   const fetchData = async (serviceId: string) => {
     try {
       const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
@@ -206,6 +223,10 @@ export default function BookingPageProps({
 
       <div className="mt-8">
         <CommentForm serviceId={bookingData.id} />
+      </div>
+      <div>
+        {" "}
+        <Recommended bookings={bookingsData.services} />
       </div>
     </div>
   );

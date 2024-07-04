@@ -23,6 +23,7 @@ import { cartEndpoints } from "@/constants/api/cart.api";
 import { productEndpoints } from "@/constants/api/product.api";
 import { paymentEndpoints } from "@/constants/api/payment.api";
 import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 interface Address {
   id: string;
@@ -61,6 +62,7 @@ interface Voucher {
 }
 
 export default function CheckoutPage() {
+  const profileStore = useProfileStore();
   const router = useRouter();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
@@ -621,9 +623,13 @@ export default function CheckoutPage() {
               </div>
             </div>
             <Button
+              style={{
+                backgroundColor: profileStore.buttonColor,
+                color: profileStore.buttonTextColor,
+              }}
               onClick={handlePlaceOrder}
               variant="secondary"
-              className="mt-4 w-full text-white py-2 rounded-md "
+              className="mt-4 w-full py-2 rounded-md "
             >
               Place Order
             </Button>
