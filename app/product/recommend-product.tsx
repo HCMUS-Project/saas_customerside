@@ -13,6 +13,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
+import { useLanguage } from "@/hooks/use-language";
 
 interface Product {
   id: string;
@@ -41,9 +42,10 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const lang = useLanguage();
 
   const handleViewAllClick = () => {
-    router.push("/all-products");
+    router.push("/product");
   };
 
   const extendedProducts =
@@ -52,13 +54,15 @@ const Recommended = ({ products = [] }: RecommendedProps) => {
   return (
     <div className="container pt-16">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-medium text-2xl">Recommended</h2>
+        <h2 className="font-medium text-2xl">
+          {lang.curLangPack.products?.["recommend"]}
+        </h2>
         <Button
           variant="link"
           onClick={handleViewAllClick}
           className="text-blue-500"
         >
-          View All
+          {lang.curLangPack.services?.["view"]}
         </Button>
       </div>
 

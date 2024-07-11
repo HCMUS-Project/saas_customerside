@@ -22,4 +22,5 @@ export const bookingEndpoints = {
   findRecommended: (domain: string) =>
     `api/booking/services/find/recommend?domain=${domain}`,
   findBestServices: `api/booking/services/find/best`,
+  deleteBooking: "api/booking/bookings/delete",
 };

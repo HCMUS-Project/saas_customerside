@@ -18,12 +18,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Image from "next/image";
+import { useLanguage } from "@/hooks/use-language";
 
 interface OrderDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
-
+const lang = useLanguage.getState();
 export function OrderDataTable<TData, TValue>({
   columns,
   data,
@@ -94,7 +95,7 @@ export function OrderDataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          {lang.curLangPack.profile?.["pre"]}
         </Button>
         <Button
           variant="outline"
@@ -102,7 +103,7 @@ export function OrderDataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          {lang.curLangPack.profile?.["next"]}
         </Button>
       </div>
     </div>

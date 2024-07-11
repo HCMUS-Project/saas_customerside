@@ -12,6 +12,7 @@ import { useAuthStore } from "@/hooks/store/auth.store";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentForm from "./comment";
 import Recommended from "../../recommend-booking";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ServiceData {
   id: string;
@@ -47,6 +48,7 @@ export default function BookingPageProps({
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
   const authStore = useAuthStore();
+  const lang = useLanguage();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -204,18 +206,22 @@ export default function BookingPageProps({
                 }`}
               />
             ))}
-            <span className="ml-2 text-gray-600">{bookingData.rating}/5</span>
+            <span className="ml-2 text-gray-600">
+              {bookingData.rating.toFixed()}/5
+            </span>
           </div>
           <div className="mt-4 text-2xl font-bold ">
             {bookingData.price.toLocaleString()} VND
           </div>
           <div className="flex gap-3 mt-4">
             <Button variant="outline" onClick={handleOrderNow}>
-              Book now
+              {lang.curLangPack.services?.["bookNow"]}
             </Button>
           </div>
           <div className="mt-8 pt-2 border-t-2 ">
-            <h2 className="text-2xl font-bold">Description</h2>
+            <h2 className="text-2xl font-bold">
+              {lang.curLangPack.services?.["description"]}
+            </h2>
             <p className="mt-2">{bookingData.description}</p>
           </div>
         </div>

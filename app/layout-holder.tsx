@@ -1,6 +1,7 @@
 "use client";
 
 import Footer from "@/components/footer/footer";
+import CartButton from "@/components/headers/cart-button";
 import { Header } from "@/components/headers/header";
 import CustomThemeProvider from "@/components/providers/custom-theme-provider";
 import { useProfileStore } from "@/hooks/store/profile.store";
@@ -18,6 +19,7 @@ const LayoutHolder: React.FC<LayoutHolderProps> = ({ children }) => {
   return (
     <CustomThemeProvider>
       <Header />
+
       <div
         className={cn(
           isDesktop ? "px-[10%]" : "px-[5%]",

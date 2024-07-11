@@ -1,46 +1,47 @@
+import { useLanguage } from "@/hooks/use-language";
 import { z } from "zod";
-
+const lang = useLanguage.getState();
 export const RegisterSchema = z
   .object({
     email: z.string().email({
-      message: "Please enter a valid email",
+      message: `${lang.curLangPack.auth?.["notiEmail"]}`,
     }),
     username: z.string().min(1, {
-      message: "Please enter your name",
+      message: `${lang.curLangPack.auth?.["notiName"]}`,
     }),
     phone: z.string().min(1, {
-      message: "Please enter your phone number",
+      message: `${lang.curLangPack.auth?.["notiPhone"]}`,
     }),
     password: z.string().min(6, {
-      message: "Password must be at least 6 characters long",
+      message: `${lang.curLangPack.auth?.["notiPassword"]}`,
     }),
     confirmPassword: z.string().min(6, {
-      message: "Password must be at least 6 characters long",
+      message: `${lang.curLangPack.auth?.["notiPassword"]}`,
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: `${lang.curLangPack.auth?.["matchPass"]}`,
     path: ["confirm"],
   });
 export const LoginSchema = z.object({
   email: z.string().email({
-    message: "please enter your email",
+    message: `${lang.curLangPack.auth?.["notiEmail"]}`,
   }),
   password: z.string().min(6, {
-    message: "password must be at least 6 characters long",
+    message: `${lang.curLangPack.auth?.["notiPassword"]}`,
   }),
 });
 
 export const OTPSchema = z.object({
   email: z.string().email({
-    message: "please enter valid email",
+    message: `${lang.curLangPack.auth?.["notiEmail"]}`,
   }),
 });
 export const RegisterOTPFSchema = z.object({
   email: z.string().email({
-    message: "Please enter a valid email",
+    message: `${lang.curLangPack.auth?.["notiEmail"]}`,
   }),
   pin: z.string().min(6, {
-    message: "Your one-time password must be 6 characters.",
+    message: `${lang.curLangPack.auth?.["OTP"]}`,
   }),
 });

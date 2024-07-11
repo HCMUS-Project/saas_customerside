@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
 
 // Define and export the type for your product data
 export interface Product {
@@ -22,7 +23,7 @@ export type Order = {
   stage: string;
   rating?: number; // Optional rating field
 };
-
+const lang = useLanguage.getState();
 // Define a function to get the columns based on the stage
 export const getOrderColumns = (
   stage: string,
@@ -31,7 +32,7 @@ export const getOrderColumns = (
   const baseColumns: ColumnDef<Order>[] = [
     {
       accessorKey: "productImages",
-      header: "Product Images",
+      header: `${lang.curLangPack.profile?.["productImage"]}`,
       cell: ({ row }) => {
         const products = row.original.products;
         return (
@@ -61,7 +62,7 @@ export const getOrderColumns = (
     },
     {
       accessorKey: "productQuantities",
-      header: "Product Quantities",
+      header: `${lang.curLangPack.profile?.["productQuan"]}`,
       cell: ({ row }) => {
         const products = row.original.products;
         return (
@@ -80,15 +81,15 @@ export const getOrderColumns = (
     },
     {
       accessorKey: "totalPrice",
-      header: "Total Price",
+      header: `${lang.curLangPack.profile?.["price"]}`,
     },
     {
       accessorKey: "address",
-      header: "Address",
+      header: `${lang.curLangPack.profile?.["address"]}`,
     },
     {
       accessorKey: "orderTime",
-      header: "Order Time",
+      header: `${lang.curLangPack.profile?.["orderTime"]}`,
       cell: ({ row }) => {
         const date = new Date(row.getValue("orderTime"));
         const formatted = date.toLocaleDateString("vi-VN");
@@ -97,7 +98,7 @@ export const getOrderColumns = (
     },
     {
       accessorKey: "stage",
-      header: "Stage",
+      header: `${lang.curLangPack.profile?.["status"]}`,
     },
   ];
 
@@ -106,7 +107,12 @@ export const getOrderColumns = (
       accessorKey: "rating",
       header: "Rating",
       cell: ({ row }) => (
-        <Button onClick={() => handleRatingClick(row.original)}>Rate</Button>
+        <Button
+          className="bg-yellow-400"
+          onClick={() => handleRatingClick(row.original)}
+        >
+          {lang.curLangPack.profile?.["rating"]}
+        </Button>
       ),
     });
   }

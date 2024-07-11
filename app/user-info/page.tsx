@@ -12,6 +12,7 @@ import { getJwt } from "@/util/auth.util";
 import Swal from "sweetalert2";
 import { Eye, EyeOff } from "lucide-react";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 const UserInfo = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -32,6 +33,7 @@ const UserInfo = () => {
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const profileStore = useProfileStore();
+  const lang = useLanguage();
   useEffect(() => {
     const accessToken = getJwt("AT");
     const fetchUserData = async () => {
@@ -159,7 +161,7 @@ const UserInfo = () => {
       <div className="flex justify-center text-align-center text-sm font-thin">
         <p>{userData.email}</p>
       </div>
-      <div className="mt-8 overflow-x-hidden relative space-x-6 flex justify-center">
+      <div className="mt-8 overflow-x-hidden relative  flex justify-center">
         <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
           <Link
             href="/user-info"
@@ -170,7 +172,7 @@ const UserInfo = () => {
               "border-b-[3px] border-blue-300"
             )}
           >
-            Account
+            {lang.curLangPack.profile?.["account"]}
           </Link>
 
           <Link
@@ -182,7 +184,7 @@ const UserInfo = () => {
               ""
             )}
           >
-            Booking
+            {lang.curLangPack.profile?.["booking"]}
           </Link>
 
           <Link
@@ -194,7 +196,7 @@ const UserInfo = () => {
               ""
             )}
           >
-            Order
+            {lang.curLangPack.profile?.["order"]}
           </Link>
         </div>
       </div>
@@ -203,35 +205,64 @@ const UserInfo = () => {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-xl font-semibold">Profile</h1>
+                <h1 className="text-xl font-semibold">
+                  {lang.curLangPack.profile?.["profile"]}
+                </h1>
                 <p className="text-sm text-gray-500">
-                  Basic info for a faster booking experience
+                  {lang.curLangPack.profile?.["your"]}
                 </p>
               </div>
               {!isEditing && (
                 <Button variant="link" onClick={handleEditProfile}>
-                  Edit Profile
+                  {lang.curLangPack.profile?.["edit"]}
                 </Button>
               )}
             </div>
           </CardHeader>
           <CardContent>
-            {renderField("Username", userData.username, "username")}
+            {renderField(
+              `${lang.curLangPack.profile?.["name"]}`,
+              userData.name,
+              "name"
+            )}
             <hr />
-            {renderField("Phone", userData.phone, "phone")}
+            {/* {renderField(
+              `${lang.curLangPack.profile?.["username"]}`,
+              userData.username,
+              "username"
+            )}
+            <hr /> */}
+            {renderField(
+              `${lang.curLangPack.profile?.["phone"]}`,
+              userData.phone,
+              "phone"
+            )}
             <hr />
-            {renderField("Address", userData.address, "address")}
+            {renderField(
+              `${lang.curLangPack.profile?.["address"]}`,
+              userData.address,
+              "address"
+            )}
             <hr />
-            {renderField("Name", userData.name, "name")}
+
+            {renderField(
+              `${lang.curLangPack.profile?.["gender"]}`,
+              userData.gender,
+              "gender"
+            )}
             <hr />
-            {renderField("Gender", userData.gender, "gender")}
-            <hr />
-            {renderField("Age", userData.age, "age")}
+            {renderField(
+              `${lang.curLangPack.profile?.["age"]}`,
+              userData.age,
+              "age"
+            )}
             <hr />
             <div className="pt-2 flex justify-center">
               {isEditing && (
                 <Button variant="destructive" onClick={handleSaveProfile}>
-                  {loading ? "Saving..." : "Save"}
+                  {loading
+                    ? `${lang.curLangPack.profile?.["saving"]}`
+                    : `${lang.curLangPack.profile?.["save"]}`}
                 </Button>
               )}
             </div>
@@ -242,24 +273,32 @@ const UserInfo = () => {
       <div>
         <Card>
           <CardHeader>
-            <h1 className="text-xl font-semibold">Login Details</h1>
+            <h1 className="text-xl font-semibold">
+              {lang.curLangPack.profile?.["login"]}
+            </h1>
             <p className="text-sm text-gray-500">
-              Manage your email and password
+              {lang.curLangPack.profile?.["manage"]}
             </p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 py-2">
-              <div className="font-medium">Mobile Number</div>
+              <div className="font-medium">
+                {lang.curLangPack.profile?.["mobile"]}
+              </div>
               <div className="col-span-2">{userData.phone}</div>
             </div>
             <hr />
             <div className="grid grid-cols-3 py-2">
-              <div className="font-medium">Email ID</div>
+              <div className="font-medium">
+                {lang.curLangPack.profile?.["email"]}
+              </div>
               <div className="col-span-2">{userData.email}</div>
             </div>
             <hr />
             <div className="grid grid-cols-3 py-2 items-center">
-              <div className="font-medium">Password</div>
+              <div className="font-medium">
+                {lang.curLangPack.profile?.["password"]}
+              </div>
               {isChangingPassword ? (
                 <>
                   <div className="col-span-2 relative mt-2 w-full">
@@ -267,7 +306,7 @@ const UserInfo = () => {
                       {" "}
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Current Password"
+                        placeholder={lang.curLangPack.profile?.["currentPass"]}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pr-10 "
@@ -285,7 +324,7 @@ const UserInfo = () => {
                       {" "}
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="New Password"
+                        placeholder={lang.curLangPack.profile?.["newPass"]}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="pr-10"
@@ -305,13 +344,15 @@ const UserInfo = () => {
                             variant="destructive"
                             onClick={handleSavePassword}
                           >
-                            {loading ? "Saving..." : "Save"}
+                            {loading
+                              ? `${lang.curLangPack.profile?.["saving"]}`
+                              : `${lang.curLangPack.profile?.["save"]}`}
                           </Button>
                           <Button
                             variant="link"
                             onClick={() => setIsChangingPassword(false)}
                           >
-                            Cancel
+                            {lang.curLangPack.profile?.["cancel"]}
                           </Button>
                         </>
                       )}
@@ -330,7 +371,7 @@ const UserInfo = () => {
                     variant="link"
                     onClick={() => setIsChangingPassword(true)}
                   >
-                    Change Password
+                    {lang.curLangPack.profile?.["change"]}
                   </Button>
                 )}
               </div>

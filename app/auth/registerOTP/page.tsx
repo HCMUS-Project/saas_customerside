@@ -29,6 +29,9 @@ import { useRouter } from "next/navigation";
 import { RegisterOTPFSchema } from "@/schema";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
+import { useLanguage } from "@/hooks/use-language";
+import { useProfileStore } from "@/hooks/store/profile.store";
+import Swal from "sweetalert2";
 
 export default function RegisterOTP() {
   const router = useRouter();
@@ -40,6 +43,8 @@ export default function RegisterOTP() {
       pin: "",
     },
   });
+  const lang = useLanguage();
+  const profileStore = useProfileStore();
   const sendMailOTP = async () => {
     try {
       setLoading(true);
@@ -51,8 +56,17 @@ export default function RegisterOTP() {
           email: form.getValues("email"), // Sử dụng email từ form
         },
       });
+      Swal.fire({
+        icon: "success",
+        title: `${lang.curLangPack.noti?.["OTP"]}`,
+      });
       console.log("New OTP sent successfully");
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: `${lang.curLangPack.noti?.["somethingWrong"]}`,
+      });
       console.error("Failed to send new OTP:", error);
     } finally {
       setLoading(false);
@@ -85,11 +99,11 @@ export default function RegisterOTP() {
 
   return (
     <CardWrapper
-      label="Welcome to Lorem"
-      title="Register OTP"
-      backButtonTitle="No Account?"
+      label={lang.curLangPack.auth?.["welcome"]}
+      title={lang.curLangPack.auth?.["registerOTP"]}
+      backButtonTitle={lang.curLangPack.auth?.["noAccount"]}
       backButtonHref="/auth/register"
-      backButtonLabel="Sign up"
+      backButtonLabel={lang.curLangPack.auth?.["signUp"]}
     >
       <Form {...form}>
         <form
@@ -101,12 +115,12 @@ export default function RegisterOTP() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{lang.curLangPack.auth?.["email"]}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder="please enter your email address"
+                    placeholder={lang.curLangPack.auth?.["inputEmail"]}
                   />
                 </FormControl>
                 <FormMessage />
@@ -118,6 +132,9 @@ export default function RegisterOTP() {
             name="pin"
             render={({ field }) => (
               <FormItem>
+                <FormLabel>
+                  <div>{lang.curLangPack.auth?.["OTPInput"]}</div>
+                </FormLabel>
                 <FormControl>
                   <InputOTP maxLength={6} {...field}>
                     <InputOTPGroup>
@@ -131,9 +148,8 @@ export default function RegisterOTP() {
                   </InputOTP>
                 </FormControl>
                 <FormDescription>
-                  <div>Please enter OTP</div>
                   <Button className="pl-0" variant="link" onClick={sendMailOTP}>
-                    Resend OTP
+                    {lang.curLangPack.auth?.["reOTP"]}
                   </Button>
                 </FormDescription>
 
@@ -142,7 +158,15 @@ export default function RegisterOTP() {
             )}
           />
 
-          <Button type="submit">Submit</Button>
+          <Button
+            style={{
+              backgroundColor: profileStore.buttonColor,
+              color: profileStore.buttonTextColor,
+            }}
+            type="submit"
+          >
+            {lang.curLangPack.auth?.["submit"]}
+          </Button>
         </form>
       </Form>
     </CardWrapper>

@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { SearchIcon, Star } from "lucide-react";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 interface FiltersProps {
   selectedCategory: string[];
@@ -44,61 +45,17 @@ const Filters: React.FC<FiltersProps> = ({
   const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
   const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Change this to your actual domain
   const profileStore = useProfileStore();
-
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       setLoadingCategories(true);
-  //       const res = await AXIOS.GET({
-  //         uri: bookingEndpoints.findCategories(domain),
-  //       });
-  //       // Extract the category names from the response
-  //       const categoryNames = res.data.categories.map(
-  //         (category: { name: string }) => category.name
-  //       );
-  //       setCategories(categoryNames);
-  //     } catch (error) {
-  //       console.error("Error fetching categories:", error);
-  //     } finally {
-  //       setLoadingCategories(false);
-  //     }
-  //   };
-
-  //   fetchCategories();
-  // }, []);
+  const lang = useLanguage();
 
   return (
     <div className="p-4 w-64 bg-white rounded-lg shadow-md h-fit">
-      <h2 className="font-bold mb-4">Filters</h2>
+      <h2 className="font-bold mb-4">
+        {lang.curLangPack.services?.["filter"]}
+      </h2>
       <div className="mb-4">
-        {/* <h3 className="font-semibold mb-2">Category</h3> */}
-        {/* <ul>
-          {loadingCategories ? (
-            <Skeleton className="h-6 w-full mb-2" />
-          ) : (
-            categories.map((category) => (
-              <li key={category}>
-                <input
-                  type="checkbox"
-                  checked={selectedCategory.includes(category)}
-                  onChange={() => {
-                    if (selectedCategory.includes(category)) {
-                      setSelectedCategory(
-                        selectedCategory.filter((cat) => cat !== category)
-                      );
-                    } else {
-                      setSelectedCategory([...selectedCategory, category]);
-                    }
-                  }}
-                />
-                <span className="ml-2">{category}</span>
-              </li>
-            ))
-          )}
-        </ul> */}
-      </div>
-      <div className="mb-4">
-        <h3 className="font-semibold mb-2">Price</h3>
+        <h3 className="font-semibold mb-2">
+          {lang.curLangPack.services?.["price"]}
+        </h3>
         <ul>
           {[
             { label: "0 - 100k", value: [1, 100000] },
@@ -121,9 +78,11 @@ const Filters: React.FC<FiltersProps> = ({
         </ul>
       </div>
       <div>
-        <h3 className="font-semibold mb-2">Rating</h3>
+        <h3 className="font-semibold mb-2">
+          {lang.curLangPack.services?.["rating"]}
+        </h3>
         <ul>
-          {[5, 4, 3].map((rating) => (
+          {[5, 4, 3, 2, 1].map((rating) => (
             <li key={rating}>
               <input
                 type="radio"
@@ -131,7 +90,9 @@ const Filters: React.FC<FiltersProps> = ({
                 checked={selectedRating === rating}
                 onChange={() => setSelectedRating(rating)}
               />
-              <span className="ml-2">{rating} Stars & up</span>
+              <span className="ml-2">
+                {rating} {lang.curLangPack.services?.["starUp"]}
+              </span>
             </li>
           ))}
         </ul>
@@ -144,7 +105,7 @@ const Filters: React.FC<FiltersProps> = ({
         onClick={resetFilters}
         className="mt-4"
       >
-        Reset All Filters
+        {lang.curLangPack.services?.["reset"]}
       </Button>
     </div>
   );
@@ -161,13 +122,24 @@ interface Booking {
 
 const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
   const profileStore = useProfileStore();
+  const router = useRouter();
+  const lang = useLanguage();
+
+  const handleBookNow = (bookingId: string) => {
+    router.push(`/bookings/services/form?bookingId=${bookingId}`);
+  };
+
+  const handleBookingClick = (bookingId: string) => {
+    router.push(`/bookings/services/${bookingId}`);
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {bookings.map((booking) => (
-        <Link
-          className=" bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
-          href={`/bookings/services/${booking.id}`}
+        <div
+          className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
           key={booking.id}
+          onClick={() => handleBookingClick(booking.id)}
         >
           <div className="relative w-full h-48">
             <Image
@@ -179,27 +151,39 @@ const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
           </div>
 
           <h3 className="font-semibold text-lg truncate">{booking.name}</h3>
-          <div className="flex items-center mt-1 ">
-            {Array.from({ length: booking.rating }).map((_, index) => (
-              <Star key={index} className="text-yellow-400 fill-current"></Star>
+          <div className="flex items-center mt-1">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4 ${
+                  i < booking.rating
+                    ? "text-yellow-400 fill-current"
+                    : "text-gray-300"
+                }`}
+              />
             ))}
-            {Array.from({ length: 5 - booking.rating }).map((_, index) => (
-              <Star key={index} className="text-gray-300"></Star>
-            ))}
+            <span className="ml-2 text-gray-600">
+              {booking.rating.toFixed(1)}/5
+            </span>
           </div>
+
           <p className="text-sm text-gray-600 mt-1 font-semibold mb-2">
             {Number(booking.price).toLocaleString("vi-VN")} VND
           </p>
           <Button
-            className="w-full mt1"
+            className="w-full mt-1"
             style={{
               backgroundColor: profileStore.buttonColor,
               color: profileStore.buttonTextColor,
             }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBookNow(booking.id);
+            }}
           >
-            Book Now
+            {lang.curLangPack.services?.["bookNow"]}
           </Button>
-        </Link>
+        </div>
       ))}
     </div>
   );
@@ -213,11 +197,12 @@ const AllBookingList: React.FC = () => {
   ]);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  // const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search");
   const router = useRouter();
+  const lang = useLanguage();
+
   const itemsPerPage = 9;
 
   const fetchBookings = async (page = 1, query?: string) => {
@@ -235,10 +220,7 @@ const AllBookingList: React.FC = () => {
         },
       });
 
-      console.log(res);
-
       setBookingsData(res.data.services);
-      // setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error("Error fetching bookings:", error);
     } finally {
@@ -254,10 +236,8 @@ const AllBookingList: React.FC = () => {
     selectedRating,
     currentPage,
     searchQuery,
-    selectedRating,
   ]);
 
-  // Get current bookings
   const indexOfLastBooking = currentPage * itemsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - itemsPerPage;
   const currentBookings = bookingsData.slice(
@@ -268,7 +248,7 @@ const AllBookingList: React.FC = () => {
 
   const resetFilters = () => {
     setSelectedCategory([]);
-    setSelectedPriceRange([1, 10000000000]);
+    setSelectedPriceRange([1, 1000000]);
     setSelectedRating(null);
     setCurrentPage(1);
   };
@@ -284,7 +264,7 @@ const AllBookingList: React.FC = () => {
           <Input
             className="border p-2 px-4 rounded-lg w-full"
             type="text"
-            placeholder="Search for bookings"
+            placeholder={lang.curLangPack.services?.["search"]}
             defaultValue={searchQuery || ""}
             onChange={handleSearch}
           />

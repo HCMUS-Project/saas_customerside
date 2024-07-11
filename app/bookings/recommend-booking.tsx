@@ -13,6 +13,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
+import { useLanguage } from "@/hooks/use-language";
 
 interface Booking {
   id: string;
@@ -29,7 +30,7 @@ interface RecommendedProps {
 
 const Recommended = ({ bookings = [] }: RecommendedProps) => {
   const [loading, setLoading] = useState(true); // State to manage loading
-
+  const lang = useLanguage();
   useEffect(() => {
     // Simulate fetching data
     const timer = setTimeout(() => {
@@ -43,7 +44,7 @@ const Recommended = ({ bookings = [] }: RecommendedProps) => {
   const router = useRouter();
 
   const handleViewAllClick = () => {
-    router.push("/all-bookings");
+    router.push("/bookings");
   };
 
   const extendedBookings =
@@ -52,13 +53,15 @@ const Recommended = ({ bookings = [] }: RecommendedProps) => {
   return (
     <div className="container pt-16">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-medium text-2xl">Recommended Bookings</h2>
+        <h2 className="font-medium text-2xl">
+          {lang.curLangPack.services?.["recommend"]}
+        </h2>
         <Button
           variant="link"
           onClick={handleViewAllClick}
           className="text-blue-500"
         >
-          View All
+          {lang.curLangPack.services?.["view"]}
         </Button>
       </div>
 
@@ -122,7 +125,7 @@ const Recommended = ({ bookings = [] }: RecommendedProps) => {
                           </div>
 
                           <div className="font-bold text-sm">
-                            {booking.price} VND
+                            {booking.price.toLocaleString("Vi")} VND
                           </div>
                         </CardContent>
                       </Link>

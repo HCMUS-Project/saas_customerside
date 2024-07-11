@@ -27,6 +27,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import { Loader } from "../components/loader/loading";
 import { Star } from "lucide-react";
+import Router from "next/router";
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/hooks/use-language";
 
 interface BannerProp {
   image: string;
@@ -61,7 +64,8 @@ export default function Home() {
   const [services, setServices] = useState<Service[]>([]);
   const profileStore = useProfileStore();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-
+  const router = useRouter();
+  const lang = useLanguage();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -126,6 +130,14 @@ export default function Home() {
       return text.substring(0, length) + "...";
     }
     return text;
+  };
+
+  const handleBookingClick = (bookingId: string) => {
+    router.push(`/bookings/services/${bookingId}`);
+  };
+
+  const handleProductClick = (productId: string) => {
+    router.push(`/product/${productId}`);
   };
 
   const renderRating = (rating: number) => (
@@ -204,10 +216,10 @@ export default function Home() {
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Featured Products
+                  {lang.curLangPack.rootPage?.["featured"]}
                 </h2>
                 <p className="max-w-[800px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Check out our latest and most popular products.
+                  {lang.curLangPack.rootPage?.["Check"]}
                 </p>
               </div>
               <div
@@ -220,8 +232,9 @@ export default function Home() {
                 {bestProducts.length > 0
                   ? bestProducts.slice(0, 4).map((product, index) => (
                       <Card
+                        onClick={() => handleProductClick(product.id)}
                         key={index}
-                        className="card rounded-lg shadow-lg overflow-hidden"
+                        className="card rounded-lg hover:shadow-lg cursor-pointer transition-shadow shadow-lg overflow-hidden"
                       >
                         <div className="relative w-full h-48 rounded-t-lg overflow-hidden">
                           {product.images.length > 0 && (
@@ -242,7 +255,7 @@ export default function Home() {
                             {renderRating(product.rating)}
                           </div>
                           <p className="text-sm text-gray-500 text-left">
-                            {product.price} VND
+                            {Number(product.price).toLocaleString("Vi-VN")} VND
                           </p>
                         </CardContent>
                         <CardFooter className="p-4">
@@ -257,7 +270,7 @@ export default function Home() {
                               }}
                               className="w-full text-sm"
                             >
-                              Tìm hiểu thêm
+                              {lang.curLangPack.rootPage?.["learn"]}
                             </Button>
                           </Link>
                         </CardFooter>
@@ -286,11 +299,10 @@ export default function Home() {
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Our Services
+                  {lang.curLangPack.rootPage?.["services"]}
                 </h2>
                 <p className="max-w-[800px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Discover our range of services designed to provide you with
-                  the best experience.
+                  {lang.curLangPack.rootPage?.["discover"]}
                 </p>
               </div>
               <div
@@ -305,8 +317,9 @@ export default function Home() {
                 {services.length > 0
                   ? services.slice(0, 4).map((service, index) => (
                       <Card
+                        onClick={() => handleBookingClick(service.id)}
                         key={index}
-                        className="card rounded-lg shadow-lg overflow-hidden"
+                        className="card rounded-lg cursor-pointer shadow-lg overflow-hidden"
                       >
                         <div className="relative h-48 rounded-t-lg overflow-hidden">
                           {service.images.length > 0 && (
@@ -327,7 +340,7 @@ export default function Home() {
                             {renderRating(service.rating)}
                           </div>
                           <p className="text-sm text-gray-500 text-left">
-                            {service.price} VND
+                            {Number(service.price).toLocaleString("Vi-VN")} VND
                           </p>
                         </CardContent>
                         <CardFooter className="p-4">
@@ -342,7 +355,7 @@ export default function Home() {
                               }}
                               className="w-full text-sm"
                             >
-                              Tìm hiểu thêm
+                              {lang.curLangPack.rootPage?.["learn"]}
                             </Button>
                           </Link>
                         </CardFooter>
@@ -370,7 +383,7 @@ export default function Home() {
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  About Our Store
+                  {lang.curLangPack.rootPage?.["about"]}
                 </h2>
                 <p className="max-w-[800px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   {profileStore.description}

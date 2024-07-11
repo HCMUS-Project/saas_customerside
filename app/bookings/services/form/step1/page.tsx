@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { AXIOS } from "@/constants/network/axios";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Service {
   id: string;
@@ -57,6 +58,7 @@ export default function ServiceCards() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const router = useRouter();
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   useEffect(() => {
     const getData = async () => {
@@ -89,7 +91,7 @@ export default function ServiceCards() {
           <div className="flex flex-wrap justify-center gap-4">
             <div className="w-full text-center">
               <h1 className="text-3xl font-bold mb-4">
-                Dịch vụ được yêu thích nhất
+                {lang.curLangPack.services?.["topServices"]}
               </h1>
             </div>
             {services.length > 0 ? (
@@ -132,8 +134,8 @@ export default function ServiceCards() {
                       onClick={() => handleSelectService(service)}
                     >
                       {selectedService?.id === service.id
-                        ? "Đã chọn"
-                        : "Chọn dịch vụ"}
+                        ? `${lang.curLangPack.services?.["selected"]}`
+                        : `${lang.curLangPack.services?.["selectServices"]}`}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -156,6 +158,7 @@ export default function ServiceCards() {
                     <Button
                       style={{
                         color: profileStore.buttonTextColor,
+                        backgroundColor: profileStore.buttonColor,
                       }}
                       variant="ghost"
                       size="sm"

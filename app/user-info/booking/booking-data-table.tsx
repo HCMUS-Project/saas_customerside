@@ -1,3 +1,5 @@
+// BookingDataTable.tsx
+
 "use client";
 
 import React from "react";
@@ -17,6 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useProfileStore } from "@/hooks/store/profile.store";
+import { Booking } from "./booking-columns";
+import { useLanguage } from "@/hooks/use-language";
 
 interface BookingDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -27,12 +32,14 @@ export function BookingDataTable<TData, TValue>({
   columns,
   data,
 }: BookingDataTableProps<TData, TValue>) {
+  const profileStore = useProfileStore();
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+  const lang = useLanguage();
 
   return (
     <div>
@@ -93,7 +100,7 @@ export function BookingDataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          {lang.curLangPack.profile?.["pre"]}
         </Button>
         <Button
           variant="outline"
@@ -101,7 +108,7 @@ export function BookingDataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          {lang.curLangPack.profile?.["next"]}
         </Button>
       </div>
     </div>

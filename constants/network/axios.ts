@@ -188,10 +188,12 @@ export const AXIOS = {
   DELETE: async ({
     uri,
     params,
+    body,
   }: {
     uri: string;
     params?: object;
     token?: string | undefined;
+    body?: object;
   }) => {
     const res = await API.delete(uri, {
       headers: {
@@ -199,6 +201,7 @@ export const AXIOS = {
         Accept: "application/json",
       },
       params: params,
+      data: body,
     });
 
     return res.data;

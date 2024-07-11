@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import Swal from "sweetalert2";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Comment {
   id: string;
@@ -30,6 +31,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
   const [editReview, setEditReview] = useState<string>("");
   const [editRating, setEditRating] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const lang = useLanguage();
 
   const fetchProfileAndComments = useCallback(async () => {
     try {
@@ -118,12 +120,12 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
     }
   };
 
-  const ratingLabels = ["Quá tệ", "Tệ", "Bình thường", "Hài lòng", "Tuyệt vời"];
-
   return (
     <div className="mt-4 p-4 bg-white rounded-lg shadow-md">
       <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-4">Đánh giá dịch vụ</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          {lang.curLangPack.services?.["comment"]}
+        </h3>
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -158,20 +160,20 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
                           />
                         ))}
                         <span className="ml-2 text-yellow-500">
-                          {ratingLabels[editRating - 1]}
+                          {[editRating]}
                         </span>
                       </div>
                       <Button
                         onClick={handleSaveEdit}
                         className="pr-2 px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
                       >
-                        Save
+                        {lang.curLangPack.services?.["save"]}
                       </Button>
                       <Button
                         onClick={() => setEditMode(null)}
                         className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
                       >
-                        Cancel
+                        {lang.curLangPack.services?.["cancel"]}
                       </Button>
                     </div>
                   ) : (
@@ -218,7 +220,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ serviceId }) => {
                 </div>
               ))
             ) : (
-              <p>No comments yet.</p>
+              <p>{lang.curLangPack.products?.["noComment"]}</p>
             )}
           </div>
         )}

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -7,7 +6,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AXIOS } from "@/constants/network/axios";
 import { BookingDataTable } from "./booking-data-table";
-import { getBookingColumns, Booking, Service } from "./booking-columns";
+import {
+  getBookingColumns,
+  Booking,
+  Service,
+  handleCancelBooking,
+} from "./booking-columns";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { Loader } from "@/components/loader/loading";
 import {
@@ -27,6 +31,7 @@ import { Star, StarHalf } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Comment {
   id: string;
@@ -82,6 +87,7 @@ async function fetchBookings(
   limit: number
 ): Promise<{ bookings: Booking[]; total: number }> {
   try {
+    const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
     const res = await AXIOS.GET({
       uri: bookingEndpoints.findBookings(status),
     });
@@ -133,6 +139,7 @@ const BookingPage = () => {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const limit = 10;
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   const formSchema = z.object({
     review: z.string().min(2, {
@@ -150,8 +157,6 @@ const BookingPage = () => {
       rating: 0,
     },
   });
-
-  const ratingLabels = ["Quá tệ", "Tệ", "Bình thường", "Hài lòng", "Tuyệt vời"];
 
   const fetchProfileAndComments = useCallback(async (serviceId: string) => {
     try {
@@ -217,20 +222,8 @@ const BookingPage = () => {
     await fetchAndSetBookings(newStatus, 1, limit);
   };
 
-  const handlePreviousPage = async () => {
-    if (page > 1) {
-      const newPage = page - 1;
-      setPage(newPage);
-      await fetchAndSetBookings(status, newPage, limit);
-    }
-  };
-
-  const handleNextPage = async () => {
-    if (page * limit < totalBookings) {
-      const newPage = page + 1;
-      setPage(newPage);
-      await fetchAndSetBookings(status, newPage, limit);
-    }
+  const refreshBookings = () => {
+    fetchAndSetBookings(status, page, limit);
   };
 
   const handleRatingClick = async (service: Service) => {
@@ -243,10 +236,6 @@ const BookingPage = () => {
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-    if (hasUserCommented[serviceId]) {
-      alert("You can only comment once on this service.");
-      return;
-    }
     const newComment = {
       review: review[serviceId],
       rating: rating[serviceId],
@@ -271,7 +260,7 @@ const BookingPage = () => {
           ...prev,
           [serviceId]: true,
         }));
-        setSuccessMessage("Review submitted successfully!");
+        setSuccessMessage(`${lang.curLangPack.profile?.["reviewComplete"]}`);
       } else {
         console.error("Unexpected response format:", response.data);
       }
@@ -297,13 +286,13 @@ const BookingPage = () => {
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p>Booking Page</p>
+        <p>{lang.curLangPack.profile?.["bookingPage"]}</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
         <p>{userEmail}</p>
       </div>
-      <div className="mt-8 ml-12 pl-4 overflow-x-hidden relative space-x-6">
-        <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
+      <div className="mt-8  overflow-x-hidden relative  flex justify-center">
+        <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content] ">
           <Link
             href="/user-info"
             data-te-ripple-init
@@ -313,7 +302,7 @@ const BookingPage = () => {
               ""
             )}
           >
-            Account
+            {lang.curLangPack.profile?.["account"]}
           </Link>
 
           <Link
@@ -325,7 +314,7 @@ const BookingPage = () => {
               "border-b-[3px] border-blue-300"
             )}
           >
-            Booking
+            {lang.curLangPack.profile?.["booking"]}
           </Link>
 
           <Link
@@ -337,7 +326,7 @@ const BookingPage = () => {
               ""
             )}
           >
-            Order
+            {lang.curLangPack.profile?.["order"]}
           </Link>
         </div>
       </div>
@@ -352,34 +341,31 @@ const BookingPage = () => {
               }}
               variant="ghost"
               onClick={() => handleStatusChange("PENDING")}
-              className={status === "PENDING" ? "bg-blue-500 text-white" : ""}
             >
-              Pending
+              {lang.curLangPack.profile?.["pending"]}
             </Button>
             <Button
               style={{
                 backgroundColor:
                   status === "SUCCESS" ? profileStore.buttonColor : "",
-                color: status === "SUCCESS" ? profileStore.headerTextColor : "",
+                color: status === "SUCCESS" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStatusChange("SUCCESS")}
-              className={status === "SUCCESS" ? "bg-blue-500 text-white" : ""}
             >
-              Success
+              {lang.curLangPack.profile?.["success"]}
             </Button>
 
             <Button
               style={{
                 backgroundColor:
                   status === "CANCEL" ? profileStore.buttonColor : "",
-                color: status === "CANCEL" ? profileStore.headerTextColor : "",
+                color: status === "CANCEL" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStatusChange("CANCEL")}
-              className={status === "CANCEL" ? "bg-blue-500 text-white" : ""}
             >
-              Cancelled
+              {lang.curLangPack.profile?.["canceled"]}
             </Button>
           </div>
           {loading ? (
@@ -388,15 +374,20 @@ const BookingPage = () => {
             </div>
           ) : bookings.length > 0 ? (
             <BookingDataTable
-              columns={getBookingColumns(status, (service) =>
-                handleRatingClick(service)
+              columns={getBookingColumns(
+                status,
+                (service) => handleRatingClick(service),
+                handleCancelBooking,
+                refreshBookings // Pass the refreshBookings function here
               )}
               data={bookings}
             />
           ) : (
-            <p className=" h-full flex-growtext-center text-gray-500">
-              No bookings found.
-            </p>
+            <div className="flex h-full items-center justify-center">
+              <p className="text-center text-gray-500">
+                {lang.curLangPack.profile?.["noBooking"]}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -407,9 +398,9 @@ const BookingPage = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Đánh Giá Dịch Vụ</DialogTitle>
+            <DialogTitle>{lang.curLangPack.profile?.["rate"]}</DialogTitle>
             <DialogDescription>
-              Để lại đánh giá của bạn về dịch vụ này.
+              {lang.curLangPack.profile?.["description"]}
             </DialogDescription>
           </DialogHeader>
           {selectedServices && selectedServices.length > 0 && (
@@ -425,15 +416,10 @@ const BookingPage = () => {
                     />
                     <div className="ml-4">
                       <h3>{service.name}</h3>
-                      <p>Chất lượng dịch vụ: {service.rating || "N/A"}</p>
                     </div>
                   </div>
                   <div className="mt-4">
-                    {hasUserCommented[service.id] ? (
-                      <div className="text-green-500">
-                        Bạn đã đánh giá dịch vụ này. Cảm ơn bạn!
-                      </div>
-                    ) : (
+                    {
                       <Form {...form}>
                         <form
                           onSubmit={(e) => handleSubmit(service.id, e)}
@@ -480,7 +466,7 @@ const BookingPage = () => {
                               </div>
                             ))}
                             <span className="ml-2 text-yellow-500 text-xl">
-                              {ratingLabels[Math.ceil(rating[service.id]) - 1]}
+                              {[Math.ceil(rating[service.id])]}
                             </span>
                           </div>
 
@@ -489,7 +475,7 @@ const BookingPage = () => {
                               htmlFor="review"
                               className="block text-sm font-medium text-gray-700"
                             >
-                              Đúng với mô tả:
+                              {lang.curLangPack.profile?.["comment"]}
                             </Label>
                             <Textarea
                               id="review"
@@ -500,7 +486,7 @@ const BookingPage = () => {
                                   [service.id]: e.target.value,
                                 }))
                               }
-                              placeholder="Hãy chia sẻ những điều bạn thích về dịch vụ này với những người khác nhé."
+                              placeholder={lang.curLangPack.profile?.["share"]}
                               required
                               className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                             />
@@ -514,7 +500,7 @@ const BookingPage = () => {
                             type="submit"
                             className="px-4 py-2   rounded-md "
                           >
-                            Submit
+                            {lang.curLangPack.profile?.["submit"]}
                           </Button>
                           {successMessage && (
                             <div className="mt-4 text-green-500">
@@ -523,7 +509,7 @@ const BookingPage = () => {
                           )}
                         </form>
                       </Form>
-                    )}
+                    }
                   </div>
                 </div>
               ))}

@@ -1,39 +1,37 @@
+// useCart.ts
 import { useState, useEffect } from "react";
+import eventBus from "@/hooks/evenBus"; // Adjust the path as necessary
 
-// A simple event bus for cross-component communication
-const eventBus = {
-  events: {} as { [key: string]: Array<(data: any) => void> },
-  dispatch(event: string, data: any) {
-    if (!this.events[event]) return;
-    this.events[event].forEach((callback) => callback(data));
-  },
-  subscribe(event: string, callback: (data: any) => void) {
-    if (!this.events[event]) {
-      this.events[event] = [];
-    }
-    this.events[event].push(callback);
-    return () => {
-      this.events[event] = this.events[event].filter((cb) => cb !== callback);
-    };
-  },
-};
+interface CartItem {
+  images: string[];
+  name: string;
+  price: number;
+  productId: string;
+  quantity: number;
+  // Add other properties as needed
+}
 
 export const useCart = () => {
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const savedCart = JSON.parse(
+      localStorage.getItem("cart") || "[]"
+    ) as CartItem[];
+    console.log("Saved cart loaded:", savedCart);
     setCartItems(savedCart);
   }, []);
 
   useEffect(() => {
+    console.log("Cart items updated:", cartItems);
     localStorage.setItem("cart", JSON.stringify(cartItems));
     eventBus.dispatch("cartUpdated", cartItems);
   }, [cartItems]);
 
-  const addToCart = (item: any) => {
+  const addToCart = (item: CartItem) => {
     setCartItems((prevItems) => {
       const newCartItems = [...prevItems, item];
+      console.log("Item added to cart:", newCartItems);
       return newCartItems;
     });
   };
@@ -41,12 +39,18 @@ export const useCart = () => {
   const removeFromCart = (index: number) => {
     setCartItems((prevItems) => {
       const newCartItems = prevItems.filter((_, i) => i !== index);
+      console.log("Item removed from cart:", newCartItems);
       return newCartItems;
     });
   };
 
   const getCartItemCount = () => {
-    return cartItems.length;
+    const itemCount = cartItems.reduce((count, item) => {
+      console.log("Calculating count for item:", item);
+      return count + item.quantity;
+    }, 0);
+    console.log("Cart item count calculated:", itemCount);
+    return itemCount;
   };
 
   return {

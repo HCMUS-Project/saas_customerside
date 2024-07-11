@@ -28,6 +28,7 @@ import { CameraIcon, Star, StarHalf, StarHalfIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Comment {
   id: string;
@@ -126,6 +127,7 @@ const OrderPage = () => {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const limit = 10;
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   const formSchema = z.object({
     review: z.string().min(2, {
@@ -143,8 +145,6 @@ const OrderPage = () => {
       rating: 0,
     },
   });
-
-  const ratingLabels = ["Quá tệ", "Tệ", "Bình thường", "Hài lòng", "Tuyệt vời"];
 
   const fetchProfileAndComments = useCallback(async (productId: string) => {
     try {
@@ -212,21 +212,21 @@ const OrderPage = () => {
     await fetchAndSetOrders(newStage, 1, limit);
   };
 
-  const handlePreviousPage = async () => {
-    if (page > 1) {
-      const newPage = page - 1;
-      setPage(newPage);
-      await fetchAndSetOrders(stage, newPage, limit);
-    }
-  };
+  // const handlePreviousPage = async () => {
+  //   if (page > 1) {
+  //     const newPage = page - 1;
+  //     setPage(newPage);
+  //     await fetchAndSetOrders(stage, newPage, limit);
+  //   }
+  // };
 
-  const handleNextPage = async () => {
-    if (page * limit < totalOrders) {
-      const newPage = page + 1;
-      setPage(newPage);
-      await fetchAndSetOrders(stage, newPage, limit);
-    }
-  };
+  // const handleNextPage = async () => {
+  //   if (page * limit < totalOrders) {
+  //     const newPage = page + 1;
+  //     setPage(newPage);
+  //     await fetchAndSetOrders(stage, newPage, limit);
+  //   }
+  // };
 
   const handleRatingClick = async (products: ProductDetails[]) => {
     setSelectedProducts(products);
@@ -259,10 +259,10 @@ const OrderPage = () => {
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-    if (hasUserCommented[productId]) {
-      alert("You can only comment once on this product.");
-      return;
-    }
+    // if (hasUserCommented[productId]) {
+    //   alert("You can only comment once on this product.");
+    //   return;
+    // }
     const newComment = {
       review: review[productId],
       rating: rating[productId],
@@ -314,13 +314,13 @@ const OrderPage = () => {
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p>Order Page</p>
+        <p>{lang.curLangPack.profile?.["orderPage"]}</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
         <p>{userEmail}</p>
       </div>
-      <div className="mt-8 ml-12 pl-4 overflow-x-hidden relative space-x-6">
-        <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]">
+      <div className="mt-8 overflow-x-hidden relative space-x-6 flex justify-center">
+        <div className="flex whitespace-nowrap gap-3 transition-transform w-[max-content] ">
           <Link
             href="/user-info"
             data-te-ripple-init
@@ -330,7 +330,7 @@ const OrderPage = () => {
               ""
             )}
           >
-            Account
+            {lang.curLangPack.profile?.["account"]}
           </Link>
 
           <Link
@@ -342,7 +342,7 @@ const OrderPage = () => {
               ""
             )}
           >
-            Booking
+            {lang.curLangPack.profile?.["booking"]}
           </Link>
 
           <Link
@@ -354,7 +354,7 @@ const OrderPage = () => {
               "border-b-[3px] border-blue-300"
             )}
           >
-            Order
+            {lang.curLangPack.profile?.["order"]}
           </Link>
         </div>
       </div>
@@ -369,47 +369,44 @@ const OrderPage = () => {
               }}
               variant="ghost"
               onClick={() => handleStageChange("pending")}
-              className={stage === "pending" ? "bg-blue-500 text-white" : ""}
             >
-              Pending
+              {lang.curLangPack.profile?.["pending"]}
             </Button>
             <Button
               style={{
                 backgroundColor:
                   stage === "shipping" ? profileStore.buttonColor : "",
-                color: stage === "shipping" ? profileStore.headerTextColor : "",
+                color: stage === "shipping" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStageChange("shipping")}
-              className={stage === "shipping" ? "bg-blue-500 text-white" : ""}
             >
-              Shipping
+              {lang.curLangPack.profile?.["shipping"]}
             </Button>
             <Button
               style={{
                 backgroundColor:
                   stage === "completed" ? profileStore.buttonColor : "",
                 color:
-                  stage === "completed" ? profileStore.headerTextColor : "",
+                  stage === "completed" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStageChange("completed")}
               className={stage === "completed" ? "bg-blue-500 text-white" : ""}
             >
-              Completed
+              {lang.curLangPack.profile?.["complete"]}
             </Button>
             <Button
               style={{
                 backgroundColor:
                   stage === "cancelled" ? profileStore.buttonColor : "",
                 color:
-                  stage === "cancelled" ? profileStore.headerTextColor : "",
+                  stage === "cancelled" ? profileStore.buttonTextColor : "",
               }}
               variant="ghost"
               onClick={() => handleStageChange("cancelled")}
-              className={stage === "cancelled" ? "bg-blue-500 text-white" : ""}
             >
-              Cancelled
+              {lang.curLangPack.profile?.["cancel"]}
             </Button>
           </div>
           {loading ? (
@@ -435,9 +432,9 @@ const OrderPage = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Đánh Giá Sản Phẩm</DialogTitle>
+            <DialogTitle>{lang.curLangPack.profile?.["rate"]}</DialogTitle>
             <DialogDescription>
-              Để lại đánh giá của bạn về sản phẩm này.
+              {lang.curLangPack.profile?.["description"]}
             </DialogDescription>
           </DialogHeader>
           {selectedProducts && selectedProducts.length > 0 && (
@@ -453,105 +450,100 @@ const OrderPage = () => {
                     />
                     <div className="ml-4">
                       <h3>{product.name}</h3>
-                      <p>Chất lượng sản phẩm: {product.rating || "N/A"}</p>
                     </div>
                   </div>
                   <div className="mt-4">
-                    {hasUserCommented[product.productId] ? (
+                    {/* {hasUserCommented[product.productId] ? (
                       <div className="text-green-500">
                         Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
                       </div>
-                    ) : (
-                      <Form {...form}>
-                        <form
-                          onSubmit={(e) => handleSubmit(product.productId, e)}
-                          className="space-y-4"
-                        >
-                          <div className="flex items-center mb-4">
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <div
-                                key={i}
-                                className="relative w-8 h-8 flex items-center"
-                                onClick={(e) => {
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  const clickX = e.clientX - rect.left;
-                                  if (clickX <= rect.width / 2) {
-                                    setRating((prev) => ({
-                                      ...prev,
-                                      [product.productId]: i + 0.5,
-                                    }));
-                                  } else {
-                                    setRating((prev) => ({
-                                      ...prev,
-                                      [product.productId]: i + 1,
-                                    }));
-                                  }
-                                }}
-                              >
-                                <Star
-                                  className={`w-8 h-8 cursor-pointer ${
-                                    rating[product.productId] >= i + 1
+                    ) : ( */}
+                    <Form {...form}>
+                      <form
+                        onSubmit={(e) => handleSubmit(product.productId, e)}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center mb-4">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="relative w-8 h-8 flex items-center"
+                              onClick={(e) => {
+                                const rect =
+                                  e.currentTarget.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                if (clickX <= rect.width / 2) {
+                                  setRating((prev) => ({
+                                    ...prev,
+                                    [product.productId]: i + 0.5,
+                                  }));
+                                } else {
+                                  setRating((prev) => ({
+                                    ...prev,
+                                    [product.productId]: i + 1,
+                                  }));
+                                }
+                              }}
+                            >
+                              <Star
+                                className={`w-8 h-8 cursor-pointer ${
+                                  rating[product.productId] >= i + 1
+                                    ? "text-yellow-500"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                              {rating[product.productId] < i + 1 && (
+                                <StarHalf
+                                  className={`absolute left-0 w-8 h-8 cursor-pointer ${
+                                    rating[product.productId] >= i + 0.5
                                       ? "text-yellow-500"
                                       : "text-gray-300"
                                   }`}
                                 />
-                                {rating[product.productId] < i + 1 && (
-                                  <StarHalf
-                                    className={`absolute left-0 w-8 h-8 cursor-pointer ${
-                                      rating[product.productId] >= i + 0.5
-                                        ? "text-yellow-500"
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                )}
-                              </div>
-                            ))}
-                            <span className="ml-2 text-yellow-500 text-xl">
-                              {
-                                ratingLabels[
-                                  Math.ceil(rating[product.productId]) - 1
-                                ]
-                              }
-                            </span>
-                          </div>
-
-                          <div className="mb-4">
-                            <Label
-                              htmlFor="review"
-                              className="block text-sm font-medium text-gray-700"
-                            >
-                              Đúng với mô tả:
-                            </Label>
-                            <Textarea
-                              id="review"
-                              value={review[product.productId] || ""}
-                              onChange={(e) =>
-                                setReview((prev) => ({
-                                  ...prev,
-                                  [product.productId]: e.target.value,
-                                }))
-                              }
-                              placeholder="Hãy chia sẻ những điều bạn thích về sản phẩm này với những người mua khác nhé."
-                              required
-                              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                            />
-                          </div>
-
-                          <Button
-                            type="submit"
-                            className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600"
-                          >
-                            Submit
-                          </Button>
-                          {successMessage && (
-                            <div className="mt-4 text-green-500">
-                              {successMessage}
+                              )}
                             </div>
-                          )}
-                        </form>
-                      </Form>
-                    )}
+                          ))}
+                          <span className="ml-2 text-yellow-500 text-xl">
+                            {Math.ceil(rating[product.productId])}
+                          </span>
+                        </div>
+
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="review"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            {lang.curLangPack.profile?.["comment"]}
+                          </Label>
+                          <Textarea
+                            id="review"
+                            value={review[product.productId] || ""}
+                            onChange={(e) =>
+                              setReview((prev) => ({
+                                ...prev,
+                                [product.productId]: e.target.value,
+                              }))
+                            }
+                            placeholder={lang.curLangPack.profile?.["share"]}
+                            required
+                            className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
+                          />
+                        </div>
+
+                        <Button
+                          type="submit"
+                          className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600"
+                        >
+                          Submit
+                        </Button>
+                        {successMessage && (
+                          <div className="mt-4 text-green-500">
+                            {successMessage}
+                          </div>
+                        )}
+                      </form>
+                    </Form>
+                    {/* )} */}
                   </div>
                 </div>
               ))}

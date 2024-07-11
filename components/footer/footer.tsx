@@ -8,9 +8,11 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Facebook, Instagram, Youtube } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Footer() {
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   return (
     <footer
@@ -24,7 +26,7 @@ export default function Footer() {
         <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 px-4 py-6 lg:py-8">
           <div>
             <h2 className="mb-6 text-sm font-semibold drop-shadow-lg ">
-              Information
+              {lang.curLangPack.footer?.["information"]}
             </h2>
             <ul className="space-y-2">
               <li>{profileStore.serviceName}</li>
@@ -50,14 +52,16 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h2 className="mb-6 text-sm font-semibold drop-shadow-lg">Legal</h2>
+            <h2 className="mb-6 text-sm font-semibold drop-shadow-lg">
+              {lang.curLangPack.footer?.["legal"]}
+            </h2>
             <ul className="space-y-2 font-medium">
               <li>
                 <a
                   href="/legal/policy"
                   className="drop-shadow-lg hover:underline"
                 >
-                  Privacy Policy
+                  {lang.curLangPack.footer?.["privacy"]}
                 </a>
               </li>
               <li>
@@ -65,14 +69,14 @@ export default function Footer() {
                   href="/legal/term"
                   className="drop-shadow-lg hover:underline"
                 >
-                  Term Of Use
+                  {lang.curLangPack.footer?.["term"]}
                 </a>
               </li>
             </ul>
           </div>
           <div>
             <h2 className="mb-6 text-sm font-semibold drop-shadow-lg ">
-              Social Contact
+              {lang.curLangPack.footer?.["social"]}
             </h2>
             <ul className="space-y-2 font-medium">
               <li>

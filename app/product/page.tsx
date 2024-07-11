@@ -17,9 +17,15 @@ import {
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { SearchIcon, Star } from "lucide-react";
+import { SearchIcon, Star, ShoppingCart } from "lucide-react";
 import { ecommerceEndpoints } from "@/constants/api/ecommerce";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useCart } from "@/constants/use-cart";
+import Swal from "sweetalert2";
+import { cartEndpoints } from "@/constants/api/cart.api";
+import { useAuthStore } from "@/hooks/store/auth.store";
+import eventBus from "@/hooks/evenBus";
+import { useLanguage } from "@/hooks/use-language";
 
 interface FiltersProps {
   selectedCategory: string[];
@@ -44,6 +50,7 @@ const Filters: React.FC<FiltersProps> = ({
   const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
   const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Change this to your actual domain
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -52,7 +59,6 @@ const Filters: React.FC<FiltersProps> = ({
         const res = await AXIOS.GET({
           uri: ecommerceEndpoints.findCategories(domain ?? ""),
         });
-        // Extract the category names from the response
         const categoryNames = res.data.categories.map(
           (category: { name: string }) => category.name
         );
@@ -65,13 +71,17 @@ const Filters: React.FC<FiltersProps> = ({
     };
 
     fetchCategories();
-  }, []);
+  }, [domain]);
 
   return (
     <div className="p-4 w-64 h-full bg-white rounded-lg shadow-md">
-      <h2 className="font-bold mb-4">Filters</h2>
+      <h2 className="font-bold mb-4">
+        {lang.curLangPack.products?.["filter"]}
+      </h2>
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">Category</h3>
+        <h3 className="font-semibold mb-2">
+          {lang.curLangPack.products?.["category"]}
+        </h3>
         <ul>
           {loadingCategories ? (
             <Skeleton className="h-6 w-full mb-2" />
@@ -98,7 +108,9 @@ const Filters: React.FC<FiltersProps> = ({
         </ul>
       </div>
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">Price</h3>
+        <h3 className="font-semibold mb-2">
+          {lang.curLangPack.services?.["price"]}
+        </h3>
         <ul>
           {[
             { label: "0 - 100k", value: [0, 100000] },
@@ -121,9 +133,11 @@ const Filters: React.FC<FiltersProps> = ({
         </ul>
       </div>
       <div>
-        <h3 className="font-semibold mb-2">Rating</h3>
+        <h3 className="font-semibold mb-2">
+          {lang.curLangPack.products?.["rating"]}
+        </h3>
         <ul>
-          {[5, 4, 3].map((rating) => (
+          {[5, 4, 3, 2, 1].map((rating) => (
             <li key={rating}>
               <input
                 type="radio"
@@ -131,7 +145,9 @@ const Filters: React.FC<FiltersProps> = ({
                 checked={selectedRating === rating}
                 onChange={() => setSelectedRating(rating)}
               />
-              <span className="ml-2">{rating} Stars & up</span>
+              <span className="ml-2">
+                {rating} {lang.curLangPack.products?.["starUp"]}
+              </span>
             </li>
           ))}
         </ul>
@@ -144,7 +160,7 @@ const Filters: React.FC<FiltersProps> = ({
         onClick={resetFilters}
         className="mt-4"
       >
-        Reset All Filters
+        {lang.curLangPack.products?.["reset"]}
       </Button>
     </div>
   );
@@ -154,6 +170,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  quantity: number;
   rating: number;
   category: string;
   images: string[];
@@ -161,13 +178,80 @@ interface Product {
 
 const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {
   const profileStore = useProfileStore();
+  const { addToCart } = useCart();
+  const authStore: any = useAuthStore();
+  const router = useRouter();
+  const lang = useLanguage();
+
+  const handleAddToCart = async (product: Product) => {
+    // if (!authStore.userId) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Oops...",
+    //     text: "User is not authenticated. Please log in first.",
+    //   });
+    //   return;
+    // }
+
+    try {
+      const createCartResponse = await AXIOS.POST({
+        uri: cartEndpoints.addItemToCart,
+        params: {
+          userId: "something",
+          cartItem: {
+            productId: product.id,
+            quantity: 1,
+          },
+        },
+      });
+
+      addToCart({
+        productId: product.id,
+        images: product.images,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+      });
+
+      const updatedCartItems = JSON.parse(
+        localStorage.getItem("cartItems") || "[]"
+      );
+      updatedCartItems.push({
+        productId: product.id,
+        images: product.images,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+      });
+      localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
+      eventBus.dispatch("cartUpdated", updatedCartItems);
+
+      Swal.fire({
+        icon: "success",
+        title: `${lang.curLangPack.noti?.["success"]}`,
+        text: `${lang.curLangPack.noti?.["added"]}`,
+      });
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: `${lang.curLangPack.noti?.["somethingWrong"]}`,
+      });
+    }
+  };
+
+  const handleProductClick = (productId: string) => {
+    router.push(`/product/${productId}`);
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <Link
-          className=" bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
-          href={`/product/${product.id}`}
+        <div
+          className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
           key={product.id}
+          onClick={() => handleProductClick(product.id)}
         >
           <div className="relative w-full h-48">
             <Image
@@ -177,29 +261,43 @@ const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {
               layout="fill"
             />
           </div>
-
           <h3 className="font-semibold text-lg truncate">{product.name}</h3>
-          <div className="flex items-center mt-1 ">
-            {Array.from({ length: product.rating }).map((_, index) => (
-              <Star key={index} className="text-yellow-400 fill-current"></Star>
+          <div className="flex items-center mt-1">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Star
+                key={i}
+                className={`w-4 h-4 ${
+                  i < product.rating
+                    ? "text-yellow-400 fill-current"
+                    : "text-gray-300"
+                }`}
+              />
             ))}
-            {Array.from({ length: 5 - product.rating }).map((_, index) => (
-              <Star key={index} className="text-gray-300"></Star>
-            ))}
+            <span className="ml-2 text-gray-600">
+              {product.rating.toFixed(1)}/5
+            </span>
           </div>
           <p className="text-sm text-gray-600 mt-1 font-semibold mb-2">
-            {product.price} VND
+            {product.price.toLocaleString("vi-VN")} VND
           </p>
           <Button
-            className="w-full mt1"
+            className="w-full mt-1"
             style={{
               backgroundColor: profileStore.buttonColor,
               color: profileStore.buttonTextColor,
             }}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent the click event from bubbling up to the product card
+              handleAddToCart(product);
+            }}
+            disabled={product.quantity === 0}
           >
-            add to cart
+            {product.quantity === 0
+              ? `${lang.curLangPack.products?.["soldOut"]}`
+              : `${lang.curLangPack.products?.["add"]}`}
+            <ShoppingCart className="ml-2" />
           </Button>
-        </Link>
+        </div>
       ))}
     </div>
   );
@@ -254,14 +352,16 @@ const AllProductList: React.FC = () => {
     fetchProducts();
   }, [selectedCategory, selectedPriceRange, selectedRating, searchQuery]);
 
-  // Get current products
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    router.push(`/product?search=${e.target.value}`);
+  };
+
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = productsData.slice(
     indexOfFirstProduct,
     indexOfLastProduct
   );
-
   const totalPages = Math.ceil(productsData.length / itemsPerPage);
 
   const resetFilters = () => {
@@ -269,10 +369,6 @@ const AllProductList: React.FC = () => {
     setSelectedPriceRange([0, 1000000]);
     setSelectedRating(null);
     setCurrentPage(1);
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    router.push(`/product?search=${e.target.value}`);
   };
 
   return (

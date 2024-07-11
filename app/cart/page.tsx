@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/constants/use-cart";
-import { useAuthStore } from "@/hooks/store/auth.store";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import Swal from "sweetalert2";
 import { Trash2, Minus, Plus } from "lucide-react";
@@ -22,6 +21,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import eventBus from "@/hooks/evenBus";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Product {
   productId: string;
@@ -34,14 +35,16 @@ interface Product {
 export default function CartPage() {
   const [count, setCount] = useState<number[]>([]);
   const [cartItems, setCartItems] = useState<Product[]>([]);
+  const [subTotalPrice, setSubTotalPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cartID, setCartID] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
   const [removing, setRemoving] = useState<number | null>(null);
   const router = useRouter();
-  const { removeFromCart } = useCart();
+  const { removeFromCart, getCartItemCount } = useCart();
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   const fetchCartData = async () => {
     try {
@@ -63,14 +66,22 @@ export default function CartPage() {
   const updateSelectedItemsFromLocalStorage = () => {
     const selectedProductId = localStorage.getItem("selectedProductId");
     if (selectedProductId) {
-      setSelectedItems((prevSelectedItems) =>
+      setSelectedItems(
         cartItems.map((item) => item.productId === selectedProductId)
       );
     }
   };
 
   useEffect(() => {
-    fetchCartData();
+    const storedCartItems = JSON.parse(
+      localStorage.getItem("cartItems") || "[]"
+    );
+    if (storedCartItems.length > 0) {
+      setCartItems(storedCartItems);
+      setLoading(false);
+    } else {
+      fetchCartData();
+    }
   }, []);
 
   useEffect(() => {
@@ -110,6 +121,8 @@ export default function CartPage() {
 
   useEffect(() => {
     console.log("Cart items updated:", cartItems);
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    eventBus.dispatch("cartUpdated", cartItems);
   }, [cartItems]);
 
   const handleCheckboxChange = (index: number) => {
@@ -132,7 +145,7 @@ export default function CartPage() {
       };
       const response = await AXIOS.POST({
         uri: cartEndpoints.updateCart,
-        params: params,
+        params,
       });
       if (!response.data) {
         throw new Error("Response data is empty");
@@ -140,17 +153,31 @@ export default function CartPage() {
       const updatedCartItems = [...cartItems];
       updatedCartItems[index] = updatedCartItem;
       setCartItems(updatedCartItems);
+      eventBus.dispatch("cartUpdated", cartItems); // Notify cart update
     } catch (error) {
       console.error("Error updating cart item:", error);
     }
   };
 
+  const calculateSubTotalPrice = () => {
+    const SubtotalPrice = cartItems.reduce((acc, item, index) => {
+      return selectedItems[index] ? acc + item.price * count[index] : acc;
+    }, 0);
+    setSubTotalPrice(SubtotalPrice);
+  };
+
   const calculateTotalPrice = () => {
     const totalPrice = cartItems.reduce((acc, item, index) => {
-      return selectedItems[index] ? acc + item.price * count[index] : acc;
+      return selectedItems[index]
+        ? acc + item.price * count[index] + 17000
+        : acc;
     }, 0);
     setTotalPrice(totalPrice);
   };
+
+  useEffect(() => {
+    calculateSubTotalPrice();
+  }, [count, selectedItems]);
 
   useEffect(() => {
     calculateTotalPrice();
@@ -190,8 +217,8 @@ export default function CartPage() {
   const checkout = () => {
     if (!selectedItems.some((item) => item)) {
       Swal.fire({
-        title: "Error",
-        text: "Please select items to checkout.",
+        title: `${lang.curLangPack.noti?.["error"]}`,
+        text: `${lang.curLangPack.noti?.["chooseItems"]}`,
         icon: "error",
         confirmButtonColor: profileStore.buttonColor,
         cancelButtonColor: "Crimson",
@@ -208,7 +235,9 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-12 flex-grow h-full">
-      <h1 className="text-2xl font-bold mb-8">Your Shopping Cart</h1>
+      <h1 className="text-2xl font-bold mb-8">
+        {lang.curLangPack.cart?.["yourShoppingCart"]}
+      </h1>
       <div className="grid md:grid-cols-[1fr_300px] gap-8">
         <div className="grid gap-6">
           {loading ? (
@@ -224,8 +253,8 @@ export default function CartPage() {
                       <div className="my-1 flex item-center gap-2">
                         <Skeleton className="w-[70px] h-[20px] rounded-full" />
                         <div className="flex font-bold text-center gap-3 mb-2">
-                          <Skeleton className="w-[30px] h-[30px] rounded-full" />
-                          <Skeleton className="w-[30px] h/[30px] rounded-full" />
+                          <Skeleton className="w/[30px] h/[30px] rounded-full" />
+                          <Skeleton className="w/[30px] h/[30px] rounded-full" />
                           <Skeleton className="w/[30px] h/[30px] rounded-full" />
                         </div>
                       </div>
@@ -241,8 +270,8 @@ export default function CartPage() {
           ) : (
             <>
               {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center  ">
-                  <p>No items in the cart.</p>
+                <div className="flex flex-col items-center justify-center">
+                  <p>{lang.curLangPack.cart?.["noItem"]}</p>
                   <Button
                     style={{
                       backgroundColor: profileStore.buttonColor,
@@ -250,7 +279,7 @@ export default function CartPage() {
                     }}
                     onClick={() => router.push("/product")}
                   >
-                    Shop Now
+                    {lang.curLangPack.cart?.["shopNow"]}
                   </Button>
                 </div>
               ) : (
@@ -281,7 +310,7 @@ export default function CartPage() {
                           <h3 className="font-semibold">{item.name}</h3>
                         </Link>
                         <p className="text-muted-foreground text-sm">
-                          {item.price} VND
+                          {Number(item.price).toLocaleString("Vi-VN")} VND
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -307,7 +336,7 @@ export default function CartPage() {
                           onClick={() => handleRemoveFromCart(index)}
                           className="bg-red-500 text-white"
                         >
-                          <Trash2 className="w-4 h-4 " />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -320,21 +349,25 @@ export default function CartPage() {
         {!loading && (
           <Card>
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>{lang.curLangPack.cart?.["order"]}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{totalPrice.toFixed(2)} VND</span>
+                <span>{lang.curLangPack.cart?.["subTotal"]}</span>
+                <span>
+                  {Number(subTotalPrice.toFixed(2)).toLocaleString("Vi-VN")} VND
+                </span>
               </div>
               <div className="flex justify-between">
-                <span>Shipping</span>
+                <span>{lang.curLangPack.cart?.["shipping"]}</span>
                 <span>17.000 VND</span>
               </div>
               <Separator />
               <div className="flex justify-between font-medium">
-                <span>Total</span>
-                <span>{totalPrice.toFixed(2)} VND</span>
+                <span>{lang.curLangPack.cart?.["total"]}</span>
+                <span>
+                  {Number(totalPrice.toFixed(2)).toLocaleString("Vi-VN")} VND
+                </span>
               </div>
             </CardContent>
             <CardFooter className="grid gap-2">
@@ -347,11 +380,11 @@ export default function CartPage() {
                   color: profileStore.buttonTextColor,
                 }}
               >
-                Proceed to Checkout
+                {lang.curLangPack.cart?.["checkOut"]}
               </Button>
-              <Link href="/products">
+              <Link href="/product">
                 <Button variant="outline" className="w-full">
-                  Continue Shopping
+                  {lang.curLangPack.cart?.["continue"]}
                 </Button>
               </Link>
             </CardFooter>

@@ -46,6 +46,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton component
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Service {
   id: string;
@@ -109,6 +110,7 @@ export default function BookingForm() {
   const [appliedVouchers, setAppliedVouchers] = useState<string[]>([]);
   const router = useRouter();
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   useEffect(() => {
     const storedService = localStorage.getItem("selectedService");
@@ -283,8 +285,8 @@ export default function BookingForm() {
     ) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Please select a date, time, service, and employee.",
+        title: `${lang.curLangPack.noti?.["error"]}`,
+        text: `${lang.curLangPack.noti?.["select"]}`,
       });
       return;
     }
@@ -321,8 +323,8 @@ export default function BookingForm() {
 
       Swal.fire({
         icon: "success",
-        title: "Success",
-        text: "Booking created successfully!",
+        title: `${lang.curLangPack.noti?.["success"]}`,
+        text: `${lang.curLangPack.noti?.["bookingSuccess"]}`,
       });
 
       // Clear local storage and refresh booked slots
@@ -337,8 +339,8 @@ export default function BookingForm() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to create booking. Please try again.",
+        title: `${lang.curLangPack.noti?.["error"]}`,
+        text: `${lang.curLangPack.noti?.["bookingFail"]}`,
       });
     }
   };
@@ -354,11 +356,19 @@ export default function BookingForm() {
         if (res.statusCode >= 200 && res.statusCode <= 300) {
           setVouchers(res.data.vouchers || []);
         } else {
-          Swal.fire("Error", "Failed to fetch vouchers.", "error");
+          Swal.fire(
+            `${lang.curLangPack.noti?.["error"]}`,
+            `${lang.curLangPack.noti?.["fecthFail"]}`,
+            "error"
+          );
         }
       } catch (error) {
         console.error("Error fetching vouchers:", error);
-        Swal.fire("Error", "Failed to fetch vouchers.", "error");
+        Swal.fire(
+          `${lang.curLangPack.noti?.["error"]}`,
+          `${lang.curLangPack.noti?.["fecthFail"]}`,
+          "error"
+        );
       }
     }
   };
@@ -369,10 +379,10 @@ export default function BookingForm() {
 
   const fetchVoucher = useCallback(
     async (code: string) => {
-      if (appliedVouchers.includes(code)) {
-        Swal.fire("Error", "Voucher already applied.", "error");
-        return;
-      }
+      // if (appliedVouchers.includes(code)) {
+      //   Swal.fire("Error", "Voucher already applied.", "error");
+      //   return;
+      // }
 
       try {
         const res = await AXIOS.GET({
@@ -387,8 +397,8 @@ export default function BookingForm() {
 
         if (selectedService && selectedService.price < voucher.minAppValue) {
           Swal.fire(
-            "Error",
-            "Service value is less than the minimum applicable value for this voucher.",
+            `${lang.curLangPack.noti?.["error"]}`,
+            `${lang.curLangPack.noti?.["lessValue"]}`,
             "error"
           );
           return;
@@ -405,7 +415,11 @@ export default function BookingForm() {
         );
 
         setDiscountAmount(discount);
-        Swal.fire("Success", "Voucher applied successfully!", "success");
+        Swal.fire(
+          `${lang.curLangPack.noti?.["success"]}`,
+          `${lang.curLangPack.noti?.["voucherApplied"]}`,
+          "success"
+        );
       } catch (error) {
         console.log("error");
       }
@@ -414,7 +428,14 @@ export default function BookingForm() {
   );
 
   const handleApplyVoucher = () => {
-    fetchVoucher(voucherCode);
+    const selectedVoucher = vouchers.find(
+      (voucher) => voucher.voucherCode === voucherCode
+    );
+    if (selectedVoucher) {
+      setVoucherCode(selectedVoucher.voucherCode);
+      fetchVoucher(selectedVoucher.id);
+      setIsVoucherDialogOpen(false);
+    }
   };
 
   const handleVoucherSelect = (code: string) => {
@@ -440,8 +461,10 @@ export default function BookingForm() {
       <div className="max-w-4xl mx-auto">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>BOOKING</CardTitle>
-            <CardDescription>Choose time to...</CardDescription>
+            <CardTitle>{lang.curLangPack.services?.["booking"]}</CardTitle>
+            <CardDescription>
+              {lang.curLangPack.services?.["choose"]}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FormProvider {...form}>
@@ -453,14 +476,20 @@ export default function BookingForm() {
                 }}
               >
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="service">Select Service</Label>
+                  <Label htmlFor="service">
+                    {lang.curLangPack.services?.["select"]}
+                  </Label>
                   <div className="border p-2 rounded">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         {selectedService ? (
-                          <span className="ml-2">Service Selected</span>
+                          <span className="ml-2">
+                            {lang.curLangPack.services?.["selected"]}
+                          </span>
                         ) : (
-                          <span className="ml-2">No service selected</span>
+                          <span className="ml-2">
+                            {lang.curLangPack.services?.["noSelect"]}
+                          </span>
                         )}
                       </div>
                       <Button
@@ -474,7 +503,9 @@ export default function BookingForm() {
                           router.push("/bookings/services/form/step1")
                         }
                       >
-                        {selectedService ? "Change Service" : "Select Service"}
+                        {selectedService
+                          ? `${lang.curLangPack.services?.["change"]}`
+                          : `${lang.curLangPack.services?.["select"]}`}
                       </Button>
                       {selectedService && (
                         <Button
@@ -497,24 +528,27 @@ export default function BookingForm() {
                         </span>
                       ) : (
                         <span className="text-muted-foreground">
-                          No service selected
+                          `${lang.curLangPack.services?.["noSelect"]}`
                         </span>
                       )}
                     </div>
                     {selectedService && (
                       <div className="mt-2 text-green-500">
-                        Total Amount to Pay: {totalAmount.toLocaleString()} VND
+                        {lang.curLangPack.services?.["total"]}{" "}
+                        {totalAmount.toLocaleString()} VND
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="mb-8 p-4 border rounded-lg">
-                  <h2 className="text-lg font-semibold mb-2">Voucher</h2>
+                  <h2 className="text-lg font-semibold mb-2">
+                    {lang.curLangPack.services?.["voucher"]}
+                  </h2>
                   <div className="flex items-center space-x-4">
                     <input
                       type="text"
-                      placeholder="Enter voucher code"
+                      placeholder={lang.curLangPack.services?.["enterVoucher"]}
                       value={voucherCode}
                       onChange={handleVoucherCodeChange}
                       className="border border-gray-300 rounded-md p-2 w-full"
@@ -524,10 +558,11 @@ export default function BookingForm() {
                         backgroundColor: profileStore.buttonColor,
                         color: profileStore.buttonTextColor,
                       }}
+                      type="button"
                       onClick={handleApplyVoucher}
                       className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
                     >
-                      Apply
+                      {lang.curLangPack.services?.["apply"]}
                     </Button>
                   </div>
                   <Button
@@ -539,21 +574,21 @@ export default function BookingForm() {
                     onClick={openVoucherDialog}
                     className="mt-4"
                   >
-                    View Available Vouchers
+                    {lang.curLangPack.services?.["viewVoucher"]}
                   </Button>
                   {voucherApplied && (
                     <div className="mt-2">
                       <p className="text-green-500">
-                        Voucher applied successfully!
+                        {lang.curLangPack.services?.["voucherAppSuccess"]}
                       </p>
                       <p className="text-gray-500">
-                        Discount:{" "}
+                        {lang.curLangPack.services?.["discount"]}{" "}
                         <span className="font-semibold text-black">
                           {discountAmount.toFixed(3)}
                         </span>
                       </p>
                       <p className="text-gray-500">
-                        Total after discount:{" "}
+                        {lang.curLangPack.services?.["totalAfterDis"]}{" "}
                         <span className="font-semibold text-black">
                           {totalAmount.toFixed(3)}
                         </span>
@@ -567,7 +602,9 @@ export default function BookingForm() {
                   name="bookingDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Booking date</FormLabel>
+                      <FormLabel>
+                        {lang.curLangPack.services?.["bookingDate"]}
+                      </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -585,7 +622,9 @@ export default function BookingForm() {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>Pick a date</span>
+                                <span>
+                                  {lang.curLangPack.services?.["pickdate"]}
+                                </span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -624,7 +663,9 @@ export default function BookingForm() {
                   name="bookingTime"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Select Time</FormLabel>
+                      <FormLabel>
+                        {lang.curLangPack.services?.["selectedTime"]}
+                      </FormLabel>
                       <div className="grid grid-cols-4 gap-2">
                         {availableSlots.map((slot) => (
                           <Button
@@ -659,7 +700,9 @@ export default function BookingForm() {
                     ) : (
                       employees.length > 0 && (
                         <div className="space-y-2">
-                          <Label>Working Employees</Label>
+                          <Label>
+                            {lang.curLangPack.services?.["employees"]}
+                          </Label>
                           <div className="flex space-x-2 overflow-x-auto pb-4">
                             {employees.map((employee) => (
                               <div
@@ -701,7 +744,7 @@ export default function BookingForm() {
                   variant="outline"
                   type="submit"
                 >
-                  Confirm Booking
+                  {lang.curLangPack.services?.["comfirm"]}
                 </Button>
               </form>
             </FormProvider>
@@ -714,9 +757,11 @@ export default function BookingForm() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Available Vouchers</DialogTitle>
+              <DialogTitle>
+                {lang.curLangPack.services?.["alaivableVouchers"]}
+              </DialogTitle>
               <DialogDescription>
-                Please select a voucher to apply
+                {lang.curLangPack.services?.["alaivableVouchersDes"]}
               </DialogDescription>
             </DialogHeader>
 
@@ -730,9 +775,18 @@ export default function BookingForm() {
                     <p>
                       <strong>Code: {voucher.voucherCode}</strong>
                     </p>
-                    <p>Discount: {voucher.discountPercent * 100}%</p>
-                    <p>Max Discount: {voucher.maxDiscount} VND</p>
-                    <p>Minimum Order Value: {voucher.minAppValue} VND</p>
+                    <p>
+                      {lang.curLangPack.services?.["discount"]}:{" "}
+                      {Math.round(voucher.discountPercent * 100)}%
+                    </p>
+                    <p>
+                      {lang.curLangPack.services?.["maxDis"]}:{" "}
+                      {voucher.maxDiscount.toLocaleString("Vi")} VND
+                    </p>
+                    <p>
+                      {lang.curLangPack.services?.["minDis"]}:{" "}
+                      {voucher.minAppValue.toLocaleString("Vi")} VND
+                    </p>
                   </div>
                   <Button
                     style={{
@@ -742,7 +796,7 @@ export default function BookingForm() {
                     onClick={() => handleVoucherSelect(voucher.voucherCode)}
                     className="bg-blue-500 text-white px-4 py-2 rounded-md"
                   >
-                    Select
+                    {lang.curLangPack.services?.["select"]}
                   </Button>
                 </div>
               ))

@@ -28,6 +28,7 @@ import { useAuthStore } from "@/hooks/store/auth.store";
 
 import Swal from "sweetalert2";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import { useLanguage } from "@/hooks/use-language";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,7 @@ const LoginForm = () => {
   });
   const authStore = useAuthStore();
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
     setLoading(true);
@@ -60,14 +62,14 @@ const LoginForm = () => {
       authStore.setIsAuthorized(true);
       Swal.fire({
         icon: "success",
-        title: "Login completed",
+        title: `${lang.curLangPack.noti?.["loginComplete"]}`,
       });
       router.push("/"); // Chuyển hướng đến trang chủ
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Oops...",
-        text: "Something went wrong! Please try again.",
+        text: `${lang.curLangPack.noti?.["somethingWrong"]}`,
       });
       console.error("Error logging in:", error);
     } finally {
@@ -77,11 +79,11 @@ const LoginForm = () => {
 
   return (
     <CardWrapper
-      label="Welcome to Lorem"
-      title="Sign In"
-      backButtonTitle="No Account?"
+      label={lang.curLangPack.auth?.["welcome"]}
+      title={lang.curLangPack.auth?.["signIn"]}
+      backButtonTitle={lang.curLangPack.auth?.["noAccount"]}
       backButtonHref="/auth/register"
-      backButtonLabel="Sign up"
+      backButtonLabel={lang.curLangPack.auth?.["signUp"]}
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -91,12 +93,12 @@ const LoginForm = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{lang.curLangPack.auth?.["email"]}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       type="email"
-                      placeholder="please enter your email address"
+                      placeholder={lang.curLangPack.auth?.["inputEmail"]}
                       suffix={<Mail />}
                     />
                   </FormControl>
@@ -109,9 +111,12 @@ const LoginForm = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{lang.curLangPack.auth?.["password"]}</FormLabel>
                   <FormControl>
-                    <PasswordIput {...field} placeholder="Your Password" />
+                    <PasswordIput
+                      {...field}
+                      placeholder={lang.curLangPack.auth?.["password"]}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,11 +134,13 @@ const LoginForm = () => {
               variant="ghost"
               disabled={loading}
             >
-              {loading ? "Loading..." : "Log in"}
+              {loading
+                ? `${lang.curLangPack.auth?.["loading"]}`
+                : `${lang.curLangPack.auth?.["login"]}`}
             </Button>
             <Link href="/auth/forgetPassword">
               <Button variant="link" className="text-xs text-left font-light">
-                Forgot password?
+                {lang.curLangPack.auth?.["forgot"]}
               </Button>
             </Link>
           </div>

@@ -24,6 +24,8 @@ import { authEndpoint } from "@/constants/api/auth.api";
 
 import { useProfileStore } from "@/hooks/store/profile.store";
 import Swal from "sweetalert2";
+import { useLanguage } from "@/hooks/use-language";
+import { error } from "console";
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -39,6 +41,7 @@ const RegisterForm = () => {
       confirmPassword: "",
     },
   });
+  const lang = useLanguage();
 
   const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
     setLoading(true);
@@ -55,19 +58,38 @@ const RegisterForm = () => {
           // Assuming device is constant
         },
       });
+
       Swal.fire({
         icon: "success",
-        title: "Login completed",
+        title: `${lang.curLangPack.noti?.["registerComplete"]}`,
       });
 
       router.push("/auth/registerOTP");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error during registration:", error);
+
+      // if (error instanceof AxiosError) {
+      //   const statusCode = error.response?.status;
+      //   const errorMessage = error.response?.data.message;
+      //   if (error.response?.statusCode === 400) {
+      //     Swal.fire({
+      //       icon: "error",
+      //       title: "Validation Error",
+      //       text: error.response.data.message,
+      //     });
+      //   } else if (error.response?.statusCode === 403) {
+      //     Swal.fire({
+      //       icon: "error",
+      //       title: "Oops...",
+      //       text: `${lang.curLangPack.noti?.["userRegisted"]}`,
+      //     });
+      //   } else {
       Swal.fire({
         icon: "error",
         title: "Oops...",
-        text: "Something went wrong! Please try again.",
+        text: `${lang.curLangPack.noti?.["somethingWrong"]}`,
       });
+      // }
     } finally {
       setLoading(false);
     }
@@ -75,9 +97,9 @@ const RegisterForm = () => {
   const { pending } = useFormStatus();
   return (
     <CardWrapper
-      label="Welcome to Lorem"
-      title="Sign Up"
-      backButtonTitle="Have an account?"
+      label={lang.curLangPack.auth?.["welcome"]}
+      title={lang.curLangPack.auth?.["signUp"]}
+      backButtonTitle={lang.curLangPack.auth?.["haveAccount"]}
       backButtonHref="/auth/login"
       backButtonLabel="Sign in"
     >
@@ -89,12 +111,12 @@ const RegisterForm = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{lang.curLangPack.auth?.["email"]}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       type="email"
-                      placeholder="please enter your email address"
+                      placeholder={lang.curLangPack.auth?.["inputEmail"]}
                     />
                   </FormControl>
                   <FormMessage />
@@ -109,9 +131,13 @@ const RegisterForm = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>User Name</FormLabel>
+                    <FormLabel>{lang.curLangPack.auth?.["username"]}</FormLabel>
                     <FormControl>
-                      <Input {...field} type="name" placeholder="User name" />
+                      <Input
+                        {...field}
+                        type="name"
+                        placeholder={lang.curLangPack.auth?.["username"]}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,12 +148,12 @@ const RegisterForm = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>{lang.curLangPack.auth?.["phone"]}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="phone"
-                        placeholder="Contact number"
+                        placeholder={lang.curLangPack.auth?.["phone"]}
                       />
                     </FormControl>
                     <FormMessage />
@@ -141,9 +167,12 @@ const RegisterForm = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{lang.curLangPack.auth?.["password"]}</FormLabel>
                   <FormControl>
-                    <PasswordIput {...field} placeholder="Your Password" />
+                    <PasswordIput
+                      {...field}
+                      placeholder={lang.curLangPack.auth?.["password"]}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,11 +183,13 @@ const RegisterForm = () => {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>
+                    {lang.curLangPack.auth?.["confirmPass"]}
+                  </FormLabel>
                   <FormControl>
                     <PasswordIput
                       {...field}
-                      placeholder="please enter your password again"
+                      placeholder={lang.curLangPack.auth?.["passInput"]}
                     />
                   </FormControl>
                   <FormMessage />
@@ -175,7 +206,9 @@ const RegisterForm = () => {
             className="w-full"
             disabled={pending}
           >
-            {loading ? "is loading...." : "Signup"}
+            {loading
+              ? `${lang.curLangPack.auth?.["loading"]}`
+              : `${lang.curLangPack.auth?.["signIn"]}`}
           </Button>
         </form>
       </Form>

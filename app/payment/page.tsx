@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +15,15 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 import { AXIOS } from "@/constants/network/axios";
 import { voucherEnpoint } from "@/constants/api/voucher.api";
-import { getJwt } from "@/util/auth.util";
 import { orderEndpoints } from "@/constants/api/order.api";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { cartEndpoints } from "@/constants/api/cart.api";
 import { productEndpoints } from "@/constants/api/product.api";
 import { paymentEndpoints } from "@/constants/api/payment.api";
-import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import eventBus from "@/hooks/evenBus";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Address {
   id: string;
@@ -33,7 +33,7 @@ interface Address {
   city: string;
   postalCode: string;
   phoneNumber: string;
-  isDefault?: boolean; // Add the isDefault property
+  isDefault?: boolean;
 }
 
 interface Product {
@@ -75,7 +75,7 @@ export default function CheckoutPage() {
   const [appliedVouchers, setAppliedVouchers] = useState<string[]>([]);
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [isVoucherDialogOpen, setIsVoucherDialogOpen] = useState(false);
-  const [addresses, setAddresses] = useState<Address[]>([]); // Initialize as an empty array
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [newAddress, setNewAddress] = useState<Address>({
     id: "",
     fullName: "",
@@ -84,11 +84,12 @@ export default function CheckoutPage() {
     city: "",
     postalCode: "",
     phoneNumber: "",
-    isDefault: false, // Initialize with default value
+    isDefault: false,
   });
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]); // Payment methods state
-  const [vouchers, setVouchers] = useState<Voucher[]>([]); // Vouchers state
-  const [loading, setLoading] = useState(true); // Loading state
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const lang = useLanguage();
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -98,9 +99,7 @@ export default function CheckoutPage() {
       params.get("message") === "success" &&
       params.get("status") === "success"
     ) {
-      // Construct the new URL without the query parameters
       const newUrl = `${url.origin}${url.pathname}`;
-      // Replace the current URL with the new URL
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
@@ -129,14 +128,21 @@ export default function CheckoutPage() {
             phoneNumber: `${profile.phone}`,
             isDefault: true,
           });
-          // Set all addresses
-          setAddresses(profile.addresses || []); // Ensure it's an array
+          setAddresses(profile.addresses || []);
         } else {
-          Swal.fire("Error", "Failed to fetch profile data.", "error");
+          Swal.fire(
+            `${lang.curLangPack.noti?.["error"]}`,
+            `${lang.curLangPack.noti?.["profileFetch"]}`,
+            "error"
+          );
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
-        Swal.fire("Error", "Failed to fetch profile data.", "error");
+        Swal.fire(
+          `${lang.curLangPack.noti?.["error"]}`,
+          `${lang.curLangPack.noti?.["profileFetch"]}`,
+          "error"
+        );
       }
     };
 
@@ -145,8 +151,6 @@ export default function CheckoutPage() {
         const res = await AXIOS.GET({
           uri: paymentEndpoints.PaymentMethod,
         });
-
-        console.log("Payment Methods Response:", res.data);
 
         if (res.statusCode >= 200 && res.statusCode <= 300) {
           const methods = res.data.paymentMethods.map((method: any) => ({
@@ -165,7 +169,7 @@ export default function CheckoutPage() {
     };
 
     Promise.all([fetchProfile(), fetchPaymentMethods()]).finally(() => {
-      setLoading(false); // Set loading to false after data is fetched
+      setLoading(false);
     });
   }, []);
 
@@ -173,12 +177,20 @@ export default function CheckoutPage() {
     setVoucherCode(e.target.value);
   };
 
+  const calculateTotalAmount = () => {
+    const total = cartProducts.reduce(
+      (total, product) => total + product.price * product.quantity,
+      0
+    );
+    return total;
+  };
+
   const fetchVoucher = useCallback(
     async (code: string) => {
-      if (appliedVouchers.includes(code)) {
-        Swal.fire("Error", "Voucher already applied.", "error");
-        return;
-      }
+      // if (appliedVouchers.includes(code)) {
+      //   Swal.fire("Error", "Voucher already applied.", "error");
+      //   return;
+      // }
 
       try {
         const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
@@ -187,18 +199,19 @@ export default function CheckoutPage() {
           uri: voucherEnpoint.findVoucher(domain ?? "", code),
         });
 
-        console.log("Voucher Response:", res.data);
-
         const voucher = res.data.voucher;
 
         if (!voucher) {
           throw new Error("Voucher not found in the response");
         }
 
-        if (calculateTotalAmount() < voucher.minAppValue) {
+        const totalAmountNum = calculateTotalAmount();
+        const minAppValueNum = Number(voucher.minAppValue);
+
+        if (totalAmountNum < minAppValueNum) {
           Swal.fire(
-            "Error",
-            "Order value is less than the minimum applicable value for this voucher.",
+            `${lang.curLangPack.noti?.["error"]}`,
+            `${lang.curLangPack.noti?.["VoucherFail"]}`,
             "error"
           );
           return;
@@ -209,19 +222,21 @@ export default function CheckoutPage() {
         setAppliedVouchers([...appliedVouchers, code]);
 
         const discount = Math.min(
-          voucher.maxDiscount,
-          (voucher.discountPercent || 0) * calculateTotalAmount()
+          parseFloat(voucher.maxDiscount),
+          voucher.discountPercent * totalAmountNum
         );
 
-        console.log("Discount Amount:", discount);
-
         setDiscountAmount(discount);
-        Swal.fire("Success", "Voucher applied successfully!", "success");
+        Swal.fire(
+          `${lang.curLangPack.noti?.["success"]}`,
+          `${lang.curLangPack.noti?.["voucherApplied"]}`,
+          "success"
+        );
       } catch (error) {
         console.error("Error fetching voucher data:", error);
       }
     },
-    [appliedVouchers]
+    [appliedVouchers, cartProducts]
   );
 
   const handleApplyVoucher = () => {
@@ -268,25 +283,28 @@ export default function CheckoutPage() {
         if (paymentUrl) {
           window.location.href = paymentUrl;
         } else {
-          Swal.fire("Success", "Order placed successfully!", "success").then(
-            async () => {
-              await fetchCartData();
-              router.push("/product");
-            }
-          );
+          Swal.fire(
+            `${lang.curLangPack.noti?.["success"]}`,
+            `${lang.curLangPack.noti?.["ordered"]}`,
+            "success"
+          ).then(async () => {
+            await fetchCartData();
+            eventBus.dispatch("cartUpdated", []); // Dispatch event to clear cart
+            router.push("/product");
+          });
         }
       } else {
         Swal.fire(
-          "Error",
-          "Failed to place the order. Please try again.",
+          `${lang.curLangPack.noti?.["error"]}`,
+          `${lang.curLangPack.noti?.["orderFetch"]}`,
           "error"
         );
       }
     } catch (error) {
       console.error("Error placing order:", error);
       Swal.fire(
-        "Error",
-        "Failed to place the order. Please try again.",
+        `${lang.curLangPack.noti?.["error"]}`,
+        `${lang.curLangPack.noti?.["orderFetch"]}`,
         "error"
       );
     }
@@ -335,15 +353,6 @@ export default function CheckoutPage() {
     }
   };
 
-  const calculateTotalAmount = () => {
-    const total = cartProducts.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
-    console.log("Total Amount:", total);
-    return total;
-  };
-
   const totalAmount = calculateTotalAmount();
   const shippingFee = 17000;
   const finalAmountWithoutSip = totalAmount - discountAmount;
@@ -363,9 +372,8 @@ export default function CheckoutPage() {
   const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Ensure the phone number has the +84 prefix
     if (name === "phoneNumber") {
-      let formattedValue = value.replace(/\D/g, ""); // Remove all non-numeric characters
+      let formattedValue = value.replace(/\D/g, "");
       if (formattedValue.startsWith("84")) {
         formattedValue = `+${formattedValue}`;
       } else if (!formattedValue.startsWith("+84")) {
@@ -407,11 +415,19 @@ export default function CheckoutPage() {
       if (res.statusCode >= 200 && res.statusCode <= 300) {
         setVouchers(res.data.vouchers || []);
       } else {
-        Swal.fire("Error", "Failed to fetch vouchers.", "error");
+        Swal.fire(
+          `${lang.curLangPack.noti?.["error"]}`,
+          `${lang.curLangPack.noti?.["VoucherFail"]}`,
+          "error"
+        );
       }
     } catch (error) {
       console.error("Error fetching vouchers:", error);
-      Swal.fire("Error", "Failed to fetch vouchers.", "error");
+      Swal.fire(
+        `${lang.curLangPack.noti?.["error"]}`,
+        `${lang.curLangPack.noti?.["VoucherFail"]}`,
+        "error"
+      );
     }
   };
 
@@ -423,7 +439,9 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-semibold mb-4">Checkout</h1>
+      <h1 className="text-3xl font-semibold mb-4">
+        {lang.curLangPack.payment?.["checkOut"]}
+      </h1>
 
       {loading ? (
         <div className="space-y-4">
@@ -436,10 +454,11 @@ export default function CheckoutPage() {
         </div>
       ) : (
         <>
-          {/* Address Section */}
           <div className="mb-8 p-4 border border-dashed border-gray-300 rounded-lg">
             <div className="border-b border-dashed border-gray-300 pb-2 mb-4">
-              <h2 className="text-lg font-semibold">Shipping Address</h2>
+              <h2 className="text-lg font-semibold">
+                {lang.curLangPack.payment?.["shipping"]}
+              </h2>
             </div>
             {selectedAddress && (
               <div className="mb-2 flex justify-between items-center">
@@ -449,27 +468,34 @@ export default function CheckoutPage() {
                   {selectedAddress.addressLine2}, {selectedAddress.city},{" "}
                   {selectedAddress.postalCode}
                   <div className="bg-white border border-red-500 text-red-500 px-2 py-1 rounded-md inline-block ml-2">
-                    Default
+                    {lang.curLangPack.payment?.["default"]}
                   </div>
                 </div>
                 <Button
                   onClick={openAddressDialog}
                   className="bg-white border border-blue-500 text-blue-500 px-2 py-1 rounded-md"
                 >
-                  Change
+                  {lang.curLangPack.payment?.["change"]}
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Products Section */}
           <div className="mb-8 p-4 border rounded-lg">
             <div className="space-y-4">
               <div className="grid grid-cols-12 gap-4 font-semibold text-gray-700">
-                <div className="col-span-6">Product</div>
-                <div className="col-span-2 text-center">Price</div>
-                <div className="col-span-2 text-center">Quantity</div>
-                <div className="col-span-2 text-center">Total</div>
+                <div className="col-span-6">
+                  {lang.curLangPack.payment?.["product"]}
+                </div>
+                <div className="col-span-2 text-center">
+                  {lang.curLangPack.payment?.["price"]}
+                </div>
+                <div className="col-span-2 text-center">
+                  {lang.curLangPack.payment?.["quantity"]}
+                </div>
+                <div className="col-span-2 text-center">
+                  {lang.curLangPack.payment?.["total"]}
+                </div>
               </div>
               {cartProducts.map((product) => (
                 <div
@@ -495,7 +521,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="col-span-2 text-center">
                     <p className="text-black font-semibold">
-                      {product.price.toFixed(3)}
+                      {product.price.toLocaleString("Vi-VN")} VND
                     </p>
                   </div>
                   <div className="col-span-2 text-center">
@@ -505,7 +531,10 @@ export default function CheckoutPage() {
                   </div>
                   <div className="col-span-2 text-center">
                     <p className="text-black font-semibold">
-                      {(product.price * product.quantity).toFixed(3)}
+                      {(product.price * product.quantity).toLocaleString(
+                        "Vi-VN"
+                      )}{" "}
+                      VND
                     </p>
                   </div>
                 </div>
@@ -517,27 +546,29 @@ export default function CheckoutPage() {
                   onClick={openVoucherDialog}
                   className="border border-red-500 text-red-500 px-2 py-1 rounded-md cursor-pointer"
                 >
-                  Shop Vouchers
+                  {lang.curLangPack.payment?.["shopVoucher"]}
                 </span>
               </div>
               <div className="text-right">
                 <span className="text-gray-600">
-                  Total ({cartProducts.length} products):
+                  {lang.curLangPack.payment?.["total"]} ({cartProducts.length}{" "}
+                  {lang.curLangPack.payment?.["product"]}):
                 </span>
                 <span className="text-red-500 font-semibold ml-2">
-                  {totalAmount.toFixed(3)}
+                  {totalAmount.toLocaleString("Vi-VN")} VND
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Voucher Section */}
           <div className="mb-8 p-4 border rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">Voucher</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              {lang.curLangPack.payment?.["voucher"]}
+            </h2>
             <div className="flex items-center space-x-4">
               <Input
                 type="text"
-                placeholder="Enter voucher code"
+                placeholder={lang.curLangPack.payment?.["enterVoucher"]}
                 value={voucherCode}
                 onChange={handleVoucherCodeChange}
                 className="border border-gray-300 rounded-md p-2 w-full"
@@ -546,31 +577,34 @@ export default function CheckoutPage() {
                 onClick={handleApplyVoucher}
                 className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
               >
-                Apply
+                {lang.curLangPack.payment?.["apply"]}
               </Button>
             </div>
             {voucherApplied && (
               <div className="mt-2">
-                <p className="text-green-500">Voucher applied successfully!</p>
+                <p className="text-green-500">
+                  {lang.curLangPack.payment?.["voucherAppSuccess"]}
+                </p>
                 <p className="text-gray-500">
-                  Discount:{" "}
+                  {lang.curLangPack.payment?.["discount"]}:{" "}
                   <span className="font-semibold text-black">
-                    {discountAmount.toFixed(3)}
+                    {discountAmount.toLocaleString("Vi-VN")} VND
                   </span>
                 </p>
                 <p className="text-gray-500">
-                  Total after discount:{" "}
+                  {lang.curLangPack.payment?.["totalAfterDis"]}:{" "}
                   <span className="font-semibold text-black">
-                    {finalAmountWithoutSip.toFixed(3)}
+                    {finalAmountWithoutSip.toLocaleString("Vi-VN")} VND
                   </span>
                 </p>
               </div>
             )}
           </div>
 
-          {/* Payment Method Section */}
           <div className="mb-8 p-4 border rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">Payment Method</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              {lang.curLangPack.payment?.["payment"]}
+            </h2>
             <div className="flex space-x-4 mb-4">
               {paymentMethods.map((method) => (
                 <button
@@ -586,39 +620,28 @@ export default function CheckoutPage() {
                 </button>
               ))}
             </div>
-            {selectedPaymentMethod === "vnpay" && (
-              <div className="p-4 border rounded-lg mb-4">
-                <span>VNPay - VNPay Wallet</span>
-              </div>
-            )}
-            {selectedPaymentMethod === "cod" && (
-              <div className="p-4 border rounded-lg mb-4">
-                <span>Cash on Delivery</span>
-              </div>
-            )}
           </div>
 
-          {/* Order Summary Section */}
           <div className="p-4 border rounded-lg">
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
-                <span>Total Products</span>
-                <span>{totalAmount.toFixed(3)}</span>
+                <span>{lang.curLangPack.payment?.["totalProdpucts"]}</span>
+                <span>{totalAmount.toLocaleString("Vi-VN")} VND</span>
               </div>
               <div className="flex justify-between">
-                <span>Shipping Fee</span>
-                <span>{shippingFee.toFixed(3)}</span>
+                <span>{lang.curLangPack.payment?.["shippingFee"]}</span>
+                <span>{shippingFee.toLocaleString("Vi-VN")} VND</span>
               </div>
               {voucherApplied && (
                 <div className="flex justify-between">
-                  <span>Discount</span>
-                  <span>-{discountAmount.toFixed(3)}</span>
+                  <span>{lang.curLangPack.payment?.["discount"]}</span>
+                  <span>-{discountAmount.toLocaleString("Vi-VN")} VND </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Total Payment</span>
+                <span>{lang.curLangPack.payment?.["totalPayment"]}</span>
                 <span className="text-red-500 font-semibold">
-                  {finalAmount.toFixed(3)}
+                  {finalAmount.toLocaleString("Vi-VN")} VND
                 </span>
               </div>
             </div>
@@ -631,26 +654,27 @@ export default function CheckoutPage() {
               variant="secondary"
               className="mt-4 w-full py-2 rounded-md "
             >
-              Place Order
+              {lang.curLangPack.payment?.["place"]}
             </Button>
             <p className="text-sm text-gray-500 mt-2 text-center">
-              By clicking {"Place Order"} you agree to our{" "}
-              <Link href="#" className="text-blue-500">
-                Terms and Conditions
+              {lang.curLangPack.payment?.["term"]}
+              <Link href="/legal/term" className="text-blue-500">
+                {lang.curLangPack.payment?.["condition"]}
               </Link>
             </p>
           </div>
 
-          {/* Address Dialog */}
           <Dialog
             open={isAddressDialogOpen}
             onOpenChange={setIsAddressDialogOpen}
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>My Addresses</DialogTitle>
+                <DialogTitle>
+                  {lang.curLangPack.payment?.["myAddress"]}
+                </DialogTitle>
                 <DialogDescription>
-                  Please select or add a new shipping address
+                  {lang.curLangPack.payment?.["selectAddress"]}
                 </DialogDescription>
               </DialogHeader>
               {addresses.length > 0 &&
@@ -673,17 +697,19 @@ export default function CheckoutPage() {
                       onClick={() => handleAddressSelect(address)}
                       className="bg-blue-500 text-white px-4 py-2 rounded-md"
                     >
-                      Select
+                      {lang.curLangPack.payment?.["select"]}
                     </Button>
                   </div>
                 ))}
               <div className="border-t pt-4 mt-4">
-                <h3 className="text-lg font-semibold mb-2">New Address</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {lang.curLangPack.payment?.["newAddress"]}
+                </h3>
                 <div className="space-y-4">
                   <Input
                     type="text"
                     placeholder="Full Name"
-                    name="fullName"
+                    name={lang.curLangPack.payment?.["fullName"]}
                     value={newAddress.fullName}
                     onChange={handleNewAddressChange}
                     className="border border-gray-300 rounded-md p-2 w-full"
@@ -692,13 +718,13 @@ export default function CheckoutPage() {
                     type="text"
                     placeholder="Phone Number"
                     name="phoneNumber"
-                    value={newAddress.phoneNumber}
+                    value={lang.curLangPack.payment?.["phone"]}
                     onChange={handleNewAddressChange}
                     className="border border-gray-300 rounded-md p-2 w-full"
                   />
                   <Input
                     type="text"
-                    placeholder="City, District, Ward"
+                    placeholder={lang.curLangPack.payment?.["city"]}
                     name="city"
                     value={newAddress.city}
                     onChange={handleNewAddressChange}
@@ -706,7 +732,7 @@ export default function CheckoutPage() {
                   />
                   <Input
                     type="text"
-                    placeholder="Specific Address"
+                    placeholder={lang.curLangPack.payment?.["specific"]}
                     name="addressLine1"
                     value={newAddress.addressLine1}
                     onChange={handleNewAddressChange}
@@ -720,20 +746,20 @@ export default function CheckoutPage() {
                       onChange={handleNewAddressChange}
                       className="form-checkbox h-4 w-4 text-red-500"
                     />
-                    <span>Set as default address</span>
+                    <span>{lang.curLangPack.payment?.["setDefault"]}</span>
                   </div>
                   <div className="flex space-x-4">
                     <Button
                       onClick={handleNewAddressSubmit}
                       className="bg-red-500 text-white px-4 py-2 rounded-md"
                     >
-                      Complete
+                      {lang.curLangPack.payment?.["complete"]}
                     </Button>
                     <Button
                       onClick={closeAddressDialog}
                       className="bg-gray-500 text-white px-4 py-2 rounded-md"
                     >
-                      Back
+                      {lang.curLangPack.payment?.["back"]}
                     </Button>
                   </div>
                 </div>
@@ -741,16 +767,17 @@ export default function CheckoutPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Voucher Dialog */}
           <Dialog
             open={isVoucherDialogOpen}
             onOpenChange={setIsVoucherDialogOpen}
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Voucher List</DialogTitle>
+                <DialogTitle>
+                  {lang.curLangPack.payment?.["voucherList"]}
+                </DialogTitle>
                 <DialogDescription>
-                  Please select a voucher to apply
+                  {lang.curLangPack.payment?.["selectVoucher"]}
                 </DialogDescription>
               </DialogHeader>
               {vouchers.length > 0 &&
@@ -761,17 +788,29 @@ export default function CheckoutPage() {
                   >
                     <div>
                       <p>
-                        <strong>Code: {voucher.voucherCode}</strong>
+                        <strong>
+                          {lang.curLangPack.payment?.["code"]}:{" "}
+                          {voucher.voucherCode}
+                        </strong>
                       </p>
-                      <p>Discount: {voucher.discountPercent * 100}%</p>
-                      <p>Max Discount: {voucher.maxDiscount} đ</p>
-                      <p>Min Applicable Value: {voucher.minAppValue} đ</p>
+                      <p>
+                        {lang.curLangPack.payment?.["discount"]}:{" "}
+                        {voucher.discountPercent * 100}%
+                      </p>
+                      <p>
+                        {lang.curLangPack.payment?.["maxDis"]}:{" "}
+                        {voucher.maxDiscount.toLocaleString("Vi-VN")} đ
+                      </p>
+                      <p>
+                        {lang.curLangPack.payment?.["minDis"]}:{" "}
+                        {voucher.minAppValue.toLocaleString("Vi-VN")} đ
+                      </p>
                     </div>
                     <Button
                       onClick={() => handleVoucherSelect(voucher.voucherCode)}
                       className="bg-blue-500 text-white px-4 py-2 rounded-md"
                     >
-                      Select
+                      {lang.curLangPack.payment?.["select"]}
                     </Button>
                   </div>
                 ))}

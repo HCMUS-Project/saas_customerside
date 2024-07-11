@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/hooks/store/auth.store";
@@ -15,6 +16,8 @@ import { cartEndpoints } from "@/constants/api/cart.api";
 import Swal from "sweetalert2";
 import { useCart } from "@/constants/use-cart";
 import { useProfileStore } from "@/hooks/store/profile.store";
+import eventBus from "@/hooks/evenBus";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CartItem {
   id: string;
@@ -37,6 +40,7 @@ interface ProductData {
   rating: number;
   description: string;
   categories: Category[];
+  quantity: number; // Add the quantity field here
 }
 
 export default function ProductPageProps({
@@ -57,15 +61,17 @@ export default function ProductPageProps({
     rating: 0,
     description: "",
     categories: [],
+    quantity: 0, // Initialize the quantity
   });
   const router = useRouter();
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(1); // Default count to 1
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true); // Default to true to show loader initially
   const [imageLoading, setImageLoading] = useState(true); // State to manage image loading
   const authStore: any = useAuthStore();
   const { addToCart } = useCart(); // Use addToCart from the custom hook
   const profileStore = useProfileStore();
+  const lang = useLanguage();
 
   const fetchData = async (productId: string) => {
     const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN;
@@ -91,11 +97,13 @@ export default function ProductPageProps({
   }, [productId]);
 
   const increment = () => {
-    setCount(count + 1);
+    if (count < productData.quantity) {
+      setCount(count + 1);
+    }
   };
 
   const decrement = () => {
-    if (count > 0) {
+    if (count > 1) {
       setCount(count - 1);
     }
   };
@@ -104,7 +112,9 @@ export default function ProductPageProps({
     const fetchData = async () => {
       try {
         const res = await AXIOS.GET({
-          uri: productEndpoints.findAll(process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? ""),
+          uri: productEndpoints.findAll(
+            process.env.NEXT_PUBLIC_TENANT_DOMAIN ?? ""
+          ),
         });
         setProductsData(res.data);
         console.log(res.data);
@@ -125,7 +135,7 @@ export default function ProductPageProps({
       });
       return;
     }
-    if (authStore.isAuthorized == false) {
+    if (!authStore.isAuthorized) {
       router.push("/auth/login");
       return;
     } else
@@ -133,7 +143,7 @@ export default function ProductPageProps({
         const createCartResponse = await AXIOS.POST({
           uri: cartEndpoints.addItemToCart,
           params: {
-            userId: "some userId",
+            userId: "someID",
             cartItem: {
               productId: productData.id,
               quantity: count,
@@ -156,10 +166,22 @@ export default function ProductPageProps({
             price: productData.price,
             quantity: count,
           });
+          const updatedCartItems = JSON.parse(
+            localStorage.getItem("cartItems") || "[]"
+          );
+          updatedCartItems.push({
+            productId: productData.id,
+            images: productData.images,
+            name: productData.name,
+            price: productData.price,
+            quantity: count,
+          });
+          localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
+          eventBus.dispatch("cartUpdated", updatedCartItems);
           Swal.fire({
             icon: "success",
-            title: "Success!",
-            text: "Product added to cart successfully.",
+            title: `${lang.curLangPack.noti?.["success"]}`,
+            text: `${lang.curLangPack.noti?.["added"]}`,
           });
         }
       } catch (error) {
@@ -167,7 +189,7 @@ export default function ProductPageProps({
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Something went wrong! Please try again.",
+          text: `${lang.curLangPack.noti?.["somethingWrong"]}`,
         });
       }
   };
@@ -181,7 +203,7 @@ export default function ProductPageProps({
       });
       return;
     }
-    if (authStore.isAuthorized == false) {
+    if (!authStore.isAuthorized) {
       router.push("/auth/login");
       return;
     } else
@@ -332,7 +354,7 @@ export default function ProductPageProps({
             ))}
           </div>
           <div className="mt-4 text-2xl font-bold ">
-            {productData.price.toLocaleString()} VND
+            {productData.price.toLocaleString("Vi")} VND
           </div>
           <div className="flex items-center mt-4 gap-3">
             <Button
@@ -358,8 +380,14 @@ export default function ProductPageProps({
             </Button>
           </div>
           <div className="flex gap-3 mt-4">
-            <Button variant="outline" onClick={handleOrderNow}>
-              Order now
+            <Button
+              variant="outline"
+              onClick={handleOrderNow}
+              disabled={productData.quantity === 0}
+            >
+              {productData.quantity === 0
+                ? `${lang.curLangPack.products?.["soldOut"]}`
+                : `${lang.curLangPack.products?.["orderNow"]}`}
             </Button>
             <Button
               style={{
@@ -368,13 +396,18 @@ export default function ProductPageProps({
               }}
               onClick={handleAddToCart}
               className="btn btn-primary"
+              disabled={productData.quantity === 0}
             >
-              Add to Cart
+              {productData.quantity === 0
+                ? `${lang.curLangPack.products?.["soldOut"]}`
+                : `${lang.curLangPack.products?.["add"]}`}
               <ShoppingCart className="ml-2" />
             </Button>
           </div>
           <div className="mt-8 pt-2 border-t-2 ">
-            <h2 className="text-2xl font-bold">Description</h2>
+            <h2 className="text-2xl font-bold">
+              {lang.curLangPack.products?.["description"]}
+            </h2>
             <p className="mt-2">{productData.description}</p>
           </div>
         </div>
