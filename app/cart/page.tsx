@@ -73,15 +73,16 @@ export default function CartPage() {
   };
 
   useEffect(() => {
-    const storedCartItems = JSON.parse(
-      localStorage.getItem("cartItems") || "[]"
-    );
-    if (storedCartItems.length > 0) {
-      setCartItems(storedCartItems);
-      setLoading(false);
-    } else {
-      fetchCartData();
-    }
+    // const storedCartItems = JSON.parse(
+    //   localStorage.getItem("cartItems") || "[]"
+    // );
+    // if (storedCartItems.length > 0) {
+    //   setCartItems(storedCartItems);
+    //   fetchCartData();
+    // setLoading(false);
+    // } else {
+    fetchCartData();
+    // }
   }, []);
 
   useEffect(() => {
