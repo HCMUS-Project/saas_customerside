@@ -145,7 +145,7 @@ export default function CartPage() {
       };
       const response = await AXIOS.POST({
         uri: cartEndpoints.updateCart,
-        params,
+        params: params,
       });
       if (!response.data) {
         throw new Error("Response data is empty");

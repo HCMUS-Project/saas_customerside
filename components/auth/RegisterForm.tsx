@@ -208,7 +208,7 @@ const RegisterForm = () => {
           >
             {loading
               ? `${lang.curLangPack.auth?.["loading"]}`
-              : `${lang.curLangPack.auth?.["signIn"]}`}
+              : `${lang.curLangPack.auth?.["signUp"]}`}
           </Button>
         </form>
       </Form>
