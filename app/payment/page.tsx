@@ -97,7 +97,7 @@ export default function CheckoutPage() {
 
     if (
       params.get("message") === "success" &&
-      params.get("status") === "success"
+      (params.get("status") === "success" || params.get("status") === "fail")
     ) {
       const newUrl = `${url.origin}${url.pathname}`;
       window.history.replaceState({}, document.title, newUrl);
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
           process.env.NEXT_PUBLIC_ENVIRONMENT == "DEV"
             ? process.env.NEXT_PUBLIC_LOCAL_REDIRECT_URL
             : process.env.NEXT_PUBLIC_REDIRECT_URL
-        }/payment/payment-success`,
+        }/payment/`,
       };
 
       const res = await AXIOS.POST({

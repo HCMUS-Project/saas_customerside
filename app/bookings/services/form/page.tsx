@@ -528,7 +528,7 @@ export default function BookingForm() {
                         </span>
                       ) : (
                         <span className="text-muted-foreground">
-                          `${lang.curLangPack.services?.["noSelect"]}`
+                          {lang.curLangPack.services?.["noSelect"]}
                         </span>
                       )}
                     </div>

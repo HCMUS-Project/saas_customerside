@@ -30,7 +30,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => {
       <div className="hidden lg:flex gap-6 sm:gap-8 fixed-nav">
         <Link
           className={`text-xl font-medium hover:underline underline-offset-4 ${
-            currentPath === "/" ? "text-white" : ""
+            currentPath === "/" ? " underline" : ""
           }`}
           href="/"
         >
@@ -38,7 +38,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => {
         </Link>
         <Link
           className={`text-xl font-medium hover:underline underline-offset-4 ${
-            currentPath.includes("bookings") ? "text-white" : ""
+            currentPath.includes("bookings") ? "underline" : ""
           }`}
           href="/bookings"
         >
@@ -46,7 +46,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => {
         </Link>
         <Link
           className={`text-xl font-medium hover:underline underline-offset-4 ${
-            currentPath.includes("product") ? "text-white" : ""
+            currentPath.includes("product") ? " underline" : ""
           }`}
           href="/product"
         >
@@ -143,7 +143,13 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           <div className="flex gap-2 items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <Button
+                  style={{
+                    backgroundColor: profileStore.buttonColor,
+                    color: profileStore.buttonTextColor,
+                  }}
+                  // variant="destructive"
+                >
                   {curLang === "en" ? (
                     <div className="flex text-center  space-x-2">
                       <Image
@@ -151,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                         width={40}
                         height={40}
                         alt="british"
-                        className="pr-2 rounded-full"
+                        className="rounded-full p-1"
                       />{" "}
                       <span className="text-lg content-center">EN</span>
                     </div>
@@ -162,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                         width={40}
                         height={40}
                         alt="vietnam"
-                        className="rounded-full pr-2"
+                        className="rounded-full p-1 "
                       />{" "}
                       <span className="text-lg content-center">VI</span>
                     </div>
@@ -206,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={handleLoginClick}>
+                <Button variant="secondary" onClick={handleLoginClick}>
                   {curLangPack.header?.["signin"]}
                 </Button>
                 <Button
