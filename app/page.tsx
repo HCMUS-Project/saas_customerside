@@ -160,7 +160,7 @@ export default function Home() {
       ) : (
         <>
           {banners.length > 0 && (
-            <section className="w-full py-8 md:py-16 lg:py-20 bg-cover bg-center">
+            <section className="w-full py-8 md:py-16 lg:py-20 bg-cover bg-center mx-auto">
               <div className="container px-4 md:px-6 space-y-4">
                 <Carousel className="w-full">
                   <CarouselContent className="relative w-full h-[500px]">

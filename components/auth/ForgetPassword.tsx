@@ -2,29 +2,26 @@
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 
-import { LoginSchema, OTPSchema } from "@/schema";
+import { OTPSchema } from "@/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { z } from "zod";
-import { useFormStatus } from "react-dom";
 import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-
+import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import CardWrapper from "@/components/auth/CardWrapper";
 import { Input } from "@/components/ui/input";
-import { PasswordIput } from "@/components/ui/passwordInput";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { AXIOS } from "@/constants/network/axios";
+import { authEndpoint } from "@/constants/api/auth.api";
+import Swal from "sweetalert2";
+import { useLanguage } from "@/hooks/use-language";
 
 const ForgetPasswordForm = () => {
   const router = useRouter();
@@ -35,36 +32,53 @@ const ForgetPasswordForm = () => {
       email: "",
     },
   });
-  const onSubmit = (data: z.infer<typeof OTPSchema>) => {
-    setLoading(true);
-    console.log(data);
-  };
-  const { pending } = useFormStatus();
-  const handleOtpSent = async () => {
-    // Replace with your actual OTP sending logic (e.g., API call)
-    const otpSent = await sendOtp(); // Simulate OTP sending
+  const lang = useLanguage();
 
-    if (otpSent) {
-      // OTP sent successfully, navigate to "forgetPassword/OTP" route
-      router.push(`forgetPassword/OTP`);
-    } else {
-      // Handle OTP sending failure (e.g., display error message)
-      console.error("Failed to send OTP"); // Replace with appropriate error handling
+  const handleOtpSent = async () => {
+    try {
+      setLoading(true);
+      const response = await AXIOS.POST({
+        uri: authEndpoint.sendMailForgotPassord,
+        params: {
+          email: form.getValues("email"),
+          role: 0, // Adjust the role value if needed
+          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
+        },
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: lang.curLangPack.noti?.["OTPSend"],
+      });
+
+      // Save email to local storage
+      localStorage.setItem("email", form.getValues("email"));
+
+      // Navigate to change password page
+      router.push("forgetPassword/changePass");
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops",
+        text: lang.curLangPack.noti?.["somethingWrong"],
+      });
+      console.error("Failed to send OTP:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Function to simulate OTP sending (replace with your actual implementation)
-  const sendOtp = async () => {
-    // Simulate asynchronous behavior
-    return new Promise((resolve) => setTimeout(() => resolve(true), 1000)); // Simulate 1 second delay
+  const onSubmit = async (data: z.infer<typeof OTPSchema>) => {
+    handleOtpSent();
   };
+
   return (
     <CardWrapper
-      label="Welcome to Lorem"
-      title="Forgot Password"
-      backButtonTitle="No Account?"
+      label={lang.curLangPack.auth?.["welcome"]}
+      title={lang.curLangPack.auth?.["forgot"]}
+      backButtonTitle={lang.curLangPack.auth?.["noAccount"]}
       backButtonHref="/auth/register"
-      backButtonLabel="Sign up"
+      backButtonLabel={lang.curLangPack.auth?.["signUp"]}
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -74,9 +88,14 @@ const ForgetPasswordForm = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Enter your Email or Username</FormLabel>
+                  <FormLabel>{lang.curLangPack.auth?.["inputEmail"]}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" suffix={<Mail />} />
+                    <Input
+                      {...field}
+                      placeholder={lang.curLangPack.auth?.["email"]}
+                      type="email"
+                      suffix={<Mail />}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,10 +107,11 @@ const ForgetPasswordForm = () => {
               type="submit"
               className="w-full bg-blue-500 text-white hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               variant="ghost"
-              disabled={pending}
-              onClick={handleOtpSent} // Call a function to handle OTP sending logic
+              disabled={loading}
             >
-              {loading ? "Loading..." : "Send OTP"}
+              {loading
+                ? lang.curLangPack.auth?.["loading"]
+                : lang.curLangPack.auth?.["sendOTP"]}
             </Button>
           </div>
         </form>

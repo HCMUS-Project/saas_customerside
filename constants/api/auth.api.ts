@@ -8,4 +8,6 @@ export const authEndpoint = {
   refreshToken: "api/auth/refresh-token",
   logOut: "api/auth/sign-out",
   changePassword: "api/auth/change-password",
+  sendMailForgotPassord: "api/auth/send-mail-forgot-password ",
+  changeNewPassord: "api/auth/forgot-password ",
 };

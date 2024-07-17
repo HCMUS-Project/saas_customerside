@@ -232,7 +232,11 @@
     "registerOTP": "Đăng ký OTP",
     "OTPInput": "Vui lòng nhập OTP",
     "reOTP": "Gửi lại OTP",
-    "submit": "xác nhận"
+    "submit": "xác nhận",
+    "changePass": "Đổi mật khẩu",
+    "newPass": "vui lòng nhập mật khẩu mới",
+    "confirmNewPass": "Mật khẩu mới",
+    "sendOTP": "Gửi OTP"
   },
 
   "noti": {
@@ -256,6 +260,7 @@
     "ordered": "Đặt hàng thành công!",
     "orderFetch": "Đặt hàng thất bại, vui lòng thử lại!",
     "thankYou": "Cảm ơn bạn đã thanh toán!",
-    "return": "Về trang cửa hàng"
+    "return": "Về trang cửa hàng",
+    "OTPSend": "Gửi OTP thành công!"
   }
 }

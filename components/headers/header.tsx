@@ -26,11 +26,11 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => {
   const { curLangPack } = useLanguage();
 
   return (
-    <nav className="p-4 flex justify-center">
-      <div className="hidden lg:flex gap-6 sm:gap-8 fixed-nav">
+    <nav className="flex justify-center text-center flex-grow">
+      <div className="hidden lg:flex gap-6 sm:gap-8">
         <Link
           className={`text-xl font-medium hover:underline underline-offset-4 ${
-            currentPath === "/" ? " underline" : ""
+            currentPath === "/" ? "underline" : ""
           }`}
           href="/"
         >
@@ -46,7 +46,7 @@ const NavLinks = ({ currentPath }: { currentPath: string }) => {
         </Link>
         <Link
           className={`text-xl font-medium hover:underline underline-offset-4 ${
-            currentPath.includes("product") ? " underline" : ""
+            currentPath.includes("product") ? "underline" : ""
           }`}
           href="/product"
         >
@@ -61,6 +61,7 @@ const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
   const router = useRouter();
   const profileStore = useProfileStore();
   const { curLangPack } = useLanguage();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -95,7 +96,6 @@ const UserMenu = ({ onLogout }: { onLogout: () => void }) => {
 export const Header: React.FC<HeaderProps> = ({ children }) => {
   const router = useRouter();
   const currentPath = usePathname();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
   const authStore = useAuthStore();
   const profileStore = useProfileStore();
   const { curLangPack, curLang, setCurLang } = useLanguage();
@@ -129,18 +129,17 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
           color: profileStore.headerTextColor,
         }}
       >
-        <div className="container mx-auto flex justify-between h-[60px] items-center px-4">
-          <Link href="/">
-            <Image
-              src={profileStore.logo}
-              alt="Logo"
-              width={40}
-              height={40}
-              className="ml-4 mr-8"
-            />
-          </Link>
-          <NavLinks currentPath={currentPath} />
-          <div className="flex gap-2 items-center">
+        <div className="container mx-auto flex justify-between items-center p-6">
+          <div className="flex items-center">
+            <Link href="/">
+              <Image
+                src={profileStore.logo}
+                alt="Logo"
+                width={40}
+                height={40}
+                className="ml-4 mr-2"
+              />
+            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -148,10 +147,9 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                     backgroundColor: profileStore.buttonColor,
                     color: profileStore.buttonTextColor,
                   }}
-                  // variant="destructive"
                 >
                   {curLang === "en" ? (
-                    <div className="flex text-center  space-x-2">
+                    <div className="flex text-center space-x-2">
                       <Image
                         src="/images/british.jpg"
                         width={40}
@@ -168,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                         width={40}
                         height={40}
                         alt="vietnam"
-                        className="rounded-full p-1 "
+                        className="rounded-full p-1"
                       />{" "}
                       <span className="text-lg content-center">VI</span>
                     </div>
@@ -198,20 +196,19 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+          <NavLinks currentPath={currentPath} />
+          <div
+            className="flex gap-2 items-center justify-end"
+            style={{ minWidth: "200px" }}
+          >
             {authStore.isAuthorized ? (
               <>
                 <UserMenu onLogout={handleLogout} />
-                <div
-                  style={{
-                    backgroundColor: profileStore.headerColor,
-                    color: profileStore.headerTextColor,
-                  }}
-                >
-                  <CartButton />
-                </div>
+                <CartButton />
               </>
             ) : (
-              <>
+              <div className="flex gap-2">
                 <Button variant="secondary" onClick={handleLoginClick}>
                   {curLangPack.header?.["signin"]}
                 </Button>
@@ -224,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({ children }) => {
                 >
                   {curLangPack.header?.["signup"]}
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>

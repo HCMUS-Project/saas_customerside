@@ -232,7 +232,11 @@
     "registerOTP": "Register OTP",
     "OTPInput": "please enter OTP",
     "reOTP": "resend OTP",
-    "submit": "Submit"
+    "submit": "Submit",
+    "changePass": "Change Password",
+    "newPass": "Please enter new Password",
+    "confirmNewPass": "New password ",
+    "sendOTP": "send OTP"
   },
 
   "noti": {
@@ -256,6 +260,7 @@
     "ordered": "Order placed successfully!",
     "orderFetch": "Failed to place order, please try again!",
     "thankYou": "Thank you for your purchase!",
-    "return": "Return to Product Page"
+    "return": "Return to Product Page",
+    "OTPSend": "OTP send successfully!"
   }
 }

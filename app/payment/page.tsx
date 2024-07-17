@@ -255,14 +255,14 @@ export default function CheckoutPage() {
       const quantities = cartProducts.map((product) => product.quantity);
 
       const phone = selectedAddress?.phoneNumber?.replace(/[^\d]/g, "") || "";
-      const formattedPhone = phone.startsWith("84")
-        ? `+${phone}`
-        : `+84${phone}`;
+      // const formattedPhone = phone.startsWith("84")
+      //   ? `+${phone}`
+      //   : `+84${phone}`;
 
       const orderData = {
         productsId: productIds,
         quantities: quantities,
-        phone: formattedPhone,
+        phone: phone,
         address: `${selectedAddress?.addressLine1}, ${selectedAddress?.addressLine2}, ${selectedAddress?.city}`,
         voucherId: voucherData ? voucherData.id : null,
         paymentMethod: selectedPaymentMethod,
@@ -708,17 +708,17 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <Input
                     type="text"
-                    placeholder="Full Name"
-                    name={lang.curLangPack.payment?.["fullName"]}
+                    placeholder={lang.curLangPack.payment?.["fullName"]}
+                    name="fullName"
                     value={newAddress.fullName}
                     onChange={handleNewAddressChange}
                     className="border border-gray-300 rounded-md p-2 w-full"
                   />
                   <Input
                     type="text"
-                    placeholder="Phone Number"
+                    placeholder={lang.curLangPack.payment?.["phone"]}
                     name="phoneNumber"
-                    value={lang.curLangPack.payment?.["phone"]}
+                    value={newAddress.phoneNumber}
                     onChange={handleNewAddressChange}
                     className="border border-gray-300 rounded-md p-2 w-full"
                   />

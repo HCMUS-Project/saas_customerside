@@ -45,3 +45,23 @@ export const RegisterOTPFSchema = z.object({
     message: `${lang.curLangPack.auth?.["OTP"]}`,
   }),
 });
+
+export const ChangePasswordSchema = z
+  .object({
+    email: z.string().email({
+      message: "Invalid email address",
+    }),
+    newpassword: z.string().min(6, {
+      message: `${lang.curLangPack.auth?.["notiPassword"]}`,
+    }),
+    confirmPassword: z.string().min(6, {
+      message: `${lang.curLangPack.auth?.["notiPassword"]}`,
+    }),
+    otp: z.string().length(6, {
+      message: `${lang.curLangPack.auth?.["OTP"]}`,
+    }),
+  })
+  .refine((data) => data.newpassword === data.confirmPassword, {
+    message: `${lang.curLangPack.auth?.["matchPass"]}`,
+    path: ["confirmPassword"], // Set the path of the error
+  });
