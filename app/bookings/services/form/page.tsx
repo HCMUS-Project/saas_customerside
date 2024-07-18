@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { format, addDays } from "date-fns";
@@ -674,6 +673,7 @@ export default function BookingForm() {
                             onClick={() => {
                               setSelectedTime(slot.startTime);
                               field.onChange(slot.startTime);
+                              handleTimeClick(slot.startTime);
                             }}
                             className={`py-2 px-4 rounded-md ${
                               selectedTime === slot.startTime

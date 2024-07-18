@@ -26,6 +26,7 @@ import { useProfileStore } from "@/hooks/store/profile.store";
 import Swal from "sweetalert2";
 import { useLanguage } from "@/hooks/use-language";
 import { error } from "console";
+import { Mail } from "lucide-react";
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -117,6 +118,7 @@ const RegisterForm = () => {
                       {...field}
                       type="email"
                       placeholder={lang.curLangPack.auth?.["inputEmail"]}
+                      suffix={<Mail />}
                     />
                   </FormControl>
                   <FormMessage />

@@ -24,6 +24,7 @@ import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { AXIOS } from "@/constants/network/axios";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import { useLanguage } from "@/hooks/use-language";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Service {
   id: string;
@@ -53,8 +54,21 @@ const fetchServices = async (): Promise<Service[]> => {
   }
 };
 
+export function SkeletonCard() {
+  return (
+    <div className="flex flex-col space-y-3 w-full sm:w-1/2 lg:w-1/2 xl:w-1/3 p-4">
+      <Skeleton className="h-[200px] w-full rounded-xl" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    </div>
+  );
+}
+
 export default function ServiceCards() {
   const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const router = useRouter();
   const profileStore = useProfileStore();
@@ -64,6 +78,7 @@ export default function ServiceCards() {
     const getData = async () => {
       const servicesData = await fetchServices();
       setServices(servicesData);
+      setLoading(false);
     };
 
     getData();
@@ -94,13 +109,17 @@ export default function ServiceCards() {
                 {lang.curLangPack.services?.["topServices"]}
               </h1>
             </div>
-            {services.length > 0 ? (
+            {loading ? (
+              Array.from({ length: 2 }).map((_, index) => (
+                <SkeletonCard key={index} />
+              ))
+            ) : services.length > 0 ? (
               services.map((service) => (
                 <Card
                   key={service.id}
                   className={`w-full sm:w-1/2 lg:w-1/2 xl:w-1/3 border border-gray-200 rounded-xl overflow-hidden shadow-md ${
                     selectedService?.id === service.id ? "border-blue-500" : ""
-                  }`}
+                  } p-4`}
                 >
                   <div className="w-full h-[200px] relative">
                     <Image
@@ -153,8 +172,6 @@ export default function ServiceCards() {
                       {selectedService.name}{" "}
                       {selectedService.price.toLocaleString()} VND
                     </p>
-                    {""}
-
                     <Button
                       style={{
                         color: profileStore.buttonTextColor,

@@ -22,6 +22,7 @@ import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import Swal from "sweetalert2";
 import { useLanguage } from "@/hooks/use-language";
+import { useProfileStore } from "@/hooks/store/profile.store";
 
 const ForgetPasswordForm = () => {
   const router = useRouter();
@@ -33,6 +34,7 @@ const ForgetPasswordForm = () => {
     },
   });
   const lang = useLanguage();
+  const profileStore = useProfileStore();
 
   const handleOtpSent = async () => {
     try {
@@ -105,7 +107,11 @@ const ForgetPasswordForm = () => {
           <div>
             <Button
               type="submit"
-              className="w-full bg-blue-500 text-white hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: profileStore.buttonColor,
+                color: profileStore.buttonTextColor,
+              }}
+              className="w-full  focus:ring-2 focus:ring-offset-2  disabled:opacity-50 disabled:cursor-not-allowed"
               variant="ghost"
               disabled={loading}
             >

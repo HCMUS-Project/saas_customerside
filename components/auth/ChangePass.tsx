@@ -24,6 +24,8 @@ import Swal from "sweetalert2";
 import { Domain } from "domain";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { useLanguage } from "@/hooks/use-language";
+import { useProfileStore } from "@/hooks/store/profile.store";
+import { PasswordIput } from "../ui/passwordInput";
 
 // Define the schema for changing the password
 const ChangePasswordFormSchema = ChangePasswordSchema;
@@ -41,6 +43,7 @@ const ChangePasswordForm = () => {
     },
   });
   const lang = useLanguage();
+  const profileStore = useProfileStore();
 
   useEffect(() => {
     // Get email from local storage and set it as default value
@@ -158,11 +161,13 @@ const ChangePasswordForm = () => {
               name="newpassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang.curLangPack.auth?.["newPass"]}</FormLabel>
+                  <FormLabel>
+                    {lang.curLangPack.auth?.["confirmNewPass"]}
+                  </FormLabel>
                   <FormControl>
-                    <Input
+                    <PasswordIput
                       {...field}
-                      placeholder={lang.curLangPack.auth?.["confirmNewPass"]}
+                      placeholder={lang.curLangPack.auth?.["newPass"]}
                     />
                   </FormControl>
                   <FormMessage />
@@ -174,11 +179,13 @@ const ChangePasswordForm = () => {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{lang.curLangPack.auth?.["passInput"]}</FormLabel>
+                  <FormLabel>
+                    {lang.curLangPack.auth?.["confirmNewPass"]}
+                  </FormLabel>
                   <FormControl>
-                    <Input
+                    <PasswordIput
                       {...field}
-                      placeholder={lang.curLangPack.auth?.["confirmNewPass"]}
+                      placeholder={lang.curLangPack.auth?.["passInput"]}
                     />
                   </FormControl>
                   <FormMessage />
@@ -189,7 +196,11 @@ const ChangePasswordForm = () => {
           <div>
             <Button
               type="submit"
-              className="w-full bg-blue-500 text-white hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: profileStore.buttonColor,
+                color: profileStore.buttonTextColor,
+              }}
+              className="w-full focus:ring-2 focus:ring-offset-2  disabled:opacity-50 disabled:cursor-not-allowed"
               variant="ghost"
               disabled={loading}
             >
