@@ -6,6 +6,8 @@ interface AuthStoreState {
   domain: string;
   email: string;
   setIsAuthorized: (isAuthorized: boolean) => void;
+  setDomain: (domain: string) => void;
+  setEmail: (email: string) => void;
   reset: () => void;
 }
 

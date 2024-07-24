@@ -212,7 +212,7 @@ export default function Home() {
             </section>
           )}
 
-          <section className="w-full py-8 md:py-16 lg:py-20 bg-muted">
+          <section className="w-auto py-8 md:py-16 lg:py-20 bg-muted">
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
@@ -295,7 +295,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="w-full md:py-10 pb-20  bg-muted">
+          <section className="w-auto md:py-10 pb-20  bg-muted">
             <div className="container px-4 md:px-6 space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">

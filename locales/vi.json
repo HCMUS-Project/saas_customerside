@@ -262,5 +262,15 @@
     "thankYou": "Cảm ơn bạn đã thanh toán!",
     "return": "Về trang cửa hàng",
     "OTPSend": "Gửi OTP thành công!"
+  },
+  "rootDashboard": {
+    "newBooking": "Đặt lịch mới!",
+    "cancelBooking": "Hủy đặt lịch!",
+    "hasCreatedNewBookingOn": "đã tạo đặt lịch mới tại",
+    "hasCancelledBookingOn": "đã hủy đặt lịch tại",
+    "newOrder": "Đơn hàng mới!",
+    "cancelOrder": "Hủy đơn hàng!",
+    "hasPlacedNewOrder": "đã đặt đơn hàng mới",
+    "hasCancelledOrder": "đã hủy đơn hàng"
   }
 }

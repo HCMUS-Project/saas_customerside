@@ -100,6 +100,7 @@ export default function BookingForm() {
   const [bookedSlots, setBookedSlots] = useState<Slot[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [loadingEmployees, setLoadingEmployees] = useState(false); // State for employee loading
+  const [loadingSlots, setLoadingSlots] = useState(false); // State for slot loading
   const [isVoucherDialogOpen, setIsVoucherDialogOpen] = useState(false);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [voucherCode, setVoucherCode] = useState<string>("");
@@ -196,6 +197,7 @@ export default function BookingForm() {
     }
 
     try {
+      setLoadingSlots(true); // Start loading slots
       const response = await AXIOS.GET({
         uri: bookingEndpoints.slotBookings(
           format(selectedDate, "yyyy-MM-dd"),
@@ -220,6 +222,8 @@ export default function BookingForm() {
       console.error("Failed to fetch booked slots", error);
       setAvailableSlots([]);
       setBookedSlots([]);
+    } finally {
+      setLoadingSlots(false); // Stop loading slots
     }
   };
 
@@ -666,25 +670,36 @@ export default function BookingForm() {
                         {lang.curLangPack.services?.["selectedTime"]}
                       </FormLabel>
                       <div className="grid grid-cols-4 gap-2">
-                        {availableSlots.map((slot) => (
-                          <Button
-                            key={slot.startTime}
-                            type="button"
-                            onClick={() => {
-                              setSelectedTime(slot.startTime);
-                              field.onChange(slot.startTime);
-                              handleTimeClick(slot.startTime);
-                            }}
-                            className={`py-2 px-4 rounded-md ${
-                              selectedTime === slot.startTime
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-700"
-                            }`}
-                            disabled={slot.employees.length === 0}
-                          >
-                            {slot.startTime}
-                          </Button>
-                        ))}
+                        {loadingSlots ? (
+                          <>
+                            {Array.from({ length: 24 }).map((_, index) => (
+                              <Skeleton
+                                key={index}
+                                className="h-10 w-full rounded-md"
+                              />
+                            ))}
+                          </>
+                        ) : (
+                          availableSlots.map((slot) => (
+                            <Button
+                              key={slot.startTime}
+                              type="button"
+                              onClick={() => {
+                                setSelectedTime(slot.startTime);
+                                field.onChange(slot.startTime);
+                                handleTimeClick(slot.startTime);
+                              }}
+                              className={`py-2 px-4 rounded-md ${
+                                selectedTime === slot.startTime
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-200 text-gray-700"
+                              }`}
+                              disabled={slot.employees.length === 0}
+                            >
+                              {slot.startTime}
+                            </Button>
+                          ))
+                        )}
                       </div>
                       <FormMessage />
                     </FormItem>

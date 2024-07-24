@@ -22,7 +22,7 @@ import { Mail } from "lucide-react";
 import { AXIOS } from "@/constants/network/axios";
 import { authEndpoint } from "@/constants/api/auth.api";
 import { useRouter } from "next/navigation";
-import { storeJwt } from "@/util/auth.util";
+import { parseJwtBody, storeJwt } from "@/util/auth.util";
 
 import { useAuthStore } from "@/hooks/store/auth.store";
 
@@ -59,7 +59,11 @@ const LoginForm = () => {
       const { accessToken, refreshToken } = response.data;
       storeJwt(accessToken, "AT");
       storeJwt(refreshToken, "RT");
+      const jwtBody = parseJwtBody(accessToken);
+
       authStore.setIsAuthorized(true);
+      authStore.setDomain(jwtBody.domain);
+      authStore.setEmail(jwtBody.email);
       Swal.fire({
         icon: "success",
         title: `${lang.curLangPack.noti?.["loginComplete"]}`,

@@ -137,7 +137,7 @@ const Filters: React.FC<FiltersProps> = ({
           {lang.curLangPack.products?.["rating"]}
         </h3>
         <ul>
-          {[5, 4, 3, 2, 1].map((rating) => (
+          {[4, 3, 2, 1].map((rating) => (
             <li key={rating}>
               <input
                 type="radio"

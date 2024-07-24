@@ -8,6 +8,8 @@ import { useProfileStore } from "@/hooks/store/profile.store";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import SocketLayer from "./layers/socket-layers";
+import Head from "next/head";
 
 interface LayoutHolderProps {
   children: React.ReactNode;
@@ -18,55 +20,51 @@ const LayoutHolder: React.FC<LayoutHolderProps> = ({ children }) => {
   const isDesktop = useMediaQuery("(min-width:768px)");
   const [favicon, setFavicon] = useState<string>("");
 
-  // const useFavicon = (url: string) => {
-  //   useEffect(() => {
-  //     const updateFavicon = () => {
-  //       try {
-  //         if (!document.head) throw new Error("Document head not available");
+  useEffect(() => {
+    if (profileStore.logo) {
+      setFavicon(profileStore.logo);
+    }
+  }, [profileStore.logo]);
 
-  //         const link = document.createElement("link");
-  //         link.rel = "icon";
-  //         link.href = url;
-
-  //         const oldLink = document.querySelector('link[rel="icon"]');
-  //         if (oldLink) {
-  //           document.head.removeChild(oldLink);
-  //         }
-  //         document.head.appendChild(link);
-  //       } catch (error) {
-  //         console.error("Failed to update favicon:", error);
-  //       }
-  //     };
-
-  //     updateFavicon();
-  //   }, [url]);
-  // };
-
-  // useEffect(() => {
-  //   if (profileStore.logo) {
-  //     setFavicon(profileStore.logo);
-  //   }
-  // }, [profileStore.logo]);
-
-  // useFavicon(favicon);
+  useEffect(() => {
+    if (favicon) {
+      const link: HTMLLinkElement | null =
+        document.querySelector("link[rel='icon']");
+      if (link) {
+        link.href = favicon;
+      } else {
+        const newLink = document.createElement("link");
+        newLink.rel = "icon";
+        newLink.type = "image/x-icon";
+        newLink.href = favicon;
+        document.head.appendChild(newLink);
+      }
+    }
+  }, [favicon]);
 
   return (
     <CustomThemeProvider>
-      <Header />
+      <Head>
+        <link rel="icon" type="image/x-icon" sizes="32x32" href={favicon} />
+      </Head>
 
-      <div
-        className={cn(
-          isDesktop ? "px-[10%]" : "px-[5%]",
-          "flex-1 overflow-y-auto"
-        )}
-        style={{
-          backgroundColor: profileStore.bodyColor,
-          color: profileStore.bodyTextColor,
-        }}
-      >
-        {children}
-      </div>
-      <Footer />
+      <SocketLayer>
+        <Header />
+
+        <div
+          className={cn(
+            isDesktop ? "px-[10%]" : "px-[5%]",
+            "flex-1 overflow-y-auto"
+          )}
+          style={{
+            backgroundColor: profileStore.bodyColor,
+            color: profileStore.bodyTextColor,
+          }}
+        >
+          {children}
+        </div>
+        <Footer />
+      </SocketLayer>
     </CustomThemeProvider>
   );
 };

@@ -262,5 +262,16 @@
     "thankYou": "Thank you for your purchase!",
     "return": "Return to Product Page",
     "OTPSend": "OTP send successfully!"
+  },
+
+  "rootDashboard": {
+    "newBooking": "New booking!",
+    "cancelBooking": "Cancel booking!",
+    "hasCreatedNewBookingOn": "has created new booking on",
+    "hasCancelledBookingOn": "has cancelled booking on",
+    "newOrder": "New order!",
+    "cancelOrder": "Cancel order!",
+    "hasPlacedNewOrder": "has placed new order",
+    "hasCancelledOrder": "has cancelled order"
   }
 }
