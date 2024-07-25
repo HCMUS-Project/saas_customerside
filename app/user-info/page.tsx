@@ -152,11 +152,11 @@ const UserInfo = () => {
           <AvatarImage
             src={userData.avatar || "https://github.com/shadcn.png"}
           />
-          <AvatarFallback>{userData.name[0]}</AvatarFallback>
+          <AvatarFallback>{userData.username}</AvatarFallback>
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p className="text-xl font-semibold">{userData.name}</p>
+        <p className="text-xl font-semibold">{userData.username}</p>
       </div>
       <div className="flex justify-center text-align-center text-sm font-thin">
         <p>{userData.email}</p>
@@ -221,9 +221,9 @@ const UserInfo = () => {
           </CardHeader>
           <CardContent>
             {renderField(
-              `${lang.curLangPack.profile?.["name"]}`,
-              userData.name,
-              "name"
+              `${lang.curLangPack.profile?.["username"]}`,
+              userData.username,
+              "username"
             )}
             <hr />
             {/* {renderField(
