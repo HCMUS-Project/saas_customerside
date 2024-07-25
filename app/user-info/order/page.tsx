@@ -58,24 +58,6 @@ interface HasUserCommentedState {
   [productId: string]: boolean;
 }
 
-async function fetchProductDetails(
-  productId: string
-): Promise<ProductDetails | null> {
-  const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Replace with your valid domain
-  try {
-    const res = await AXIOS.GET({
-      uri: productEndpoints.findById(domain ?? "", productId),
-    });
-    const productDetails = res.data;
-    const imgSrc = productDetails.images?.[0] || "";
-    const name = productDetails.name || "Unknown Product"; // Assuming product name is in `productDetails.name`
-    return { productId, imgSrc, name, quantity: 1 }; // Adding a default quantity
-  } catch (error) {
-    console.error("Failed to fetch product details:", error);
-    return null;
-  }
-}
-
 async function fetchOrders(
   stage: string,
   page: number,
@@ -86,22 +68,7 @@ async function fetchOrders(
       uri: ecommerceEndpoints.searchOrder(stage),
     });
     const orders = res.data.orders;
-
-    const fetchProductPromises = orders.map(async (order: Order) => {
-      const productDetailsPromises = order.products.map(async (product) => {
-        const productDetails = await fetchProductDetails(product.productId);
-        if (productDetails) {
-          product.imgSrc = productDetails.imgSrc;
-          product.name = productDetails.name;
-        }
-        return product;
-      });
-      order.products = await Promise.all(productDetailsPromises);
-      return order;
-    });
-
-    const fetchedOrders = await Promise.all(fetchProductPromises);
-    return { orders: fetchedOrders, total: res.data.total };
+    return { orders, total: res.data.total };
   } catch (error) {
     console.error("Failed to fetch orders:", error);
     return { orders: [], total: 0 };
@@ -212,22 +179,6 @@ const OrderPage = () => {
     await fetchAndSetOrders(newStage, 1, limit);
   };
 
-  // const handlePreviousPage = async () => {
-  //   if (page > 1) {
-  //     const newPage = page - 1;
-  //     setPage(newPage);
-  //     await fetchAndSetOrders(stage, newPage, limit);
-  //   }
-  // };
-
-  // const handleNextPage = async () => {
-  //   if (page * limit < totalOrders) {
-  //     const newPage = page + 1;
-  //     setPage(newPage);
-  //     await fetchAndSetOrders(stage, newPage, limit);
-  //   }
-  // };
-
   const handleRatingClick = async (products: ProductDetails[]) => {
     setSelectedProducts(products);
     await Promise.all(
@@ -288,7 +239,7 @@ const OrderPage = () => {
           ...prev,
           [productId]: true,
         }));
-        setSuccessMessage("Review submitted successfully!");
+        setSuccessMessage(`${lang.curLangPack.profile?.["reviewComplete"]}`);
       } else {
         console.error("Unexpected response format:", response.data);
       }
@@ -314,7 +265,7 @@ const OrderPage = () => {
         </Avatar>
       </div>
       <div className="mt-6 flex justify-center text-align-center">
-        <p>{lang.curLangPack.profile?.["orderPage"]}</p>
+        <p>reviewComplete</p>
       </div>
       <div className="flex justify-center text-align-center font-thin">
         <p>{userEmail}</p>
@@ -443,8 +394,8 @@ const OrderPage = () => {
                 <div key={product.productId} className="mb-6">
                   <div className="flex items-center">
                     <Image
-                      src={product.imgSrc}
-                      alt={product.name}
+                      src={product.images[0]}
+                      alt={`Image of ${product.name}`}
                       width={100}
                       height={100}
                     />
@@ -453,11 +404,6 @@ const OrderPage = () => {
                     </div>
                   </div>
                   <div className="mt-4">
-                    {/* {hasUserCommented[product.productId] ? (
-                      <div className="text-green-500">
-                        Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
-                      </div>
-                    ) : ( */}
                     <Form {...form}>
                       <form
                         onSubmit={(e) => handleSubmit(product.productId, e)}
@@ -504,7 +450,9 @@ const OrderPage = () => {
                             </div>
                           ))}
                           <span className="ml-2 text-yellow-500 text-xl">
-                            {Math.ceil(rating[product.productId])}
+                            {rating[product.productId] !== undefined
+                              ? rating[product.productId].toFixed(1)
+                              : "0.0"}
                           </span>
                         </div>
 
@@ -534,7 +482,7 @@ const OrderPage = () => {
                           type="submit"
                           className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600"
                         >
-                          Submit
+                          {lang.curLangPack.profile?.["submit"]}
                         </Button>
                         {successMessage && (
                           <div className="mt-4 text-green-500">
@@ -543,7 +491,6 @@ const OrderPage = () => {
                         )}
                       </form>
                     </Form>
-                    {/* )} */}
                   </div>
                 </div>
               ))}

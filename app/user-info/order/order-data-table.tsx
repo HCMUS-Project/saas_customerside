@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Image from "next/image";
 import { useLanguage } from "@/hooks/use-language";
 
 interface OrderDataTableProps<TData, TValue> {
@@ -37,9 +36,9 @@ export function OrderDataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="overflow-auto">
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -64,6 +63,7 @@ export function OrderDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-gray-100"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

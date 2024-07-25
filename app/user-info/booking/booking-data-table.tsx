@@ -1,7 +1,3 @@
-// BookingDataTable.tsx
-
-"use client";
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,9 +38,9 @@ export function BookingDataTable<TData, TValue>({
   const lang = useLanguage();
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-full divide-y divide-gray-200">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -69,9 +65,13 @@ export function BookingDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-gray-100"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -43,7 +43,7 @@ interface Comment {
 
 interface ServiceDetails extends Service {
   id: string;
-  images?: string[];
+  images: string[];
   rating?: number;
 }
 
@@ -61,24 +61,6 @@ interface CommentsState {
 
 interface HasUserCommentedState {
   [serviceId: string]: boolean;
-}
-
-async function fetchServiceDetails(
-  serviceId: string
-): Promise<ServiceDetails | null> {
-  const domain = process.env.NEXT_PUBLIC_TENANT_DOMAIN; // Replace with your valid domain
-  try {
-    const res = await AXIOS.GET({
-      uri: bookingEndpoints.findById(domain ?? "", serviceId),
-    });
-    const serviceDetails = res.data;
-    const imgSrc = serviceDetails.images?.[0] || "";
-    const name = serviceDetails.name || "Unknown Service";
-    return { id: serviceId, imgSrc, name, images: serviceDetails.images };
-  } catch (error) {
-    console.error("Failed to fetch service details:", error);
-    return null;
-  }
 }
 
 async function fetchBookings(
@@ -99,19 +81,8 @@ async function fetchBookings(
       return { bookings: [], total: 0 };
     }
 
-    const fetchServicePromises = bookings.map(async (booking: Booking) => {
-      const service = booking.service;
-      const serviceDetails = await fetchServiceDetails(service.id);
-      if (serviceDetails) {
-        service.imgSrc = serviceDetails.imgSrc;
-        service.name = serviceDetails.name;
-      }
-      return booking;
-    });
-
-    const fetchedBookings = await Promise.all(fetchServicePromises);
     return {
-      bookings: fetchedBookings,
+      bookings,
       total: res.data.total || bookings.length,
     };
   } catch (error) {
@@ -409,8 +380,8 @@ const BookingPage = () => {
                 <div key={service.id} className="mb-6">
                   <div className="flex items-center">
                     <Image
-                      src={service.imgSrc}
-                      alt={service.name}
+                      src={service.images[0]}
+                      alt={`Image of ${service.name}`}
                       width={100}
                       height={100}
                     />
@@ -419,97 +390,97 @@ const BookingPage = () => {
                     </div>
                   </div>
                   <div className="mt-4">
-                    {
-                      <Form {...form}>
-                        <form
-                          onSubmit={(e) => handleSubmit(service.id, e)}
-                          className="space-y-4"
-                        >
-                          <div className="flex items-center mb-4">
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <div
-                                key={i}
-                                className="relative w-8 h-8 flex items-center"
-                                onClick={(e) => {
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  const clickX = e.clientX - rect.left;
-                                  if (clickX <= rect.width / 2) {
-                                    setRating((prev) => ({
-                                      ...prev,
-                                      [service.id]: i + 0.5,
-                                    }));
-                                  } else {
-                                    setRating((prev) => ({
-                                      ...prev,
-                                      [service.id]: i + 1,
-                                    }));
-                                  }
-                                }}
-                              >
-                                <Star
-                                  className={`w-8 h-8 cursor-pointer ${
-                                    rating[service.id] >= i + 1
+                    <Form {...form}>
+                      <form
+                        onSubmit={(e) => handleSubmit(service.id, e)}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center mb-4">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="relative w-8 h-8 flex items-center"
+                              onClick={(e) => {
+                                const rect =
+                                  e.currentTarget.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                if (clickX <= rect.width / 2) {
+                                  setRating((prev) => ({
+                                    ...prev,
+                                    [service.id]: i + 0.5,
+                                  }));
+                                } else {
+                                  setRating((prev) => ({
+                                    ...prev,
+                                    [service.id]: i + 1,
+                                  }));
+                                }
+                              }}
+                            >
+                              <Star
+                                className={`w-8 h-8 cursor-pointer ${
+                                  rating[service.id] >= i + 1
+                                    ? "text-yellow-500"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                              {rating[service.id] < i + 1 && (
+                                <StarHalf
+                                  className={`absolute left-0 w-8 h-8 cursor-pointer ${
+                                    rating[service.id] >= i + 0.5
                                       ? "text-yellow-500"
                                       : "text-gray-300"
                                   }`}
                                 />
-                                {rating[service.id] < i + 1 && (
-                                  <StarHalf
-                                    className={`absolute left-0 w-8 h-8 cursor-pointer ${
-                                      rating[service.id] >= i + 0.5
-                                        ? "text-yellow-500"
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                )}
-                              </div>
-                            ))}
-                            <span className="ml-2 text-yellow-500 text-xl">
-                              {[Math.ceil(rating[service.id])]}
-                            </span>
-                          </div>
-
-                          <div className="mb-4">
-                            <Label
-                              htmlFor="review"
-                              className="block text-sm font-medium text-gray-700"
-                            >
-                              {lang.curLangPack.profile?.["comment"]}
-                            </Label>
-                            <Textarea
-                              id="review"
-                              value={review[service.id] || ""}
-                              onChange={(e) =>
-                                setReview((prev) => ({
-                                  ...prev,
-                                  [service.id]: e.target.value,
-                                }))
-                              }
-                              placeholder={lang.curLangPack.profile?.["share"]}
-                              required
-                              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                            />
-                          </div>
-
-                          <Button
-                            style={{
-                              backgroundColor: profileStore.buttonColor,
-                              color: profileStore.buttonTextColor,
-                            }}
-                            type="submit"
-                            className="px-4 py-2   rounded-md "
-                          >
-                            {lang.curLangPack.profile?.["submit"]}
-                          </Button>
-                          {successMessage && (
-                            <div className="mt-4 text-green-500">
-                              {successMessage}
+                              )}
                             </div>
-                          )}
-                        </form>
-                      </Form>
-                    }
+                          ))}
+                          <span className="ml-2 text-yellow-500 text-xl">
+                            {rating[service.id] !== undefined
+                              ? rating[service.id].toFixed(1)
+                              : "0.0"}
+                          </span>
+                        </div>
+
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="review"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            {lang.curLangPack.profile?.["comment"]}
+                          </Label>
+                          <Textarea
+                            id="review"
+                            value={review[service.id] || ""}
+                            onChange={(e) =>
+                              setReview((prev) => ({
+                                ...prev,
+                                [service.id]: e.target.value,
+                              }))
+                            }
+                            placeholder={lang.curLangPack.profile?.["share"]}
+                            required
+                            className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300"
+                          />
+                        </div>
+
+                        <Button
+                          style={{
+                            backgroundColor: profileStore.buttonColor,
+                            color: profileStore.buttonTextColor,
+                          }}
+                          type="submit"
+                          className="px-4 py-2 rounded-md"
+                        >
+                          {lang.curLangPack.profile?.["submit"]}
+                        </Button>
+                        {successMessage && (
+                          <div className="mt-4 text-green-500">
+                            {successMessage}
+                          </div>
+                        )}
+                      </form>
+                    </Form>
                   </div>
                 </div>
               ))}

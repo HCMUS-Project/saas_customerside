@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import Swal from "sweetalert2";
 import { useLanguage } from "@/hooks/use-language";
+import { useState } from "react";
 
 interface CancelBookingDialogProps {
   isOpen: boolean;
@@ -69,7 +69,7 @@ export default CancelBookingDialog;
 // Define and export the type for your service data
 export interface Service {
   id: string;
-  imgSrc: string;
+  images: string[];
   name: string;
 }
 
@@ -140,9 +140,9 @@ export const getBookingColumns = (
         return (
           <div className="flex space-x-2">
             <div className="flex flex-col items-center">
-              {service.imgSrc ? (
+              {service.images && service.images.length > 0 ? (
                 <Image
-                  src={service.imgSrc}
+                  src={service.images[0]}
                   alt={service.name}
                   width={100}
                   height={100}

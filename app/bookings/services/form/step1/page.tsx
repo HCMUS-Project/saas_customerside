@@ -12,13 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { AXIOS } from "@/constants/network/axios";
@@ -53,18 +47,6 @@ const fetchServices = async (): Promise<Service[]> => {
     return [];
   }
 };
-
-export function SkeletonCard() {
-  return (
-    <div className="flex flex-col space-y-3 w-full sm:w-1/2 lg:w-1/2 xl:w-1/3 p-4">
-      <Skeleton className="h-[200px] w-full rounded-xl" />
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-2/3" />
-      </div>
-    </div>
-  );
-}
 
 export default function ServiceCards() {
   const [services, setServices] = useState<Service[]>([]);
@@ -111,7 +93,16 @@ export default function ServiceCards() {
             </div>
             {loading ? (
               Array.from({ length: 2 }).map((_, index) => (
-                <SkeletonCard key={index} />
+                <div
+                  key={index}
+                  className="flex flex-col space-y-3 w-full sm:w-1/2 lg:w-1/2 xl:w-1/3 p-4"
+                >
+                  <Skeleton className="h-[200px] w-full rounded-xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                </div>
               ))
             ) : services.length > 0 ? (
               services.map((service) => (

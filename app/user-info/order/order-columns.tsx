@@ -9,7 +9,7 @@ import { useLanguage } from "@/hooks/use-language";
 export interface Product {
   productId: string;
   quantity: number;
-  imgSrc: string;
+  images: string[];
   name: string;
 }
 
@@ -42,10 +42,10 @@ export const getOrderColumns = (
                 key={product.productId}
                 className="flex flex-col items-center"
               >
-                {product.imgSrc ? (
+                {product.images && product.images.length > 0 ? (
                   <Image
-                    src={product.imgSrc}
-                    alt={product.name}
+                    src={product.images[0]}
+                    alt={`Image of ${product.name}`}
                     width={100}
                     height={100}
                   />
