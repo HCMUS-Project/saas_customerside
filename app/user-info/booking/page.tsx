@@ -32,6 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuthStore } from "@/hooks/store/auth.store";
+import { useRouter } from "next/navigation";
 
 interface Comment {
   id: string;
@@ -111,6 +113,13 @@ const BookingPage = () => {
   const limit = 10;
   const profileStore = useProfileStore();
   const lang = useLanguage();
+  const authStore = useAuthStore();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  if (!authStore.isAuthorized) {
+    router.push("/auth/login");
+  }
 
   const formSchema = z.object({
     review: z.string().min(2, {
@@ -184,6 +193,10 @@ const BookingPage = () => {
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     fetchAndSetBookings(status, page, limit);
   }, [fetchAndSetBookings, status, page]);
 
@@ -247,6 +260,10 @@ const BookingPage = () => {
       console.error("Error creating comment", error);
     }
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="py-6 h-full flex-grow">
