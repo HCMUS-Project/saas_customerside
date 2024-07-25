@@ -13,6 +13,8 @@ import Swal from "sweetalert2";
 import { Eye, EyeOff } from "lucide-react";
 import { useProfileStore } from "@/hooks/store/profile.store";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuthStore } from "@/hooks/store/auth.store";
+import { useRouter } from "next/navigation";
 
 const UserInfo = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -34,6 +36,18 @@ const UserInfo = () => {
   const [showPassword, setShowPassword] = useState(false);
   const profileStore = useProfileStore();
   const lang = useLanguage();
+  const authStore = useAuthStore();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  if (!authStore.isAuthorized) {
+    router.push("/auth/login");
+  }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const accessToken = getJwt("AT");
     const fetchUserData = async () => {
@@ -120,6 +134,10 @@ const UserInfo = () => {
       setLoading(false);
     }
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   const renderField = (
     label: string,
