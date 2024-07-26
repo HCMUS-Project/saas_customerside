@@ -61,6 +61,10 @@ const Filters: React.FC<FiltersProps> = ({
             { label: "0 - 100k", value: [1, 100000] },
             { label: "100k - 500k", value: [100000, 500000] },
             { label: "500k - 1m", value: [500000, 1000000] },
+            { label: "1m - 2m", value: [1000000, 2000000] },
+            { label: "2m - 3m", value: [2000000, 3000000] },
+            { label: "3m - 4m", value: [3000000, 4000000] },
+            { label: "4m - 5m", value: [4000000, 5000000] },
           ].map((range) => (
             <li key={range.label}>
               <input
@@ -205,19 +209,29 @@ const AllBookingList: React.FC = () => {
 
   const itemsPerPage = 9;
 
-  const fetchBookings = async (page = 1, query?: string) => {
+  const fetchBookings = async (query?: string) => {
     try {
       setLoading(true);
 
+      const params: { [key: string]: any } = {
+        domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
+        name: query,
+      };
+
+      // Add price range filters if they are set
+      if (selectedPriceRange[0] !== 1 || selectedPriceRange[1] !== 1000000) {
+        params.priceHigher = selectedPriceRange[0];
+        params.priceLower = selectedPriceRange[1];
+      }
+
+      // Add rating filter if it is set
+      if (selectedRating !== null) {
+        params.rating = selectedRating;
+      }
+
       const res = await AXIOS.GET({
         uri: bookingEndpoints.searchBookings,
-        params: {
-          domain: process.env.NEXT_PUBLIC_TENANT_DOMAIN,
-          priceHigher: selectedPriceRange[0],
-          priceLower: selectedPriceRange[1],
-          name: query,
-          rating: selectedRating,
-        },
+        params: params,
       });
 
       setBookingsData(res.data.services);
@@ -229,7 +243,7 @@ const AllBookingList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchBookings(currentPage, searchQuery || undefined);
+    fetchBookings(searchQuery || undefined);
   }, [
     selectedCategory,
     selectedPriceRange,

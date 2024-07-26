@@ -113,9 +113,13 @@ const Filters: React.FC<FiltersProps> = ({
         </h3>
         <ul>
           {[
-            { label: "0 - 100k", value: [0, 100000] },
+            { label: "0 - 100k", value: [1, 100000] },
             { label: "100k - 500k", value: [100000, 500000] },
             { label: "500k - 1m", value: [500000, 1000000] },
+            { label: "1m - 2m", value: [1000000, 2000000] },
+            { label: "2m - 3m", value: [2000000, 3000000] },
+            { label: "3m - 4m", value: [3000000, 4000000] },
+            { label: "4m - 5m", value: [4000000, 5000000] },
           ].map((range) => (
             <li key={range.label}>
               <input
