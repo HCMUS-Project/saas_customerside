@@ -120,6 +120,7 @@ const Filters: React.FC<FiltersProps> = ({
             { label: "2m - 3m", value: [2000000, 3000000] },
             { label: "3m - 4m", value: [3000000, 4000000] },
             { label: "4m - 5m", value: [4000000, 5000000] },
+            { label: "5m - 10m", value: [5000000, 10000000] },
           ].map((range) => (
             <li key={range.label}>
               <input
