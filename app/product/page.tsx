@@ -197,8 +197,11 @@ const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {
     //   });
     //   return;
     // }
-
-    try {
+    if (!authStore.isAuthorized) {
+      router.push("/auth/login");
+      return;
+    } 
+      else try {
       const createCartResponse = await AXIOS.POST({
         uri: cartEndpoints.addItemToCart,
         params: {
