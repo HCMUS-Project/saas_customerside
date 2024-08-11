@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "30Shine",
-  description: "30Shine - Best place for haircut and hair treatment",
+  title: "22NailStore",
+  description: "22NailStore - Best place for treating your hands",
 };
 
 export default function RootLayout({
