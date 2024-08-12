@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useAuthStore } from "@/hooks/store/auth.store";
 import { AXIOS } from "@/constants/network/axios";
 import { bookingEndpoints } from "@/constants/api/bookings.api";
 import { Button } from "@/components/ui/button";
@@ -128,12 +129,18 @@ const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
   const profileStore = useProfileStore();
   const router = useRouter();
   const lang = useLanguage();
+  const authStore: any = useAuthStore();
 
   const handleBookNow = (bookingId: string) => {
-    router.push(`/bookings/services/form?bookingId=${bookingId}`);
+    if (!authStore.isAuthorized) {
+      router.push("/auth/login");
+      return;
+    } else router.push(`/bookings/services/form?bookingId=${bookingId}`);
   };
 
   const handleBookingClick = (bookingId: string) => {
+
+  
     router.push(`/bookings/services/${bookingId}`);
   };
 
