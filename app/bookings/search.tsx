@@ -87,7 +87,9 @@ const SearchBooking = () => {
         size={20}
       />
       {loading && (
-        <p className="absolute z-10 w-full bg-white rounded-lg shadow-lg mt-2 py-1">
+        
+        <p className="absolute z-10 w-full bg-white rounded-lg shadow-lg mt-2 py-1 ">
+          
           Loading...
         </p>
       )}

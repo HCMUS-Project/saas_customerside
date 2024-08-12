@@ -19,13 +19,12 @@ const PaymentResult = () => {
     const message = urlParams.get("message");
     const status = urlParams.get("status");
 
-    if (message === "success") {
-      if (status === "success") {
-        setIsSuccess(true);
-      } else if (status === "failed") {
-        setIsSuccess(false);
-      }
+    if (status === "success") {
+      setIsSuccess(true);
+    } else if (status === "failed") {
+      setIsSuccess(false);
     }
+    
   }, []);
 
   const handleReturnHome = () => {
